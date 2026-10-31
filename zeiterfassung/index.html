@@ -6,6 +6,7 @@
   <title>Schicht- & Zeiterfassung</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1e293b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1857,6 +1858,11 @@ function doGet(e) {
         }).catch(err => { alert('Kopieren fehlgeschlagen: ' + err); });
       });
     });
+  </script>
+  <script>
+   if ('serviceWorker' in navigator) {
+     navigator.serviceWorker.register('./sw.js');
+   }
   </script>
 </body>
 </html>
