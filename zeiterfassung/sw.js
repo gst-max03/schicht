@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schicht-offline-cache-v1';
+const CACHE_NAME = 'zeiterfassung-offline-v1';
 
 self.addEventListener('fetch', (event) => {
   // Nur GET-Anfragen cachen (Google Drive Sync/POST ausnehmen)
