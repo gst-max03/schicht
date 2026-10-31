@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Schichtplan</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Schichtplan Farben */
+    .shift-cell-0112 { background-color: #fde047 !important; color: #000000 !important; font-weight: 900; border-color: #eab308 !important; }
+    .shift-cell-0111 { background-color: #22c55e !important; color: #000000 !important; font-weight: 900; border-color: #16a34a !important; }
+    .shift-cell-0113 { background-color: #06b6d4 !important; color: #000000 !important; font-weight: 900; border-color: #0891b2 !important; }
+    .shift-cell-0135 { background-color: #f9a8d4 !important; color: #000000 !important; font-weight: 900; border-color: #f472b6 !important; }
+    .shift-cell-URLAUB { background-color: #9333ea !important; color: #ffffff !important; font-weight: 900; border-color: #7e22ce !important; }
+    .shift-cell-KRANK { background-color: #ef4444 !important; color: #ffffff !important; font-weight: 900; border-color: #dc2626 !important; }
+    .shift-cell-LEHRGANG { background-color: #cbd5e1 !important; color: #000000 !important; font-weight: 900; border-color: #94a3b8 !important; }
+    
+    .shift-cell-FREI-we { background-color: #f8fafc; color: #c2410c; border-color: #fb923c; }
+    .dark .shift-cell-FREI-we { background-color: #1e293b; color: #fdba74; border-color: #ea580c; }
+    
+    .shift-cell-FREI-wd { background-color: #ffffff; color: #64748b; border-color: #cbd5e1; }
+    .dark .shift-cell-FREI-wd { background-color: #0f172a; color: #64748b; border-color: #334155; }
+
+    .tool-active {
+      outline: 3px solid !important;
+      outline-color: #2563eb !important;
+      outline-offset: 1px;
+      transform: scale(1.04);
+      opacity: 1 !important;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+    }
+    .dark .tool-active {
+      outline-color: #60a5fa !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+  <!-- ========================================================= -->
+  <!-- HAUPTANSICHT: SCHICHTPLAN                                 -->
+  <!-- ========================================================= -->
+  <main id="view-roster" class="max-w-lg mx-auto px-2 pb-12 pt-2">
+    <div id="roster-fixed-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-2 px-2 border-b border-slate-300 dark:border-slate-800 shadow-md">
+      <div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 flex flex-col gap-2">
+        
+        <!-- Top Navigation -->
+        <div class="flex justify-between items-center gap-1">
+          <div class="flex items-center gap-1">
+            <button type="button" id="btn-roster-year-prev" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition">◀</button>
+            <span id="roster-year-title" class="text-base font-black px-2">2026</span>
+            <button type="button" id="btn-roster-year-next" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition">▶</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95 shadow-sm transition">📍 Heute</button>
+            <button type="button" id="btn-open-drive-modal" class="px-2.5 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Google Drive Sync">☁️</button>
+            <button type="button" id="btn-open-backup-modal" class="px-2.5 py-1 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Lokales Backup">💾</button>
+            <button type="button" id="btn-open-settings-modal" class="px-2.5 py-1 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Einstellungen">⚙️</button>
+          </div>
+        </div>
+
+        <!-- Werkzeugleiste (Grid dynamisch über JS) -->
+        <div id="tool-grid-container" class="grid grid-cols-12 gap-1.5 items-stretch">
+          
+          <!-- Einzelschichten -->
+          <div id="tool-box-single" class="col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
+            <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Tag oder KW (Mo–Fr)</div>
+            <div class="grid grid-cols-7 gap-1">
+              <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
+              <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
+              <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
+              <button type="button" data-single="0135" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0135 opacity-75 transition">Z</button>
+              <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
+              <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
+              <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
+            </div>
+          </div>
+
+          <!-- Kombi-Wochen -->
+          <div id="tool-box-kombi" class="col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
+            <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Kombi</div>
+            <div class="grid grid-cols-2 gap-1 h-full items-stretch">
+              <div class="flex flex-col gap-1">
+                <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none">FF-SSS</button>
+                <button type="button" data-pattern="NN-FF" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
+              </div>
+              <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn h-full rounded-md text-[8px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="roster-tool-hint" class="text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+          👆 Links Schicht wählen, dann unten auf Tage oder KW tippen.
+        </div>
+
+        <!-- Monats-Sprungmarken -->
+        <div id="roster-month-pills" class="grid grid-cols-6 gap-1 text-[10px] font-bold mt-1"></div>
+      </div>
+    </div>
+
+    <!-- Platzhalter für den fixed Header -->
+    <div id="roster-header-spacer" class="h-[235px]"></div>
+    
+    <!-- Liste aller Wochen -->
+    <div id="roster-kw-list" class="flex flex-col gap-3"></div>
+
+    <div class="text-center mt-6 mb-2 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
+      v013
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- MODALS (Einstellungen, Backup, Drive)                     -->
+  <!-- ========================================================= -->
+  
+  <!-- MODAL: Einstellungen -->
+  <div id="modal-settings" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-base font-extrabold">⚙️ Einstellungen</h3>
+        <button type="button" id="btn-close-settings" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      
+      <div class="flex flex-col gap-3">
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Erscheinungsbild</div>
+          <div class="flex gap-2">
+            <button type="button" id="theme-light" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">☀️ Hell</button>
+            <button type="button" id="theme-dark" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">🌙 Dunkel</button>
+            <button type="button" id="theme-system" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">💻 Sys</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Schichtplan Optionen</div>
+          
+          <label class="flex items-start gap-3 cursor-pointer mb-3">
+            <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
+            <div>
+              <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
+              <span class="text-xs text-slate-500 block leading-snug">Wenn aktiv: Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche aus.</span>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" id="setting-show-kombi" class="w-5 h-5 mt-0.5 accent-blue-600">
+            <div>
+              <span class="font-bold text-sm block">Kombi-Bereich anzeigen</span>
+              <span class="text-xs text-slate-500 block leading-snug">Zeigt oben rechts die Buttons für Schichtkombinationen (FF-SSS, etc.) an.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button type="button" id="btn-save-settings" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md active:scale-95 transition mt-2">
+        Speichern & Schließen
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Backup & Export -->
+  <div id="modal-backup" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-base font-extrabold">💾 Lokales Backup</h3>
+        <button type="button" id="btn-close-backup" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      
+      <div class="flex flex-col gap-3">
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Schichtplan (CSV Daten)</div>
+          <div class="flex flex-col gap-2">
+            <button type="button" id="btn-full-backup-export" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition">
+              <span>📤</span> Schichtplan Exportieren
+            </button>
+            <label class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition">
+              <span>📥</span> Schichtplan Wiederherstellen
+              <input type="file" id="input-full-backup-import" accept=".csv" class="hidden">
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Google Drive Sync -->
+  <div id="modal-drive" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-sm font-extrabold">☁️ Google Drive Sync</h3>
+        <button type="button" id="btn-close-drive" class="text-slate-400 text-lg font-bold px-2">✕</button>
+      </div>
+      <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
+        <input type="checkbox" id="drive-auto-sync" class="w-4 h-4 accent-blue-600">
+        <span>Automatisch bei jeder Änderung synchronisieren</span>
+      </label>
+      <div class="flex flex-col gap-1 text-xs mt-1">
+        <label class="font-bold">Google Apps Script Web-App URL:</label>
+        <input type="url" id="drive-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[11px] border border-slate-300 dark:border-slate-700">
+      </div>
+      
+      <button type="button" id="btn-drive-help" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 text-left mt-1 underline">📖 Anleitung für Google Drive anzeigen</button>
+      
+      <div id="drive-help-text" class="hidden flex flex-col gap-2">
+        <div class="text-[10px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl leading-relaxed">
+          <strong class="text-slate-800 dark:text-slate-200">1. Einrichten:</strong> Gehe am PC zu <i>script.google.com</i>.<br>
+          <strong class="text-slate-800 dark:text-slate-200">2. Neues Projekt:</strong> Klicke auf "Neues Projekt". Lösche den alten Text dort komplett und füge das generierte Skript (siehe unten) ein.<br>
+          <strong class="text-slate-800 dark:text-slate-200">3. Bereitstellen:</strong> Oben rechts auf "Bereitstellen" &rarr; "Neue Bereitstellung". Wähle "Web-App", Zugriff: "Jeder".<br>
+          <strong class="text-slate-800 dark:text-slate-200">4. Kopieren:</strong> Kopiere die angezeigte URL und füge sie hier oben ein.<br><br>
+          <strong class="text-slate-800 dark:text-slate-200">URL vergessen?</strong> Gehe wieder zu script.google.com, öffne das Projekt, tippe auf "Bereitstellen" &rarr; "Bereitstellungen verwalten" und kopiere die Web-App-URL erneut.
+        </div>
+        
+        <div class="p-2.5 bg-slate-200 dark:bg-slate-700 rounded-xl">
+          <label class="text-[10px] font-bold block mb-1">Speicherpfad (in "Meine Ablage"):</label>
+          <input type="text" id="drive-folder-input" value="Schicht/PWA_Schichtplan" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs font-mono">
+          <button type="button" id="btn-copy-script" class="mt-2 w-full py-2.5 bg-slate-800 dark:bg-slate-600 text-white font-bold rounded-lg text-xs active:scale-95 transition">
+            📋 Apps Script Code kopieren
+          </button>
+        </div>
+      </div>
+
+      <div id="drive-sync-status" class="text-[11px] font-bold text-center text-slate-500 hidden"></div>
+      <div class="grid grid-cols-2 gap-2 mt-1">
+        <button type="button" id="btn-drive-push" class="py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 transition text-white font-bold rounded-xl text-xs shadow-sm">↑ In Cloud senden</button>
+        <button type="button" id="btn-drive-pull" class="py-2.5 bg-slate-700 hover:bg-slate-800 active:scale-95 transition text-white font-bold rounded-xl text-xs shadow-sm">↓ Aus Cloud laden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT LOGIK                                          -->
+  <!-- ========================================================= -->
+  <script>
+    const SHIFTS = [
+      { code: '0112', short: 'F' },
+      { code: '0111', short: 'S' },
+      { code: '0113', short: 'N' },
+      { code: '0135', short: 'Z' },
+      { code: 'LEHRGANG', short: 'LG' },
+      { code: 'URLAUB', short: 'U' },
+      { code: 'KRANK',  short: 'K' }
+    ];
+
+    const WEEK_PATTERNS = {
+      'FF-SSS': ['0112', '0112', '0111', '0111', '0111', 'FREI', 'FREI'],
+      'SS-NNN': ['0111', '0111', '0113', '0113', '0113', 'FREI', 'FREI'],
+      'NN-FF':  ['0113', '0113', 'FREI', 'FREI', '0112', '0112', 'FREI']
+    };
+
+    /********************************************************************
+     * DYNAMISCHE FEIERTAGS-BERECHNUNG (Osterformel)
+     ********************************************************************/
+    function getEasterDate(year) {
+      const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+      const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(year, month - 1, day);
+    }
+
+    const holidayCache = {};
+    function getHolidaysForYear(year) {
+      if (holidayCache[year]) return holidayCache[year];
+      const h = {};
+      const add = (m, d) => { h[`${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`] = true; };
+      add(1, 1); add(1, 6); add(5, 1); add(8, 15);
+      add(10, 3); add(11, 1); add(12, 25); add(12, 26);
+      const easter = getEasterDate(year);
+      const addDays = (days) => {
+        const d = new Date(easter); d.setDate(d.getDate() + days);
+        add(d.getMonth() + 1, d.getDate());
+      };
+      addDays(-2); addDays(1); addDays(39); addDays(50); addDays(60);
+      holidayCache[year] = h;
+      return h;
+    }
+
+    function isHoliday(isoDate) {
+      const year = parseInt(isoDate.split('-')[0], 10);
+      return getHolidaysForYear(year)[isoDate] || false;
+    }
+
+    const STORAGE_KEYS = {
+      ROSTER:  'pwa_roster_only_v1',
+      META:    'pwa_roster_meta_v1'
+    };
+
+    function loadJSON(key, fallback) {
+      try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
+    }
+    function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+    let rosterDB  = loadJSON(STORAGE_KEYS.ROSTER, {});
+    let metaDB    = loadJSON(STORAGE_KEYS.META, {
+      theme: 'system', 
+      nightShiftSunday: false, 
+      showKombi: true,
+      driveAuto: false, 
+      driveUrl: ''
+    });
+
+    const WD_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const MONTH_NAMES = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const MONTH_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+    function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+    function toGermanDateFilename(d) { return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; }
+    function parseISODate(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); }
+
+    function getISOWeek(d) {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    }
+
+    /********************************************************************
+     * GOOGLE DRIVE SYNC LOGIK & KOPIEREN
+     ********************************************************************/
+    async function syncPushToGoogleDrive(showSuccessAlert = true) {
+      const inputEl = document.getElementById('drive-url-input');
+      if (inputEl && inputEl.value.trim()) { metaDB.driveUrl = inputEl.value.trim(); saveJSON(STORAGE_KEYS.META, metaDB); }
+      const url = (metaDB.driveUrl || '').trim();
+      if (!url) { if (showSuccessAlert) alert('Bitte zuerst die Google Apps Script URL eintragen!'); return false; }
+
+      const statusEl = document.getElementById('drive-sync-status');
+      if (statusEl && showSuccessAlert) {
+        statusEl.textContent = '⏳ Sende Schichtplan an Google Drive...';
+        statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400';
+        statusEl.classList.remove('hidden');
+      }
+
+      const fullPayload = { roster: rosterDB, meta: metaDB, exportedAt: new Date().toISOString() };
+
+      try {
+        await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullPayload), keepalive: true });
+        if (statusEl && showSuccessAlert) { statusEl.textContent = '✅ Erfolgreich in Google Drive gespeichert!'; statusEl.className = 'text-[11px] font-bold text-center text-emerald-600 dark:text-emerald-400'; }
+        if (showSuccessAlert) alert('Schichtplan erfolgreich an Google Drive gesendet!'); return true;
+      } catch (err) {
+        if (statusEl && showSuccessAlert) { statusEl.textContent = '❌ Fehler beim Senden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
+        if (showSuccessAlert) alert('Fehler beim Senden an Google Drive: ' + err.message); return false;
+      }
+    }
+
+    async function syncPullFromGoogleDrive() {
+      const inputEl = document.getElementById('drive-url-input');
+      if (inputEl && inputEl.value.trim()) { metaDB.driveUrl = inputEl.value.trim(); saveJSON(STORAGE_KEYS.META, metaDB); }
+      const url = (metaDB.driveUrl || '').trim();
+      if (!url) { alert('Bitte zuerst die Google Apps Script URL eintragen!'); return; }
+
+      const statusEl = document.getElementById('drive-sync-status');
+      if (statusEl) { statusEl.textContent = '⏳ Lade Schichtplan aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
+
+      try {
+        const res = await fetch(url); const data = await res.json();
+        if (!data || Object.keys(data).length === 0 || !data.roster) {
+          if (statusEl) statusEl.classList.add('hidden');
+          alert('Noch keine Backup-Datei in Google Drive gefunden (Bitte zuerst einmal senden).'); return;
+        }
+        if (data.roster) rosterDB = data.roster;
+        if (data.meta) { const keepUrl = metaDB.driveUrl; metaDB = data.meta; if (!metaDB.driveUrl) metaDB.driveUrl = keepUrl; }
+        
+        saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
+        alert('Schichtplan erfolgreich aus Google Drive wiederhergestellt!'); window.location.reload();
+      } catch (err) {
+        if (statusEl) { statusEl.textContent = '❌ Fehler beim Laden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
+        alert('Fehler beim Laden aus Google Drive: ' + err.message);
+      }
+    }
+
+    function triggerBackgroundDriveSync() { if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false); }
+
+    /********************************************************************
+     * SCHICHTPLAN LOGIK
+     ********************************************************************/
+    let rosterYear = new Date().getFullYear();
+    let activeSingleBrush = null;
+    let activeWeekPattern = null;
+
+    function applyKombiVisibility() {
+      const boxSingle = document.getElementById('tool-box-single');
+      const boxKombi = document.getElementById('tool-box-kombi');
+      if (metaDB.showKombi) {
+        boxSingle.className = 'col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
+        boxKombi.className = 'col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
+      } else {
+        boxSingle.className = 'col-span-12 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
+        boxKombi.className = 'hidden';
+      }
+    }
+
+    function updateToolUI() {
+      document.querySelectorAll('.tool-single-btn').forEach(btn => { btn.classList.toggle('tool-active', btn.dataset.single === activeSingleBrush); });
+      document.querySelectorAll('.tool-pattern-btn').forEach(btn => { btn.classList.toggle('tool-active', btn.dataset.pattern === activeWeekPattern); });
+      const hint = document.getElementById('roster-tool-hint');
+      if (activeSingleBrush) {
+        const letter = SHIFTS.find(s => s.code === activeSingleBrush)?.short || activeSingleBrush;
+        hint.textContent = `✏️ [${letter}] aktiv: Tag tippen = Einzeltag | Auf „KW“ tippen = Ausfüllen`; hint.className = 'text-[10px] font-extrabold text-center py-1 px-2 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200';
+      } else if (activeWeekPattern) {
+        hint.textContent = `⚡ Kombi [${activeWeekPattern}] aktiv: Auf „KW“ oder Zeile tippen zum Ausfüllen!`; hint.className = 'text-[10px] font-extrabold text-center py-1 px-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200';
+      } else {
+        hint.textContent = '👆 Links Schicht wählen, dann unten auf Tage oder KW tippen.'; hint.className = 'text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+      }
+    }
+
+    function getShiftCellClass(code, isWeekend) {
+      if (code === '0112') return 'shift-cell-0112'; if (code === '0111') return 'shift-cell-0111';
+      if (code === '0113') return 'shift-cell-0113'; if (code === '0135') return 'shift-cell-0135';
+      if (code === 'URLAUB') return 'shift-cell-URLAUB'; if (code === 'KRANK') return 'shift-cell-KRANK';
+      if (code === 'LEHRGANG') return 'shift-cell-LEHRGANG';
+      return isWeekend ? 'shift-cell-FREI-we' : 'shift-cell-FREI-wd';
+    }
+
+    function getShiftShortLetter(code) { return SHIFTS.find(x => x.code === code)?.short || ''; }
+
+    function generateWeeksForYear(year) {
+      const weeks = []; let d = new Date(year, 0, 1);
+      d.setDate(d.getDate() - ((d.getDay() || 7) - 1));
+      while (true) {
+        const weekDays = []; for (let i = 0; i < 7; i++) weekDays.push(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i));
+        const thursday = weekDays[3]; weeks.push({ kw: getISOWeek(thursday), month: thursday.getMonth(), thursdayYear: thursday.getFullYear(), days: weekDays });
+        d.setDate(d.getDate() + 7); if (d.getFullYear() > year && getISOWeek(d) === 1) break; if (weeks.length > 54) break;
+      }
+      return weeks;
+    }
+
+    function scrollToRosterElement(el) {
+      if (!el) return; const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 135;
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 8, behavior: 'smooth' });
+    }
+
+    function renderRosterYear(scrollToToday = false) {
+      document.getElementById('roster-year-title').textContent = `${rosterYear}`;
+      const pillsEl = document.getElementById('roster-month-pills'); pillsEl.innerHTML = '';
+      MONTH_SHORT.forEach((mName, mIdx) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950 text-slate-700 dark:text-slate-300 text-center active:scale-95 transition'; b.textContent = mName;
+        b.addEventListener('click', () => scrollToRosterElement(document.getElementById(`roster-month-sec-${mIdx}`))); pillsEl.appendChild(b);
+      });
+
+      const listEl = document.getElementById('roster-kw-list'); listEl.innerHTML = '';
+      const allWeeks = generateWeeksForYear(rosterYear); const todayIso = toISODate(new Date());
+      let currentMonthRendered = -1; let monthCard = null;
+
+      allWeeks.forEach(w => {
+        const displayMonth = w.thursdayYear < rosterYear ? 0 : (w.thursdayYear > rosterYear ? 11 : w.month);
+        if (displayMonth !== currentMonthRendered) {
+          currentMonthRendered = displayMonth;
+          monthCard = document.createElement('div'); monthCard.id = `roster-month-sec-${displayMonth}`; monthCard.className = 'bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2';
+          monthCard.innerHTML = `<div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-1 px-1"><span class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">${MONTH_NAMES[displayMonth]} ${rosterYear}</span></div>`; listEl.appendChild(monthCard);
+        }
+
+        const isCurrentWeek = w.days.some(dayObj => toISODate(dayObj) === todayIso);
+        const kwBlock = document.createElement('div'); if (isCurrentWeek) kwBlock.id = 'roster-current-kw';
+        kwBlock.className = `p-1.5 rounded-xl border transition ${isCurrentWeek ? 'bg-blue-50/50 dark:bg-blue-950/30 border-2 border-blue-500' : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'}`;
+
+        const rowGrid = document.createElement('div'); rowGrid.className = 'grid grid-cols-8 gap-1 items-stretch';
+        const kwBtn = document.createElement('button'); kwBtn.type = 'button';
+        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 ${isCurrentWeek ? 'border-blue-500 dark:border-blue-400' : 'border-slate-300 dark:border-slate-700'}`;
+        kwBtn.innerHTML = `<span>KW</span><span class="text-xs leading-none mt-0.5">${w.kw}</span>`;
+
+        const dayCells = [];
+        kwBtn.addEventListener('click', () => {
+          if (activeWeekPattern && WEEK_PATTERNS[activeWeekPattern]) { applyWeekPatternToRow(dayCells, WEEK_PATTERNS[activeWeekPattern]); return; }
+          if (activeSingleBrush) {
+            const isNight = activeSingleBrush === '0113'; const startSun = metaDB.nightShiftSunday; let targetIsos = [];
+            if (isNight && startSun) {
+              for(let i=0; i<=3; i++) targetIsos.push(dayCells[i].dataset.iso);
+              const prevSun = new Date(parseISODate(dayCells[0].dataset.iso)); prevSun.setDate(prevSun.getDate() - 1); targetIsos.push(toISODate(prevSun));
+            } else { for(let i=0; i<=4; i++) targetIsos.push(dayCells[i].dataset.iso); }
+            const alreadyMatches = targetIsos.every(iso => rosterDB[iso] === activeSingleBrush); const nextCode = alreadyMatches ? '' : activeSingleBrush;
+            targetIsos.forEach(iso => {
+              const d = parseISODate(iso); const isWe = d.getDay() === 0 || d.getDay() === 6;
+              if (!nextCode) delete rosterDB[iso]; else rosterDB[iso] = nextCode;
+              const cellEl = document.querySelector(`.roster-day-cell[data-iso="${iso}"]`); if (cellEl) setCellShift(cellEl, iso, nextCode, isWe);
+            });
+            saveJSON(STORAGE_KEYS.ROSTER, rosterDB); triggerBackgroundDriveSync();
+          }
+        });
+        rowGrid.appendChild(kwBtn);
+
+        w.days.forEach((dayObj, idx) => {
+          const iso = toISODate(dayObj); const isToday = (iso === todayIso); const isWeekend = (idx >= 5); const hol = isHoliday(iso); const code = rosterDB[iso] || '';
+          const cell = document.createElement('button'); cell.type = 'button'; cell.dataset.iso = iso; cell.dataset.weekend = isWeekend ? '1' : '0';
+          cell.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-lg border-2 select-none active:scale-95 transition ${getShiftCellClass(code, isWeekend)} ${isToday ? 'ring-2 ring-blue-600 dark:ring-blue-400' : ''}`;
+
+          const starHtml = hol ? `<div class="absolute -top-0.5 right-0.5 text-[12px] text-amber-400 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.8)] leading-none">★</div>` : '';
+          cell.innerHTML = `
+            ${starHtml}
+            <div class="text-[10px] font-extrabold leading-none mt-1">${WD_NAMES[dayObj.getDay()]}</div>
+            <div class="text-[9px] font-semibold leading-tight my-0.5 ${hol ? 'text-rose-600 dark:text-rose-400' : 'opacity-80'}">${String(dayObj.getDate()).padStart(2, '0')}.${String(dayObj.getMonth() + 1).padStart(2, '0')}</div>
+            <div class="cell-letter h-4 flex items-center justify-center text-xs font-black leading-none mb-0.5">${getShiftShortLetter(code)}</div>
+          `;
+
+          cell.addEventListener('click', () => {
+            if (activeWeekPattern && WEEK_PATTERNS[activeWeekPattern]) { applyWeekPatternToRow(dayCells, WEEK_PATTERNS[activeWeekPattern]); return; }
+            if (!activeSingleBrush) return;
+            const currentCode = rosterDB[iso] || ''; const nextCode = (currentCode === activeSingleBrush) ? '' : activeSingleBrush;
+            setCellShift(cell, iso, nextCode, isWeekend); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); triggerBackgroundDriveSync();
+          });
+
+          dayCells.push(cell); rowGrid.appendChild(cell);
+        });
+
+        kwBlock.appendChild(rowGrid); monthCard.appendChild(kwBlock);
+      });
+
+      setTimeout(() => {
+        const h = document.getElementById('roster-fixed-header')?.offsetHeight; if (h) document.getElementById('roster-header-spacer').style.height = (h + 6) + 'px';
+        if (scrollToToday) scrollToRosterElement(document.getElementById('roster-current-kw'));
+      }, 100);
+    }
+
+    function applyWeekPatternToRow(dayCells, patternArray) {
+      const alreadyMatches = dayCells.every((c, idx) => { return (rosterDB[c.dataset.iso] || 'FREI') === (patternArray[idx] || 'FREI'); });
+      dayCells.forEach((c, idx) => { const targetCode = alreadyMatches ? '' : (patternArray[idx] === 'FREI' ? '' : patternArray[idx]); setCellShift(c, c.dataset.iso, targetCode, c.dataset.weekend === '1'); });
+      saveJSON(STORAGE_KEYS.ROSTER, rosterDB); triggerBackgroundDriveSync();
+    }
+
+    function setCellShift(cellEl, iso, code, isWeekend) {
+      if (!code || code === 'FREI') delete rosterDB[iso]; else rosterDB[iso] = code;
+      const isToday = (iso === toISODate(new Date()));
+      cellEl.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-lg border-2 select-none active:scale-95 transition ${getShiftCellClass(code, isWeekend)} ${isToday ? 'ring-2 ring-blue-600 dark:ring-blue-400' : ''}`;
+      cellEl.querySelector('.cell-letter').textContent = getShiftShortLetter(code);
+    }
+
+    /********************************************************************
+     * CSV EXPORT / IMPORT
+     ********************************************************************/
+    function exportFullBackupCSV() {
+      const rows = [['RECORD_TYPE', 'KEY_OR_DATE', 'SHIFT', 'JSON_DATA']];
+      
+      Object.keys(rosterDB).sort().forEach(iso => { rows.push(['ROSTER', iso, rosterDB[iso], '']); });
+      
+      rows.push(['META', 'FULL_META_JSON', '', JSON.stringify(metaDB)]);
+
+      const csvContent = '\uFEFF' + rows.map(r => r.map(f => `"${String(f ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `PWA_Schichtplan_Backup_${toGermanDateFilename(new Date())}.csv`; a.click();
+    }
+
+    function importFullBackupCSV(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
+          const newRoster = {};
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
+            if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { newRoster[cols[1]] = cols[2]; }
+            else if (cols[0] === 'META' && cols[3]) { const parsedMeta = JSON.parse(cols[3]); metaDB = parsedMeta; }
+          }
+          rosterDB = newRoster;
+          saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
+          triggerBackgroundDriveSync(); alert('Schichtplan erfolgreich wiederhergestellt!'); window.location.reload();
+        } catch (err) { alert('Fehler beim Import: ' + err.message); }
+      }; reader.readAsText(file, 'UTF-8');
+    }
+
+    function applyTheme(mode) {
+      metaDB.theme = mode; saveJSON(STORAGE_KEYS.META, metaDB);
+      const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.classList.toggle('dark', isDark);
+      ['light', 'dark', 'system'].forEach(m => {
+        const btn = document.getElementById(`theme-${m}`);
+        if (btn) btn.className = (m === mode) ? 'flex-1 py-1.5 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md' : 'flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900';
+      });
+    }
+
+    /********************************************************************
+     * INITIALISIERUNG
+     ********************************************************************/
+    window.addEventListener('DOMContentLoaded', () => {
+      applyTheme(metaDB.theme || 'system'); 
+      applyKombiVisibility();
+      document.getElementById('setting-show-kombi').checked = !!metaDB.showKombi;
+      document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday;
+
+      renderRosterYear(true);
+
+      document.querySelectorAll('.tool-single-btn').forEach(btn => {
+        btn.addEventListener('click', () => { activeWeekPattern = null; activeSingleBrush = (activeSingleBrush === btn.dataset.single) ? null : btn.dataset.single; updateToolUI(); });
+      });
+      document.querySelectorAll('.tool-pattern-btn').forEach(btn => {
+        btn.addEventListener('click', () => { activeSingleBrush = null; activeWeekPattern = (activeWeekPattern === btn.dataset.pattern) ? null : btn.dataset.pattern; updateToolUI(); });
+      });
+
+      document.getElementById('btn-roster-year-prev').addEventListener('click', () => { rosterYear--; renderRosterYear(false); });
+      document.getElementById('btn-roster-year-next').addEventListener('click', () => { rosterYear++; renderRosterYear(false); });
+      document.getElementById('btn-roster-scroll-today').addEventListener('click', () => { rosterYear = new Date().getFullYear(); renderRosterYear(true); });
+
+      // EINSTELLUNGEN
+      document.getElementById('btn-open-settings-modal').addEventListener('click', () => { document.getElementById('modal-settings').classList.remove('hidden'); });
+      document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
+      document.getElementById('btn-save-settings').addEventListener('click', () => { 
+        metaDB.nightShiftSunday = document.getElementById('setting-night-sunday').checked; 
+        metaDB.showKombi = document.getElementById('setting-show-kombi').checked;
+        saveJSON(STORAGE_KEYS.META, metaDB); 
+        applyKombiVisibility();
+        document.getElementById('modal-settings').classList.add('hidden'); 
+      });
+      document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
+
+      // BACKUP
+      document.getElementById('btn-open-backup-modal').addEventListener('click', () => document.getElementById('modal-backup').classList.remove('hidden'));
+      document.getElementById('btn-close-backup').addEventListener('click', () => document.getElementById('modal-backup').classList.add('hidden'));
+      
+      document.getElementById('btn-full-backup-export').addEventListener('click', exportFullBackupCSV);
+      document.getElementById('input-full-backup-import').addEventListener('change', (e) => { if (e.target.files[0]) importFullBackupCSV(e.target.files[0]); });
+
+      // DRIVE SYNC & KOPIEREN
+      document.getElementById('btn-open-drive-modal').addEventListener('click', () => {
+        document.getElementById('drive-auto-sync').checked = !!metaDB.driveAuto; document.getElementById('drive-url-input').value = metaDB.driveUrl || '';
+        document.getElementById('drive-sync-status').classList.add('hidden'); document.getElementById('drive-help-text').classList.add('hidden');
+        document.getElementById('btn-drive-help').textContent = '📖 Anleitung für Google Drive anzeigen';
+        document.getElementById('modal-drive').classList.remove('hidden');
+      });
+      
+      document.getElementById('btn-close-drive').addEventListener('click', () => {
+        metaDB.driveAuto = document.getElementById('drive-auto-sync').checked; metaDB.driveUrl = document.getElementById('drive-url-input').value.trim();
+        saveJSON(STORAGE_KEYS.META, metaDB); document.getElementById('modal-drive').classList.add('hidden');
+      });
+      document.getElementById('btn-drive-push').addEventListener('click', () => syncPushToGoogleDrive(true));
+      document.getElementById('btn-drive-pull').addEventListener('click', () => syncPullFromGoogleDrive());
+      
+      document.getElementById('btn-drive-help').addEventListener('click', function() {
+        const t = document.getElementById('drive-help-text'); t.classList.toggle('hidden');
+        this.textContent = t.classList.contains('hidden') ? '📖 Anleitung für Google Drive anzeigen' : '📖 Anleitung für Google Drive ausblenden';
+      });
+
+      document.getElementById('btn-copy-script').addEventListener('click', function() {
+        const folderPath = document.getElementById('drive-folder-input').value.trim() || 'Schicht/PWA_Schichtplan';
+        const scriptCode = `function getFolderByPath(path) {
+  var parts = path.split('/');
+  var folder = DriveApp.getRootFolder();
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i] == '') continue;
+    var folders = folder.getFoldersByName(parts[i]);
+    if (folders.hasNext()) { folder = folders.next(); } 
+    else { folder = folder.createFolder(parts[i]); }
+  }
+  return folder;
+}
+
+var FILE_NAME = 'PWA_Schichtplan_Backup.json';
+
+function doPost(e) {
+  try {
+    var folder = getFolderByPath('${folderPath}');
+    var files = folder.getFilesByName(FILE_NAME);
+    var file;
+    if (files.hasNext()) {
+      file = files.next();
+      file.setContent(e.postData.contents);
+    } else {
+      file = folder.createFile(FILE_NAME, e.postData.contents, 'application/json');
+    }
+    return ContentService.createTextOutput(JSON.stringify({status: 'success'})).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    var folder = getFolderByPath('${folderPath}');
+    var files = folder.getFilesByName(FILE_NAME);
+    if (files.hasNext()) {
+      return ContentService.createTextOutput(files.next().getBlob().getDataAsString()).setMimeType(ContentService.MimeType.JSON);
+    } else {
+      return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+        navigator.clipboard.writeText(scriptCode).then(() => {
+          const origText = this.textContent; this.textContent = '✅ Code kopiert!';
+          this.classList.replace('bg-slate-800', 'bg-emerald-600'); this.classList.replace('dark:bg-slate-600', 'dark:bg-emerald-600');
+          setTimeout(() => { this.textContent = origText; this.classList.replace('bg-emerald-600', 'bg-slate-800'); this.classList.replace('dark:bg-emerald-600', 'dark:bg-slate-600'); }, 2000);
+        }).catch(err => { alert('Kopieren fehlgeschlagen: ' + err); });
+      });
+    });
+  </script>
+</body>
+</html>
