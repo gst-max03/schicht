@@ -1,7 +1,7 @@
 {
   "name": "Schichtplan",
   "short_name": "Schicht",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -9,15 +9,9 @@
   "icons": [
     {
       "src": "icon.png",
-      "sizes": "512x512",
+      "sizes": "192x192 512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
