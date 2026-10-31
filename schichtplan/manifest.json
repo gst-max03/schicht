@@ -1,17 +1,21 @@
 {
-  "name": "Schichtplan",
-  "short_name": "Schicht",
-  "start_url": "./index.html",
-  "scope": "./",
+  "name": "Zeiterfassung",
+  "short_name": "Zeiterfassung",
+  "start_url": "/schicht/zeiterfassung/index.html",
+  "scope": "/schicht/zeiterfassung/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#1e293b",
   "icons": [
     {
       "src": "icon.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }
