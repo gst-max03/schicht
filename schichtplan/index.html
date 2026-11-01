@@ -32,6 +32,7 @@
     .shift-cell-URLAUB { background-color: #9333ea !important; color: #ffffff !important; font-weight: 900; border-color: #7e22ce !important; }
     .shift-cell-KRANK { background-color: #ef4444 !important; color: #ffffff !important; font-weight: 900; border-color: #dc2626 !important; }
     .shift-cell-LEHRGANG { background-color: #cbd5e1 !important; color: #000000 !important; font-weight: 900; border-color: #94a3b8 !important; }
+    .shift-cell-FS { background-color: #14b8a6 !important; color: #ffffff !important; font-weight: 900; border-color: #0d9488 !important; }
     
     .shift-cell-FREI-we { background-color: #f8fafc; color: #c2410c; border-color: #fb923c; }
     .dark .shift-cell-FREI-we { background-color: #1e293b; color: #fdba74; border-color: #ea580c; }
@@ -70,19 +71,20 @@
           </div>
           <div class="flex items-center gap-1.5">
             <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95 shadow-sm transition">📍 Heute</button>
+            <button type="button" id="btn-open-stats-modal" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Jahresstatistik">📊</button>
             <button type="button" id="btn-open-drive-modal" class="px-2.5 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Google Drive Sync">☁️</button>
             <button type="button" id="btn-open-backup-modal" class="px-2.5 py-1 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Lokales Backup">💾</button>
             <button type="button" id="btn-open-settings-modal" class="px-2.5 py-1 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Einstellungen">⚙️</button>
           </div>
         </div>
 
-        <!-- Werkzeugleiste (Grid dynamisch über JS) -->
-        <div id="tool-grid-container" class="grid grid-cols-12 gap-1.5 items-stretch">
+        <!-- Werkzeugleiste -->
+        <div id="tool-grid-container" class="flex flex-col gap-1.5">
           
           <!-- Einzelschichten -->
-          <div id="tool-box-single" class="col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
+          <div id="tool-box-single" class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
             <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Tag oder KW (Mo–Fr)</div>
-            <div class="grid grid-cols-7 gap-1">
+            <div id="single-btn-grid" class="grid grid-cols-4 gap-1">
               <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
               <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
               <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
@@ -90,18 +92,17 @@
               <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
               <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
               <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
+              <button type="button" data-single="FS" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-FS opacity-75 transition flex items-center justify-center" title="Freischicht">FS</button>
             </div>
           </div>
 
           <!-- Kombi-Wochen -->
-          <div id="tool-box-kombi" class="col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
+          <div id="tool-box-kombi" class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
             <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Kombi</div>
-            <div class="grid grid-cols-2 gap-1 h-full items-stretch">
-              <div class="flex flex-col gap-1">
-                <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none">FF-SSS</button>
-                <button type="button" data-pattern="NN-FF" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
-              </div>
-              <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn h-full rounded-md text-[8px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
+            <div id="kombi-btn-grid" class="grid grid-cols-3 gap-1">
+                <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn py-2 rounded-md text-[9px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none">FF-SSS</button>
+                <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn py-2 rounded-md text-[9px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
+                <button type="button" data-pattern="NN-FF" class="tool-pattern-btn py-2 rounded-md text-[9px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
             </div>
           </div>
         </div>
@@ -122,14 +123,48 @@
     <div id="roster-kw-list" class="flex flex-col gap-3"></div>
 
     <div class="text-center mt-6 mb-2 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v015
+      v016
     </div>
   </main>
 
   <!-- ========================================================= -->
-  <!-- MODALS (Einstellungen, Backup, Drive)                     -->
+  <!-- MODALS (Statistik, Einstellungen, Backup, Drive)          -->
   <!-- ========================================================= -->
   
+  <!-- MODAL: Jahres-Statistik (Schichten) -->
+  <div id="modal-stats" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-base font-extrabold">📊 Jahresübersicht <span id="stats-year-title"></span></h3>
+        <button type="button" id="btn-close-stats" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      
+      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-center border-collapse table-fixed">
+          <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px]">
+            <tr>
+              <th class="py-2 px-1 text-left w-[18%]">Monat</th>
+              <th class="py-2 px-0.5 text-yellow-600 dark:text-yellow-400">F</th>
+              <th class="py-2 px-0.5 text-green-600 dark:text-green-400">S</th>
+              <th class="py-2 px-0.5 text-cyan-600 dark:text-cyan-400">N</th>
+              <th class="py-2 px-0.5 text-pink-600 dark:text-pink-400">Z</th>
+              <th class="py-2 px-0.5 text-slate-600 dark:text-slate-400">LG</th>
+              <th class="py-2 px-0.5 text-purple-600 dark:text-purple-400">U</th>
+              <th class="py-2 px-0.5 text-red-600 dark:text-red-400">K</th>
+              <th class="py-2 px-0.5 text-teal-600 dark:text-teal-400">FS</th>
+            </tr>
+          </thead>
+          <tbody id="stats-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold">
+            <!-- Befüllt via JS -->
+          </tbody>
+          <tfoot id="stats-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold text-[11px] border-t-2 border-slate-300 dark:border-slate-700">
+            <!-- Befüllt via JS -->
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Einstellungen -->
   <div id="modal-settings" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
@@ -163,7 +198,7 @@
             <input type="checkbox" id="setting-show-kombi" class="w-5 h-5 mt-0.5 accent-blue-600">
             <div>
               <span class="font-bold text-sm block">Kombi-Bereich anzeigen</span>
-              <span class="text-xs text-slate-500 block leading-snug">Zeigt oben rechts die Buttons für Schichtkombinationen (FF-SSS, etc.) an.</span>
+              <span class="text-xs text-slate-500 block leading-snug">Zeigt die Buttons für Schichtkombinationen (FF-SSS, etc.) an und stapelt die Einzelschichten 2-reihig.</span>
             </div>
           </label>
         </div>
@@ -252,7 +287,6 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Falls wir später hier auch den Install-Button freischalten wollen
     });
 
     const SHIFTS = [
@@ -262,7 +296,8 @@
       { code: '0135', short: 'Z' },
       { code: 'LEHRGANG', short: 'LG' },
       { code: 'URLAUB', short: 'U' },
-      { code: 'KRANK',  short: 'K' }
+      { code: 'KRANK',  short: 'K' },
+      { code: 'FS',     short: 'FS' }
     ];
 
     const WEEK_PATTERNS = {
@@ -330,7 +365,6 @@
 
     function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     
-    // Neuer Dateiname Generator mit Zeitstempel für Schichtplan
     function toTimestampFilename() { 
       const d = new Date();
       const datePart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -412,14 +446,15 @@
     let activeWeekPattern = null;
 
     function applyKombiVisibility() {
-      const boxSingle = document.getElementById('tool-box-single');
       const boxKombi = document.getElementById('tool-box-kombi');
+      const singleGrid = document.getElementById('single-btn-grid');
+      
       if (metaDB.showKombi) {
-        boxSingle.className = 'col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
-        boxKombi.className = 'col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
+        boxKombi.classList.remove('hidden');
+        singleGrid.className = 'grid grid-cols-4 gap-1';
       } else {
-        boxSingle.className = 'col-span-12 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
-        boxKombi.className = 'hidden';
+        boxKombi.classList.add('hidden');
+        singleGrid.className = 'grid grid-cols-8 gap-1';
       }
     }
 
@@ -441,7 +476,7 @@
       if (code === '0112') return 'shift-cell-0112'; if (code === '0111') return 'shift-cell-0111';
       if (code === '0113') return 'shift-cell-0113'; if (code === '0135') return 'shift-cell-0135';
       if (code === 'URLAUB') return 'shift-cell-URLAUB'; if (code === 'KRANK') return 'shift-cell-KRANK';
-      if (code === 'LEHRGANG') return 'shift-cell-LEHRGANG';
+      if (code === 'LEHRGANG') return 'shift-cell-LEHRGANG'; if (code === 'FS') return 'shift-cell-FS';
       return isWeekend ? 'shift-cell-FREI-we' : 'shift-cell-FREI-wd';
     }
 
@@ -461,6 +496,67 @@
     function scrollToRosterElement(el) {
       if (!el) return; const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 135;
       window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 8, behavior: 'smooth' });
+    }
+
+    function renderStats() {
+      document.getElementById('stats-year-title').textContent = rosterYear;
+      const tbody = document.getElementById('stats-table-body');
+      const tfoot = document.getElementById('stats-table-foot');
+      tbody.innerHTML = '';
+      
+      let total = { F: 0, S: 0, N: 0, Z: 0, LG: 0, U: 0, K: 0, FS: 0 };
+      
+      for (let m = 0; m < 12; m++) {
+        const daysInMonth = new Date(rosterYear, m + 1, 0).getDate();
+        let counts = { F: 0, S: 0, N: 0, Z: 0, LG: 0, U: 0, K: 0, FS: 0 };
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+          const iso = toISODate(new Date(rosterYear, m, d));
+          const shift = rosterDB[iso];
+          
+          if (shift === '0112') counts.F++;
+          else if (shift === '0111') counts.S++;
+          else if (shift === '0113') counts.N++;
+          else if (shift === '0135') counts.Z++;
+          else if (shift === 'LEHRGANG') counts.LG++;
+          else if (shift === 'URLAUB' || shift === '0109') counts.U++;
+          else if (shift === 'KRANK') counts.K++;
+          else if (shift === 'FS') counts.FS++;
+        }
+        
+        total.F += counts.F; total.S += counts.S; total.N += counts.N;
+        total.Z += counts.Z; total.LG += counts.LG; total.U += counts.U; total.K += counts.K; total.FS += counts.FS;
+
+        const isCurrentMonth = (m === new Date().getMonth() && rosterYear === new Date().getFullYear());
+        const tr = document.createElement('tr');
+        tr.className = isCurrentMonth ? 'bg-blue-100/50 dark:bg-blue-900/30 font-extrabold ring-1 ring-blue-500 rounded-lg' : '';
+        tr.innerHTML = `
+          <td class="py-2 px-1 text-left ${isCurrentMonth ? 'text-blue-700 dark:text-blue-300' : ''}">${MONTH_SHORT[m]}</td>
+          <td class="py-2 px-0.5 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
+          <td class="py-2 px-0.5 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
+          <td class="py-2 px-0.5 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
+          <td class="py-2 px-0.5 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
+          <td class="py-2 px-0.5 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
+          <td class="py-2 px-0.5 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
+          <td class="py-2 px-0.5 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
+          <td class="py-2 px-0.5 ${counts.FS ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.FS}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+      
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-2 px-1 text-left">JAHR</td>
+          <td class="py-2 px-0.5 text-yellow-600 dark:text-yellow-400">${total.F}</td>
+          <td class="py-2 px-0.5 text-green-600 dark:text-green-400">${total.S}</td>
+          <td class="py-2 px-0.5 text-cyan-600 dark:text-cyan-400">${total.N}</td>
+          <td class="py-2 px-0.5 text-pink-600 dark:text-pink-400">${total.Z}</td>
+          <td class="py-2 px-0.5 text-slate-600 dark:text-slate-400">${total.LG}</td>
+          <td class="py-2 px-0.5 text-purple-600 dark:text-purple-400">${total.U}</td>
+          <td class="py-2 px-0.5 text-red-600 dark:text-red-400">${total.K}</td>
+          <td class="py-2 px-0.5 text-teal-600 dark:text-teal-400">${total.FS}</td>
+        </tr>
+      `;
     }
 
     function renderRosterYear(scrollToToday = false) {
@@ -622,6 +718,13 @@
       document.getElementById('btn-roster-year-prev').addEventListener('click', () => { rosterYear--; renderRosterYear(false); });
       document.getElementById('btn-roster-year-next').addEventListener('click', () => { rosterYear++; renderRosterYear(false); });
       document.getElementById('btn-roster-scroll-today').addEventListener('click', () => { rosterYear = new Date().getFullYear(); renderRosterYear(true); });
+
+      // STATISTIK MODAL
+      document.getElementById('btn-open-stats-modal').addEventListener('click', () => { 
+        renderStats(); 
+        document.getElementById('modal-stats').classList.remove('hidden'); 
+      });
+      document.getElementById('btn-close-stats').addEventListener('click', () => document.getElementById('modal-stats').classList.add('hidden'));
 
       // EINSTELLUNGEN
       document.getElementById('btn-open-settings-modal').addEventListener('click', () => { document.getElementById('modal-settings').classList.remove('hidden'); });
