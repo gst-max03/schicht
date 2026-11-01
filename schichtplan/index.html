@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Schichtplan</title>
+  <title>Schicht- & Zeiterfassung</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="manifest.json">
@@ -24,6 +24,66 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Wheel Picker */
+    .wheel-wrapper {
+      position: relative;
+      height: 132px;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      user-select: none;
+    }
+    .wheel-highlight {
+      position: absolute;
+      top: 50%;
+      left: 4px;
+      right: 4px;
+      height: 36px;
+      transform: translateY(-50%);
+      border-radius: 0.5rem;
+      pointer-events: none;
+      z-index: 1;
+      background: rgba(59, 130, 246, 0.14);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+    .dark .wheel-highlight {
+      background: rgba(59, 130, 246, 0.24);
+      border-color: rgba(96, 165, 250, 0.5);
+    }
+    .wheel-scroller {
+      height: 100%;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-top: 48px;
+      padding-bottom: 48px;
+      position: relative;
+      z-index: 2;
+      touch-action: pan-y;
+    }
+    .wheel-scroller::-webkit-scrollbar { display: none; }
+    .wheel-item {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      scroll-snap-align: center;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: #64748b;
+      transition: all 0.1s ease;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+    .dark .wheel-item { color: #94a3b8; }
+    .wheel-item.active {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .dark .wheel-item.active { color: #f8fafc; }
+
     /* Schichtplan Farben */
     .shift-cell-0112 { background-color: #fde047 !important; color: #000000 !important; font-weight: 900; border-color: #eab308 !important; }
     .shift-cell-0111 { background-color: #22c55e !important; color: #000000 !important; font-weight: 900; border-color: #16a34a !important; }
@@ -31,6 +91,7 @@
     .shift-cell-0135 { background-color: #f9a8d4 !important; color: #000000 !important; font-weight: 900; border-color: #f472b6 !important; }
     .shift-cell-URLAUB { background-color: #9333ea !important; color: #ffffff !important; font-weight: 900; border-color: #7e22ce !important; }
     .shift-cell-KRANK { background-color: #ef4444 !important; color: #ffffff !important; font-weight: 900; border-color: #dc2626 !important; }
+    .shift-cell-FS { background-color: #14b8a6 !important; color: #ffffff !important; font-weight: 900; border-color: #0d9488 !important; }
     .shift-cell-LEHRGANG { background-color: #cbd5e1 !important; color: #000000 !important; font-weight: 900; border-color: #94a3b8 !important; }
     
     .shift-cell-FREI-we { background-color: #f8fafc; color: #c2410c; border-color: #fb923c; }
@@ -40,8 +101,7 @@
     .dark .shift-cell-FREI-wd { background-color: #0f172a; color: #64748b; border-color: #334155; }
 
     .tool-active {
-      outline: 3px solid !important;
-      outline-color: #2563eb !important;
+      outline: 3px solid #2563eb !important;
       outline-offset: 1px;
       transform: scale(1.04);
       opacity: 1 !important;
@@ -55,32 +115,163 @@
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
 
   <!-- ========================================================= -->
-  <!-- HAUPTANSICHT: SCHICHTPLAN                                 -->
+  <!-- ANSICHT 1: HAUPTANSICHT (STEMPELN)                        -->
   <!-- ========================================================= -->
-  <main id="view-roster" class="max-w-lg mx-auto px-2 pb-12 pt-2">
+  <main id="view-main" class="max-w-md mx-auto px-2.5 pt-2.5 pb-8 flex flex-col gap-2.5">
+    <header class="flex justify-end items-center gap-2 py-0.5">
+      <button type="button" onclick="window.switchView('roster')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
+        <span>🗓️</span>
+        <span>Schichtplan</span>
+      </button>
+      <button type="button" onclick="window.switchView('overview')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
+        <span>📅</span>
+        <span>Übersicht</span>
+      </button>
+    </header>
+
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div class="grid grid-cols-2 gap-2 text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+        <div>Datum wählen</div>
+        <div class="flex items-center justify-center gap-1">
+          <span>Schicht (TAZP)</span>
+          <span id="roster-indicator" class="hidden text-[9px] px-1.5 py-0.2 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded font-extrabold">PLAN</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+          <div class="wheel-highlight"></div>
+          <div id="wheel-date" class="wheel-scroller"></div>
+        </div>
+        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+          <div class="wheel-highlight"></div>
+          <div id="wheel-shift" class="wheel-scroller"></div>
+        </div>
+      </div>
+      <div class="flex justify-between items-center mt-2 px-1">
+        <button type="button" id="btn-jump-today" class="text-xs font-semibold text-blue-600 dark:text-blue-400 active:opacity-70">⟲ Auf Heute springen</button>
+        <span id="shift-source-hint" class="text-[10px] text-slate-400 dark:text-slate-500 font-medium"></span>
+        <span id="holiday-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 hidden">🎉 Feiertag</span>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 gap-2">
+      <button type="button" id="card-in" class="p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">🟢 Kommen</span>
+          <span id="badge-active-in" class="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded">Rad aktiv</span>
+        </div>
+        <div id="val-time-in" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 tracking-tight">--:--</div>
+        <div id="sub-time-in" class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">Nicht gebucht</div>
+      </button>
+
+      <button type="button" id="card-out" class="p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-rose-600 dark:text-rose-400">🔴 Gehen</span>
+          <span id="badge-active-out" class="text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded hidden">Rad aktiv</span>
+        </div>
+        <div id="val-time-out" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 tracking-tight">--:--</div>
+        <div id="sub-time-out" class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">Nicht gebucht</div>
+      </button>
+    </section>
+
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div class="flex justify-between items-center mb-1 px-1">
+        <span id="label-wheel-target" class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Uhrzeit für KOMMEN wählen</span>
+        <div class="flex gap-2.5 text-xs font-semibold">
+          <button type="button" id="btn-set-now" class="text-blue-600 dark:text-blue-400 active:opacity-70">⚡ Jetzt</button>
+          <button type="button" id="btn-set-default" class="text-slate-500 dark:text-slate-400 active:opacity-70">Kernzeit</button>
+          <button type="button" id="btn-clear-time" class="text-rose-500 active:opacity-70">Löschen</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 items-center relative">
+        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+          <div class="wheel-highlight"></div>
+          <div id="wheel-hour" class="wheel-scroller"></div>
+        </div>
+        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+          <div class="wheel-highlight"></div>
+          <div id="wheel-minute" class="wheel-scroller"></div>
+        </div>
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-lg text-slate-400 pointer-events-none">:</div>
+      </div>
+    </section>
+
+    <div class="flex gap-2">
+      <button type="button" id="btn-save-entry" class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+        <span>💾</span>
+        <span id="btn-save-label">Tag speichern</span>
+      </button>
+      <button type="button" id="btn-delete-day" title="Eintrag für diesen Tag löschen" class="w-12 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 hover:border-rose-500 text-rose-600 dark:text-rose-400 font-bold rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center">
+        <span class="text-lg">🗑️</span>
+      </button>
+      <button type="button" id="btn-open-special" title="Sonderbuchung & Optionen" class="w-12 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 hover:border-blue-500 text-slate-700 dark:text-slate-200 font-bold rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center relative">
+        <span class="text-lg">⚙️</span>
+        <span id="dot-special-active" class="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -top-1 -right-1 hidden"></span>
+      </button>
+    </div>
+
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="flex justify-between items-center mb-1.5">
+        <span id="live-card-title" class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Heute</span>
+        <span id="live-card-shift" class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300">Früh (0112)</span>
+      </div>
+      <div class="grid grid-cols-4 gap-1 text-center py-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+        <div>
+          <div class="text-[10px] text-slate-400 font-semibold">IST</div>
+          <div id="live-ist" class="text-xs font-bold text-slate-700 dark:text-slate-200">0,00</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-slate-400 font-semibold">VERR</div>
+          <div id="live-verr" class="text-xs font-extrabold text-slate-900 dark:text-white">0,00</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-slate-400 font-semibold">SOLL</div>
+          <div id="live-soll" class="text-xs font-bold text-slate-600 dark:text-slate-400">8,00</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-slate-400 font-semibold">MEHR</div>
+          <div id="live-mehr" class="text-xs font-extrabold text-slate-400">0,00</div>
+        </div>
+      </div>
+      <div id="live-info-line" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 text-center font-medium">
+        Noch keine Buchung für diesen Tag
+      </div>
+    </section>
+
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+        Die letzten 5 Tage (Antippen = Bearbeiten • Nochmal = Zurück ✏️)
+      </div>
+      <div id="recent-days-list" class="flex flex-col gap-1.5"></div>
+    </section>
+    
+    <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
+      v055
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- ANSICHT 2: SCHICHTPLAN                                    -->
+  <!-- ========================================================= -->
+  <section id="view-roster" class="hidden max-w-lg mx-auto px-2 pb-16">
     <div id="roster-fixed-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-2 px-2 border-b border-slate-300 dark:border-slate-800 shadow-md">
       <div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 flex flex-col gap-2">
-        
-        <!-- Top Navigation -->
         <div class="flex justify-between items-center gap-1">
+          <button type="button" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95">
+            ⬅ Zurück
+          </button>
           <div class="flex items-center gap-1">
-            <button type="button" id="btn-roster-year-prev" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition">◀</button>
-            <span id="roster-year-title" class="text-base font-black px-2">2026</span>
-            <button type="button" id="btn-roster-year-next" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition">▶</button>
+            <button type="button" id="btn-roster-year-prev" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">◀</button>
+            <span id="roster-year-title" class="text-sm font-black px-2">2026</span>
+            <button type="button" id="btn-roster-year-next" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">▶</button>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95 shadow-sm transition">📍 Heute</button>
-            <button type="button" id="btn-open-drive-modal" class="px-2.5 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Google Drive Sync">☁️</button>
-            <button type="button" id="btn-open-backup-modal" class="px-2.5 py-1 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Lokales Backup">💾</button>
-            <button type="button" id="btn-open-settings-modal" class="px-2.5 py-1 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-lg active:scale-95 transition shadow-sm" title="Einstellungen">⚙️</button>
-          </div>
+          <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95">
+            📍 Heute
+          </button>
         </div>
 
-        <!-- Werkzeugleiste (Grid dynamisch über JS) -->
-        <div id="tool-grid-container" class="grid grid-cols-12 gap-1.5 items-stretch">
-          
-          <!-- Einzelschichten -->
-          <div id="tool-box-single" class="col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
+        <div class="grid grid-cols-12 gap-1.5 items-stretch">
+          <div class="col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
             <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Tag oder KW (Mo–Fr)</div>
             <div class="grid grid-cols-7 gap-1">
               <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
@@ -93,44 +284,123 @@
             </div>
           </div>
 
-          <!-- Kombi-Wochen -->
-          <div id="tool-box-kombi" class="col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
-            <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Kombi</div>
+          <div class="col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between h-full">
             <div class="grid grid-cols-2 gap-1 h-full items-stretch">
-              <div class="flex flex-col gap-1">
+              <div class="flex flex-col gap-1 h-full">
                 <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none">FF-SSS</button>
-                <button type="button" data-pattern="NN-FF" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
+                <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
               </div>
-              <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn h-full rounded-md text-[8px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
+              <button type="button" data-pattern="NN-FF" class="tool-pattern-btn h-full rounded-md text-[8px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
             </div>
           </div>
         </div>
 
         <div id="roster-tool-hint" class="text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-          👆 Links Schicht wählen, dann unten auf Tage oder KW tippen.
+          👆 Links wählen (Tag tippen = Einzeltag | KW tippen = Mo–Fr) oder rechts Kombi wählen
         </div>
 
-        <!-- Monats-Sprungmarken -->
-        <div id="roster-month-pills" class="grid grid-cols-6 gap-1 text-[10px] font-bold mt-1"></div>
+        <div id="roster-month-pills" class="grid grid-cols-6 gap-1 text-[10px] font-bold"></div>
       </div>
     </div>
 
-    <!-- Platzhalter für den fixed Header -->
     <div id="roster-header-spacer" class="h-[235px]"></div>
-    
-    <!-- Liste aller Wochen -->
     <div id="roster-kw-list" class="flex flex-col gap-3"></div>
-
-    <div class="text-center mt-6 mb-2 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v015
-    </div>
-  </main>
+  </section>
 
   <!-- ========================================================= -->
-  <!-- MODALS (Einstellungen, Backup, Drive)                     -->
+  <!-- ANSICHT 3: MONATSÜBERSICHT (NEUES HEADER DESIGN)          -->
+  <!-- ========================================================= -->
+  <section id="view-overview" class="hidden max-w-md mx-auto px-2 pt-2.5 pb-14 flex flex-col gap-2.5">
+    
+    <div class="flex justify-between items-center gap-1 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <button type="button" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition">
+        ⬅ Zurück
+      </button>
+      <div class="flex items-center gap-1.5">
+        <button type="button" id="btn-open-stats-modal" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-slate-800 rounded-xl text-base active:scale-95 transition shadow-sm" title="Jahresstatistik">📊</button>
+        <button type="button" id="btn-open-drive-modal" class="px-2.5 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-slate-800 rounded-xl text-base active:scale-95 transition shadow-sm" title="Google Drive Sync">☁️</button>
+        <button type="button" id="btn-open-backup-modal" class="px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Lokales Backup">💾</button>
+        <button type="button" id="btn-open-settings-modal" class="px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Einstellungen & Design">⚙️</button>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
+      <button type="button" id="btn-prev-month" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm active:scale-95">◀</button>
+      <div class="text-center">
+        <div id="overview-month-title" class="text-sm font-extrabold text-slate-900 dark:text-white">Oktober 2026</div>
+        <div class="text-[10px] text-slate-400"><span id="header-kostenstelle">Meine Kostenstelle</span> • 165,00 h Auszahlungs-Basis</div>
+      </div>
+      <button type="button" id="btn-next-month" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm active:scale-95">▶</button>
+    </div>
+
+    <!-- 4 Kacheln -->
+    <div class="grid grid-cols-2 gap-2">
+      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-bold uppercase text-slate-400">VERR (165h Basis)</span>
+          <button type="button" id="btn-open-verr-modal" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 underline">⚙️ Anpassen</button>
+        </div>
+        <div id="sum-verr-total" class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">0,00 h</div>
+        <div id="sum-fs-aufbau" class="text-[11px] font-bold text-emerald-600">FS-Aufbau: +0,00 h</div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-bold uppercase text-slate-400">FS-Konto</span>
+          <button type="button" id="btn-open-fs-modal" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 underline">⚙️ Anpassen</button>
+        </div>
+        <div id="sum-fs-current" class="text-base font-extrabold text-blue-600 dark:text-blue-400 mt-0.5">143,69 h</div>
+        <div id="sum-fs-sub" class="text-[10px] text-slate-400 truncate">Vorm.: 143,69 h</div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="text-[10px] font-bold uppercase text-slate-400">Mehrarbeit</div>
+        <div id="sum-overtime-total" class="text-base font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">0,00 h</div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-bold uppercase text-slate-400">Resturlaub</span>
+          <button type="button" id="btn-open-vac-modal" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 underline">⚙️ Anpassen</button>
+        </div>
+        <div class="flex items-baseline gap-1 mt-0.5">
+          <span id="sum-vacation-left" class="text-base font-extrabold text-slate-900 dark:text-white">30</span>
+          <span class="text-[11px] font-bold text-slate-500">Tage</span>
+          <span id="badge-sonderurlaub-overview" class="hidden px-1.5 py-0.2 text-[11px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded border border-emerald-400">+1</span>
+        </div>
+        <div id="sum-vacation-sub" class="text-[10px] text-slate-400 truncate">Aktueller Stand</div>
+      </div>
+    </div>
+
+    <!-- KOMPAKTE SMARTPHONE-TABELLE -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="flex justify-between items-center px-1 mb-1.5">
+        <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Monatsliste (Antippen zum Ändern ✏️)</span>
+      </div>
+      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-left border-collapse table-fixed">
+          <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px]">
+            <tr>
+              <th class="py-2 px-1.5 w-[16%]">Tag</th>
+              <th class="py-2 px-1 w-[14%] text-center">Sch.</th>
+              <th class="py-2 px-1 w-[31%]">Kommt–Geht</th>
+              <th class="py-2 px-1 w-[11%] text-right">IST</th>
+              <th class="py-2 px-1 w-[12%] text-right">VERR</th>
+              <th class="py-2 px-1.5 w-[14%] text-right">Mehr</th>
+            </tr>
+          </thead>
+          <tbody id="overview-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]"></tbody>
+          <tfoot id="overview-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold text-[11px] border-t-2 border-slate-300 dark:border-slate-700"></tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- MODALS (Einstellungen, Backup, Drive, etc.)               -->
   <!-- ========================================================= -->
   
-  <!-- MODAL: Einstellungen -->
+  <!-- MODAL: Einstellungen (Theme & Sonntag) -->
   <div id="modal-settings" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -149,21 +419,12 @@
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Schichtplan Optionen</div>
-          
-          <label class="flex items-start gap-3 cursor-pointer mb-3">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Nachtschicht-Rhythmus</div>
+          <label class="flex items-start gap-3 cursor-pointer">
             <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
             <div>
               <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
-              <span class="text-xs text-slate-500 block leading-snug">Wenn aktiv: Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche aus.</span>
-            </div>
-          </label>
-
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" id="setting-show-kombi" class="w-5 h-5 mt-0.5 accent-blue-600">
-            <div>
-              <span class="font-bold text-sm block">Kombi-Bereich anzeigen</span>
-              <span class="text-xs text-slate-500 block leading-snug">Zeigt oben rechts die Buttons für Schichtkombinationen (FF-SSS, etc.) an.</span>
+              <span class="text-xs text-slate-500 block leading-snug">Wenn aktiv: Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche.</span>
             </div>
           </label>
         </div>
@@ -175,23 +436,100 @@
     </div>
   </div>
 
+  <!-- MODAL: VERR & Kostenstelle anpassen -->
+  <div id="modal-verr" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-base font-extrabold">⚙️ VERR & Kostenstelle</h3>
+        <button type="button" id="btn-close-verr" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      
+      <div class="flex flex-col gap-3">
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <label class="text-[11px] font-extrabold uppercase text-slate-500 block mb-1">Kostenstelle (Anzeige oben)</label>
+          <input type="text" id="input-kostenstelle" placeholder="Z. B. Instandhaltung" class="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-sm">
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Berechnungs-Regeln</div>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" id="setting-cap-early" class="w-5 h-5 mt-0.5 accent-blue-600">
+            <div>
+              <span class="font-bold text-sm block">Kappung der VERR-Zeit vor Schichtbeginn</span>
+              <span class="text-xs text-slate-500 block leading-snug">Wenn aktiv, werden z.B. bei der Frühschicht (Beginn 05:45) Einstempel-Zeiten vor 05:45 Uhr nicht zur VERR-Zeit addiert.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button type="button" id="btn-save-verr" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md active:scale-95 transition mt-2">
+        Speichern & Schließen
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Jahres-Statistik (Schichten) -->
+  <div id="modal-stats" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-base font-extrabold">📊 Jahresübersicht <span id="stats-year-title"></span></h3>
+        <button type="button" id="btn-close-stats" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      
+      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-center border-collapse table-fixed">
+          <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px]">
+            <tr>
+              <th class="py-2 px-1 text-left w-[20%]">Monat</th>
+              <th class="py-2 px-1 text-yellow-600 dark:text-yellow-400">F</th>
+              <th class="py-2 px-1 text-green-600 dark:text-green-400">S</th>
+              <th class="py-2 px-1 text-cyan-600 dark:text-cyan-400">N</th>
+              <th class="py-2 px-1 text-pink-600 dark:text-pink-400">Z</th>
+              <th class="py-2 px-1 text-slate-600 dark:text-slate-400">LG</th>
+              <th class="py-2 px-1 text-purple-600 dark:text-purple-400">U</th>
+              <th class="py-2 px-1 text-red-600 dark:text-red-400">K</th>
+            </tr>
+          </thead>
+          <tbody id="stats-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold">
+            <!-- Befüllt via JS -->
+          </tbody>
+          <tfoot id="stats-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold text-[11px] border-t-2 border-slate-300 dark:border-slate-700">
+            <!-- Befüllt via JS -->
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Backup & Export -->
   <div id="modal-backup" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold">💾 Lokales Backup</h3>
+        <h3 class="text-base font-extrabold">💾 Backup & Export (CSV)</h3>
         <button type="button" id="btn-close-backup" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
       </div>
       
       <div class="flex flex-col gap-3">
         <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Schichtplan (CSV Daten)</div>
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Daten-Export (Für Excel)</div>
+          <div class="flex flex-col gap-2">
+            <button type="button" id="btn-month-csv-export" class="w-full py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition">
+              📥 Ausgewählten Monat als CSV
+            </button>
+            <button type="button" id="btn-year-csv-export" class="w-full py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition">
+              📥 Ausgewähltes Jahr als CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Backup (App-Daten)</div>
           <div class="flex flex-col gap-2">
             <button type="button" id="btn-full-backup-export" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition">
-              <span>📤</span> Schichtplan Exportieren
+              <span>📤</span> Backup Exportieren
             </button>
             <label class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition">
-              <span>📥</span> Schichtplan Wiederherstellen
+              <span>📥</span> Backup Wiederherstellen
               <input type="file" id="input-full-backup-import" accept=".csv" class="hidden">
             </label>
           </div>
@@ -200,7 +538,87 @@
     </div>
   </div>
 
-  <!-- MODAL: Google Drive Sync -->
+  <div id="modal-delete-confirm" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col items-center text-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl">🗑️</div>
+      <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tag löschen?</h3>
+      <p id="delete-modal-date-text" class="text-xs text-slate-500 dark:text-slate-400 font-semibold"></p>
+      <div class="grid grid-cols-2 gap-2.5 w-full mt-1">
+        <button type="button" id="btn-confirm-delete-yes" class="py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs shadow-sm active:scale-95 transition">JA</button>
+        <button type="button" id="btn-confirm-delete-no" class="py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold rounded-xl text-xs active:scale-95 transition">NEIN</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-special" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3 my-auto">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 id="special-modal-title" class="text-sm font-extrabold">⚙️ Sonderbuchung & Optionen</h3>
+        <button type="button" id="btn-close-special" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <div class="text-xs font-bold text-slate-500">1. Zeitblöcke an diesem Tag (bis zu 3x Kommen/Gehen):</div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div><label class="text-[10px] text-slate-400">Block 1 Kommt</label><input type="time" id="sp-in-1" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
+          <div><label class="text-[10px] text-slate-400">Block 1 Geht</label><input type="time" id="sp-out-1" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
+          <div><label class="text-[10px] text-slate-400">Block 2 Kommt</label><input type="time" id="sp-in-2" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
+          <div><label class="text-[10px] text-slate-400">Block 2 Geht</label><input type="time" id="sp-out-2" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
+          <div><label class="text-[10px] text-slate-400">Block 3 Kommt</label><input type="time" id="sp-in-3" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
+          <div><label class="text-[10px] text-slate-400">Block 3 Geht</label><input type="time" id="sp-out-3" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold text-slate-500">2. Zusatzstunden / Bezahlter Arztbesuch (z.B. 1,5):</label>
+        <input type="text" id="sp-doctor-hours" placeholder="0,0 (oder 01:30)" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm border border-slate-300 dark:border-slate-700">
+      </div>
+      <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+        <div class="font-bold text-slate-500 uppercase text-[10px]">3. Tagestyp-Optionen</div>
+        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-paid-holiday" class="w-4 h-4 accent-blue-600"><span>Feiertag bezahlt (Nicht gearbeitet → 8,00h VERR)</span></label>
+        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-fill-fs" class="w-4 h-4 accent-blue-600"><span>Fehlzeit bis 8,00h aus FS-Konto auffüllen (Freizeit FS)</span></label>
+        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-unpaid-child" class="w-4 h-4 accent-amber-600"><span>Kind krank unbezahlt (Reduziert 165h-Basis)</span></label>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold text-slate-500">4. Notiz / Bemerkung:</label>
+        <input type="text" id="sp-note" placeholder="z.B. Arztbesuch, Umbau..." class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
+      </div>
+      <button type="button" id="btn-save-special" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md">💾 Übernehmen & Speichern</button>
+    </div>
+  </div>
+
+  <div id="modal-fs" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3 my-auto">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-sm font-extrabold">⚙️ FS-Konto & Urlaub anpassen</h3>
+        <button type="button" id="btn-close-fs" class="text-slate-400 text-lg font-bold px-2">✕</button>
+      </div>
+      <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+        <div class="font-extrabold uppercase text-[10px] text-blue-600 dark:text-blue-400">1. FS-Konto (Monat: <span id="fs-modal-month-label"></span>)</div>
+        <div>
+          <label class="font-bold">FS-Konto Vormonat (Startwert in Std.):</label>
+          <input type="number" step="0.01" id="fs-input-prev" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold" placeholder="z.B. 143,69">
+          <div class="text-[10px] text-slate-500 mt-1">Hinweis: Wird ohne manuelle Eingabe automatisch aus dem Vormonat übernommen.</div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold">Auszahlung (Std.):</label><input type="number" step="0.01" id="fs-input-payout" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold"></div>
+          <div><label class="font-bold">Korrektur (+/- Std.):</label><input type="number" step="0.01" id="fs-input-corr" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold"></div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+        <div class="font-extrabold uppercase text-[10px] text-emerald-600 dark:text-emerald-400">2. Urlaubs-Anspruch (<span id="vac-modal-year-label">2026</span>)</div>
+        <div>
+          <label class="font-bold">Basis-Urlaubsanspruch (z.B. 30 Tage):</label>
+          <input type="number" step="0.5" id="vac-input-current" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-sm">
+        </div>
+        <div class="pt-1">
+          <label class="font-bold text-emerald-700 dark:text-emerald-400">Zusätzlicher Sonderurlaub (Tage):</label>
+          <input type="number" step="0.5" id="vac-input-sonder" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-sm text-emerald-700">
+        </div>
+        <div id="vac-modal-taken-hint" class="text-[10px] text-slate-400 mt-1">Trage den generellen Anspruch für das Jahr ein. Die bisher eingetragenen „U“-Tage werden automatisch abgezogen.</div>
+      </div>
+      <button type="button" id="btn-save-fs" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md">💾 Werte speichern</button>
+    </div>
+  </div>
+
   <div id="modal-drive" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3">
     <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3">
       <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -228,8 +646,8 @@
         </div>
         
         <div class="p-2.5 bg-slate-200 dark:bg-slate-700 rounded-xl">
-          <label class="text-[10px] font-bold block mb-1">Speicherpfad (in "Meine Ablage"):</label>
-          <input type="text" id="drive-folder-input" value="Schicht/PWA_Schichtplan" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs font-mono">
+          <label class="text-[10px] font-bold block mb-1">Speicherpfad in Google Drive:</label>
+          <input type="text" id="drive-folder-input" value="Schicht/PWA_Zeiterfassung" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs font-mono">
           <button type="button" id="btn-copy-script" class="mt-2 w-full py-2.5 bg-slate-800 dark:bg-slate-600 text-white font-bold rounded-lg text-xs active:scale-95 transition">
             📋 Apps Script Code kopieren
           </button>
@@ -252,17 +670,24 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Falls wir später hier auch den Install-Button freischalten wollen
+      const installBtn = document.getElementById('btn-install-pwa');
+      if (installBtn) installBtn.classList.remove('hidden');
     });
 
+    const PAYOUT_BASELINE_HOURS = 165.00;
+    const DEFAULT_VACATION_DAYS = 30;
+
     const SHIFTS = [
-      { code: '0112', short: 'F' },
-      { code: '0111', short: 'S' },
-      { code: '0113', short: 'N' },
-      { code: '0135', short: 'Z' },
-      { code: 'LEHRGANG', short: 'LG' },
-      { code: 'URLAUB', short: 'U' },
-      { code: 'KRANK',  short: 'K' }
+      { code: '0112', name: 'Früh (0112)',       short: 'F',  label: 'Früh',  start: '05:45', end: '13:45', soll: 8.0 },
+      { code: '0111', name: 'Spät (0111)',       short: 'S',  label: 'Spät',  start: '13:45', end: '21:45', soll: 8.0 },
+      { code: '0113', name: 'Nacht (0113)',      short: 'N',  label: 'Nacht', start: '21:45', end: '05:45', soll: 8.0 },
+      { code: '0135', name: 'ZBV (0135)',        short: 'Z',  label: 'ZBV',   start: '05:45', end: '14:15', soll: 8.0 },
+      { code: 'LEHRGANG', name: 'Lehrgang (LG)', short: 'LG', label: 'LG',    start: '07:00', end: '15:00', soll: 8.0 },
+      { code: 'FREI', name: 'Frei (FREI)',       short: '',   label: 'FREI',  start: '',      end: '',      soll: 0.0 },
+      { code: 'URLAUB', name: 'Urlaub (0109)',   short: 'U',  label: 'Url.',  start: '',      end: '',      soll: 8.0 },
+      { code: 'KRANK',  name: 'Krank (0109)',    short: 'K',  label: 'Krank', start: '',      end: '',      soll: 8.0 },
+      { code: 'FS',     name: 'Freischicht (FS)', short: 'FS', label: 'FS',    start: '',      end: '',      soll: 8.0 },
+      { code: 'FEIERTAG', name: 'Feiertag bez.', short: 'Ft.bzh', label: 'Ft.bzh', start: '', end: '',    soll: 8.0 }
     ];
 
     const WEEK_PATTERNS = {
@@ -287,27 +712,31 @@
     function getHolidaysForYear(year) {
       if (holidayCache[year]) return holidayCache[year];
       const h = {};
-      const add = (m, d) => { h[`${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`] = true; };
-      add(1, 1); add(1, 6); add(5, 1); add(8, 15);
-      add(10, 3); add(11, 1); add(12, 25); add(12, 26);
+      const add = (m, d, name) => { h[`${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`] = name; };
+      add(1, 1, 'Neujahr'); add(1, 6, 'Hl. 3 Könige'); add(5, 1, 'Tag d. Arbeit'); add(8, 15, 'Mariä Himmelf.');
+      add(10, 3, 'Dt. Einheit'); add(11, 1, 'Allerheiligen'); add(12, 25, '1. Weihn.'); add(12, 26, '2. Weihn.');
       const easter = getEasterDate(year);
-      const addDays = (days) => {
+      const addDays = (days, name) => {
         const d = new Date(easter); d.setDate(d.getDate() + days);
-        add(d.getMonth() + 1, d.getDate());
+        add(d.getMonth() + 1, d.getDate(), name);
       };
-      addDays(-2); addDays(1); addDays(39); addDays(50); addDays(60);
+      addDays(-2, 'Karfreitag'); addDays(1, 'Ostermontag'); addDays(39, 'Chr. Himmelf.');
+      addDays(50, 'Pfingstmontag'); addDays(60, 'Fronleichnam');
       holidayCache[year] = h;
       return h;
     }
 
     function isHoliday(isoDate) {
       const year = parseInt(isoDate.split('-')[0], 10);
-      return getHolidaysForYear(year)[isoDate] || false;
+      return getHolidaysForYear(year)[isoDate] || null;
     }
 
     const STORAGE_KEYS = {
-      ROSTER:  'pwa_roster_only_v1',
-      META:    'pwa_roster_meta_v1'
+      ENTRIES: 'pwa_schicht_entries_v3',
+      ROSTER:  'pwa_schicht_roster_v3',
+      META:    'pwa_schicht_meta_v3',
+      LAST_SHIFT: 'pwa_schicht_last_shift_v3',
+      LAST_DATE:  'pwa_schicht_last_date_on_reload'
     };
 
     function loadJSON(key, fallback) {
@@ -315,14 +744,19 @@
     }
     function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
+    let entriesDB = loadJSON(STORAGE_KEYS.ENTRIES, {});
     let rosterDB  = loadJSON(STORAGE_KEYS.ROSTER, {});
     let metaDB    = loadJSON(STORAGE_KEYS.META, {
-      theme: 'system', 
-      nightShiftSunday: false, 
-      showKombi: true,
-      driveAuto: false, 
-      driveUrl: ''
+      theme: 'system', nightShiftSunday: false, capEarlyShift: true, kostenstelle: 'Meine Kostenstelle',
+      driveAuto: false, driveUrl: '', vacationBase: { '2026': 30, '2027': 30 }, vacationSonder: { '2026': 0, '2027': 0 }, months: {}
     });
+
+    if (metaDB.sonderurlaub && !metaDB.vacationSonder) {
+      metaDB.vacationSonder = {};
+      for (const y in metaDB.sonderurlaub) { metaDB.vacationSonder[y] = metaDB.sonderurlaub[y] ? 1 : 0; }
+    }
+    if(metaDB.capEarlyShift === undefined) metaDB.capEarlyShift = true;
+    if(!metaDB.kostenstelle) metaDB.kostenstelle = 'Meine Kostenstelle';
 
     const WD_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
     const MONTH_NAMES = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -330,7 +764,7 @@
 
     function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     
-    // Neuer Dateiname Generator mit Zeitstempel für Schichtplan
+    // Generator für Zeitstempel im Backup-Dateinamen
     function toTimestampFilename() { 
       const d = new Date();
       const datePart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -339,6 +773,35 @@
     }
     
     function parseISODate(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); }
+    function formatDE(iso) { const d = parseISODate(iso); return `${WD_NAMES[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`; }
+    function formatShortDE(iso) { const d = parseISODate(iso); const todayIso = toISODate(new Date()); return `${iso === todayIso ? 'Heute • ' : ''}${WD_NAMES[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.`; }
+    function fmtDec(num, forceSign = false) { 
+      if (num === null || num === undefined || isNaN(num)) return '0,00'; 
+      let res = (Math.round(num * 100) / 100).toFixed(2).replace('.', ','); 
+      if (forceSign && num > 0) res = '+' + res;
+      return res; 
+    }
+    function fmtShortHours(num) { const rounded = Math.round((num || 0) * 100) / 100; if (Math.round(rounded * 10) === rounded * 10) return rounded.toFixed(1).replace('.', ','); return rounded.toFixed(2).replace('.', ','); }
+    function timeToMin(t) { if (!t || !t.includes(':')) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+    function parseDoctorInput(val) {
+      if (!val) return 0; const s = String(val).trim();
+      if (s.includes(':')) { const [h, m] = s.split(':').map(Number); return (h || 0) + ((m || 0) / 60); }
+      const num = parseFloat(s.replace(',', '.')); return isNaN(num) ? 0 : num;
+    }
+
+    function getBookedTimeLines(entry) {
+      if (!entry) return []; const lines = [];
+      if (entry.in || entry.out) lines.push(`${entry.in || '--'}-${entry.out || '--'}`);
+      if (Array.isArray(entry.blocks)) {
+        for (let i = 1; i <= 2; i++) {
+          const b = entry.blocks[i];
+          if (b && (b.in || b.out)) lines.push(`${b.in || '--'}-${b.out || '--'}`);
+        }
+      }
+      const docH = parseDoctorInput(entry.docHours);
+      if (docH > 0) lines.push(`+${fmtShortHours(docH)}h`);
+      return lines;
+    }
 
     function getISOWeek(d) {
       const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -346,6 +809,12 @@
       date.setUTCDate(date.getUTCDate() + 4 - dayNum);
       const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
       return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function getVacationTakenInYear(yearStr) {
+      let taken = 0;
+      Object.keys(entriesDB).forEach(k => { if (k.startsWith(yearStr) && entriesDB[k]?.shift === 'URLAUB') taken++; });
+      return taken;
     }
 
     /********************************************************************
@@ -359,17 +828,21 @@
 
       const statusEl = document.getElementById('drive-sync-status');
       if (statusEl && showSuccessAlert) {
-        statusEl.textContent = '⏳ Sende Schichtplan an Google Drive...';
+        statusEl.textContent = '⏳ Sende Backup an Google Drive...';
         statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400';
         statusEl.classList.remove('hidden');
       }
 
-      const fullPayload = { roster: rosterDB, meta: metaDB, exportedAt: new Date().toISOString() };
+      const fullPayload = {
+        entries: entriesDB, roster: rosterDB, meta: metaDB,
+        lastShift: localStorage.getItem(STORAGE_KEYS.LAST_SHIFT) || '0112',
+        exportedAt: new Date().toISOString()
+      };
 
       try {
         await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullPayload), keepalive: true });
         if (statusEl && showSuccessAlert) { statusEl.textContent = '✅ Erfolgreich in Google Drive gespeichert!'; statusEl.className = 'text-[11px] font-bold text-center text-emerald-600 dark:text-emerald-400'; }
-        if (showSuccessAlert) alert('Schichtplan erfolgreich an Google Drive gesendet!'); return true;
+        if (showSuccessAlert) alert('Backup erfolgreich an Google Drive gesendet!'); return true;
       } catch (err) {
         if (statusEl && showSuccessAlert) { statusEl.textContent = '❌ Fehler beim Senden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
         if (showSuccessAlert) alert('Fehler beim Senden an Google Drive: ' + err.message); return false;
@@ -383,19 +856,20 @@
       if (!url) { alert('Bitte zuerst die Google Apps Script URL eintragen!'); return; }
 
       const statusEl = document.getElementById('drive-sync-status');
-      if (statusEl) { statusEl.textContent = '⏳ Lade Schichtplan aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
+      if (statusEl) { statusEl.textContent = '⏳ Lade Backup aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
 
       try {
         const res = await fetch(url); const data = await res.json();
-        if (!data || Object.keys(data).length === 0 || !data.roster) {
+        if (!data || Object.keys(data).length === 0 || (!data.entries && !data.roster)) {
           if (statusEl) statusEl.classList.add('hidden');
           alert('Noch keine Backup-Datei in Google Drive gefunden (Bitte zuerst einmal senden).'); return;
         }
+        if (data.entries) entriesDB = data.entries;
         if (data.roster) rosterDB = data.roster;
         if (data.meta) { const keepUrl = metaDB.driveUrl; metaDB = data.meta; if (!metaDB.driveUrl) metaDB.driveUrl = keepUrl; }
-        
-        saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
-        alert('Schichtplan erfolgreich aus Google Drive wiederhergestellt!'); window.location.reload();
+        if (data.lastShift) localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, data.lastShift);
+        saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
+        alert('Daten erfolgreich aus Google Drive wiederhergestellt!'); window.location.reload();
       } catch (err) {
         if (statusEl) { statusEl.textContent = '❌ Fehler beim Laden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
         alert('Fehler beim Laden aus Google Drive: ' + err.message);
@@ -404,24 +878,440 @@
 
     function triggerBackgroundDriveSync() { if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false); }
 
+    function getInitialStartDateISO() {
+      const reloadDate = localStorage.getItem(STORAGE_KEYS.LAST_DATE);
+      if (reloadDate) { localStorage.removeItem(STORAGE_KEYS.LAST_DATE); return reloadDate; }
+      const now = new Date();
+      if (now.getHours() < 8) {
+        const yest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        const yestIso = toISODate(yest);
+        const yEntry = entriesDB[yestIso];
+        if (yEntry && yEntry.shift === '0113' && !yEntry.out) return yestIso;
+        if (!yEntry && rosterDB[yestIso] === '0113') return yestIso;
+      }
+      return toISODate(now);
+    }
+
+    window.switchView = function(target) {
+      document.getElementById('view-main').classList.toggle('hidden', target !== 'main');
+      document.getElementById('view-roster').classList.toggle('hidden', target !== 'roster');
+      document.getElementById('view-overview').classList.toggle('hidden', target !== 'overview');
+
+      if (target === 'roster') {
+        renderRosterYear(true);
+      } else if (target === 'overview') {
+        const selDate = parseISODate(selectedDateISO);
+        overviewYear = selDate.getFullYear(); overviewMonth = selDate.getMonth(); renderOverview();
+      } else if (target === 'main') {
+        onDateChanged();
+      }
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+
+    function getAutoShiftForDate(isoDate) {
+      if (entriesDB[isoDate] && entriesDB[isoDate].shift) {
+        return { shift: entriesDB[isoDate].shift, source: 'Gebucht' };
+      }
+      if (rosterDB[isoDate]) {
+        return { shift: rosterDB[isoDate], source: 'Schichtplan' };
+      }
+      return { shift: 'FREI', source: 'Plan (Leer)' };
+    }
+
+    function calculateDay(isoDate, entry) {
+      // Wenn der User am Drehrad eine Sonderschicht ausgewählt hat, MUSS diese erzwungen werden
+      // (auch wenn noch ein verwaister Eintrag aus einer versehentlichen Buchung drinsteht).
+      const activeShiftCode = entry ? entry.shift : (rosterDB[isoDate] || 'FREI');
+      const hol = isHoliday(isoDate);
+      const isShift = (code) => ['0112', '0111', '0113', '0135', 'LEHRGANG'].includes(code);
+
+      // Zwangskorrektur für Sonderschichten
+      if (activeShiftCode === 'FREI') return { ist: 0, verr: 0, soll: 0, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'FREI', tazp: 'FREI', isPreview: false, isWorked: false };
+      if (activeShiftCode === 'URLAUB') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Urlaub', tazp: '0109', isPreview: false, isWorked: false };
+      if (activeShiftCode === 'KRANK') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Krank m. Attest', tazp: '0109', isPreview: false, isWorked: false };
+      if (activeShiftCode === 'FS') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 8, info: 'Freischicht (-8h FS)', tazp: '0109', isPreview: false, isWorked: false };
+      if (activeShiftCode === 'FEIERTAG' || (entry && entry.paidHoliday)) {
+         return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Feiertag bezahlt', tazp: 'Ft.bzh', isPreview: false, isWorked: false };
+      }
+
+      if (!entry) {
+        if (hol && isShift(activeShiftCode)) {
+          return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: `Feiertag (${hol})`, tazp: activeShiftCode, isPreview: false, isWorked: false };
+        }
+        if (isShift(activeShiftCode)) {
+          return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: `Plan: ${activeShiftCode} (Vorschau)`, tazp: activeShiftCode, isPreview: true, isWorked: false };
+        }
+        return { ist: 0, verr: 0, soll: 0, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: activeShiftCode ? `Plan: ${activeShiftCode}` : '--', tazp: activeShiftCode || 'FREI', isPreview: false, isWorked: false };
+      }
+
+      if (entry.rawKnauf || entry.rawImport) {
+        return {
+          ist: entry.ist ?? 0, verr: entry.verr ?? 0, soll: entry.soll ?? 0, mehr: entry.mehr ?? 0, nacht: entry.nacht ?? 0,
+          sonntag: entry.sonntag ?? 0, feiertag: entry.feiertag ?? 0, fsUsed: entry.fsUsed ?? 0, info: entry.note || 'Original Beleg', tazp: entry.tazp || entry.shift,
+          isPreview: false, isWorked: isShift(entry.tazp || entry.shift)
+        };
+      }
+
+      const docHours = parseDoctorInput(entry.docHours);
+      if (entry.unpaidChild) return { ist: 0, verr: 0, soll: 8, mehr: -8, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Kind krank unbez.', tazp: '0109', isPreview: false, isWorked: false };
+
+      const blocks = [];
+      if (entry.in && entry.out) blocks.push([entry.in, entry.out]);
+      if (entry.blocks && Array.isArray(entry.blocks)) {
+        entry.blocks.forEach((b, idx) => { if (idx > 0 && b.in && b.out) blocks.push([b.in, b.out]); });
+      }
+
+      if (blocks.length === 0 && docHours === 0) {
+        const infoText = entry.in ? `Kommt ${entry.in} (Geht offen)` : 'Offen';
+        
+        if (hol && (isShift(activeShiftCode) || ['URLAUB', 'KRANK', '0109', 'FS'].includes(activeShiftCode))) {
+            return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: `Feiertag (${hol})`, tazp: activeShiftCode, isPreview: false, isWorked: false };
+        }
+        
+        if (isShift(activeShiftCode)) {
+           return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: infoText, tazp: activeShiftCode, isPreview: true, isWorked: false };
+        }
+        
+        return { ist: 0, verr: 0, soll: 8, mehr: -8, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: infoText, tazp: activeShiftCode, isPreview: false, isWorked: false };
+      }
+
+      let totalIstMin = 0, totalVerrMin = 0, totalNachtMin = 0;
+      let capNote = '';
+      
+      let applyCap = false;
+      if (activeShiftCode !== 'LEHRGANG' && metaDB.capEarlyShift !== false) {
+        applyCap = true;
+      }
+
+      blocks.forEach(([tIn, tOut], idx) => {
+        let mIn = timeToMin(tIn); let mOut = timeToMin(tOut);
+        if (mIn === null || mOut === null) return;
+        if (mOut <= mIn) mOut += 1440;
+        totalIstMin += (mOut - mIn);
+
+        let effIn = mIn;
+        if (idx === 0 && applyCap) {
+          if (activeShiftCode === '0112') {
+            if (mIn <= 255) {
+              if (mIn < 225) { effIn = 225; capNote = 'Ab 03:45'; }
+              totalNachtMin += 120;
+            } else if (mIn < 345) { effIn = 345; capNote = 'Ab 05:45'; }
+          } else if (activeShiftCode === '0135' && mIn < 345) { effIn = 345; capNote = 'Ab 05:45'; }
+          else if (activeShiftCode === '0111' && mIn < 825) { effIn = 825; capNote = 'Ab 13:45'; }
+          else if (activeShiftCode === '0113' && mIn < 1305 && mIn > 720) { effIn = 1305; capNote = 'Ab 21:45'; }
+        } else if (idx === 0 && !applyCap) {
+          if (activeShiftCode === '0112' && mIn <= 255) totalNachtMin += 120;
+        }
+
+        totalVerrMin += Math.max(0, mOut - effIn);
+        if (activeShiftCode === '0111' && mOut > 1305) totalNachtMin += Math.max(0, mOut - Math.max(effIn, 1305));
+      });
+
+      if (activeShiftCode === '0113' && totalVerrMin > 0) totalNachtMin = 480;
+      if (activeShiftCode === '0135' && blocks.length > 0) {
+        if (totalVerrMin > 360) { totalVerrMin -= 30; capNote = (capNote ? capNote + ' • ' : '') + '-30m Pause'; } 
+        else { capNote = (capNote ? capNote + ' • ' : '') + '≤6h (0m Pause)'; }
+      }
+
+      let istHours = Math.round((totalIstMin / 60) * 100) / 100;
+      let verrHours = Math.round((totalVerrMin / 60) * 100) / 100;
+
+      if (docHours > 0) {
+        istHours = Math.round((istHours + docHours) * 100) / 100; verrHours = Math.round((verrHours + docHours) * 100) / 100;
+        capNote = (capNote ? capNote + ' • ' : '') + `+${fmtShortHours(docHours)}h`;
+      }
+
+      let fsUsed = 0;
+      if (entry.fillFS && verrHours < 8.0) {
+        fsUsed = Math.round((8.0 - verrHours) * 100) / 100; verrHours = 8.0; istHours = Math.max(istHours, 8.0);
+        capNote = (capNote ? capNote + ' • ' : '') + `FS -${fmtDec(fsUsed)}h`;
+      }
+
+      const sollHours = 8.0;
+      const mehrHours = Math.round((verrHours - sollHours) * 100) / 100;
+      const nachtHours = Math.round((totalNachtMin / 60) * 100) / 100;
+
+      return {
+        ist: istHours, verr: verrHours, soll: sollHours, mehr: mehrHours, nacht: nachtHours,
+        sonntag: 0, feiertag: 0, fsUsed: fsUsed, info: entry.note ? entry.note : (capNote || 'OK'), tazp: activeShiftCode,
+        isPreview: false, isWorked: isShift(activeShiftCode)
+      };
+    }
+
+    /********************************************************************
+     * DREHRÄDER (Inklusive Endlos-Option & Scroll-Blocker!)
+     ********************************************************************/
+    let selectedDateISO = getInitialStartDateISO();
+    let selectedShiftCode = '0112';
+    let activeTimeTarget = 'in';
+    let dateWheelList = [];
+
+    function buildDateList() {
+      dateWheelList = []; const today = new Date();
+      for (let i = -90; i <= 60; i++) dateWheelList.push(toISODate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + i)));
+    }
+
+    function setupWheel(containerId, items, getLabelFn, onSelectFn, isInfinite = false) {
+      const el = document.getElementById(containerId); el.innerHTML = '';
+      const multiplier = isInfinite ? 5 : 1; const baseLen = items.length; const totalLen = baseLen * multiplier;
+      
+      for (let i = 0; i < totalLen; i++) {
+        const div = document.createElement('div'); div.className = 'wheel-item'; div.textContent = getLabelFn(items[i % baseLen]);
+        div.addEventListener('click', () => scrollToWheelIndex(containerId, i % baseLen, true));
+        el.appendChild(div);
+      }
+
+      let scrollTimer = null; let isJumping = false;
+      el.addEventListener('scroll', () => {
+        if (el.dataset.ignoreScroll === 'true' || isJumping) return;
+        
+        if (scrollTimer) clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          let currIdx = Math.max(0, Math.min(totalLen - 1, Math.round(el.scrollTop / 36)));
+          if (isInfinite && (currIdx < baseLen || currIdx >= baseLen * 4)) {
+            const targetIdx = (currIdx % baseLen) + (baseLen * 2);
+            isJumping = true; el.scrollTo({ top: targetIdx * 36, behavior: 'instant' }); currIdx = targetIdx;
+            setTimeout(() => { isJumping = false; }, 50);
+          }
+          updateWheelActiveStyle(el, currIdx); onSelectFn(items[currIdx % baseLen], currIdx % baseLen);
+        }, 60);
+      });
+      el.dataset.infinite = isInfinite; el.dataset.baseLen = baseLen;
+    }
+
+    function updateWheelActiveStyle(el, activeIdx) { el.querySelectorAll('.wheel-item').forEach((c, i) => c.classList.toggle('active', i === activeIdx)); }
+
+    function scrollToWheelIndex(containerId, baseIdx, smooth = false) {
+      const el = document.getElementById(containerId); if (!el) return;
+      let targetIdx = baseIdx;
+      if (el.dataset.infinite === 'true') targetIdx = baseIdx + (parseInt(el.dataset.baseLen, 10) * 2);
+      
+      el.dataset.ignoreScroll = 'true';
+      el.scrollTo({ top: targetIdx * 36, behavior: smooth ? 'smooth' : 'auto' });
+      updateWheelActiveStyle(el, targetIdx);
+      setTimeout(() => { el.dataset.ignoreScroll = 'false'; }, 100);
+    }
+
+    const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+    let currentWheelHour = '05', currentWheelMinute = '30';
+    let draftEntry = { shift: '0112', in: '', out: '', blocks: [], docHours: '', paidHoliday: false, fillFS: false, unpaidChild: false, note: '' };
+
+    function initWheels() {
+      buildDateList();
+      setupWheel('wheel-date', dateWheelList, (iso) => formatShortDE(iso), (iso) => { if (selectedDateISO !== iso) { selectedDateISO = iso; onDateChanged(); } }, false);
+      setupWheel('wheel-shift', SHIFTS, (s) => s.name, (s) => { 
+        selectedShiftCode = s.code; 
+        draftEntry.shift = s.code; // NEU: Drehrad-Auswahl zwingt die draftEntry auf die gewählte Schicht
+        localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, s.code); 
+        updateLivePreview(); 
+      }, false);
+      
+      setupWheel('wheel-hour', HOURS, (h) => h, (h) => { currentWheelHour = h; }, true);
+      setupWheel('wheel-minute', MINUTES, (m) => m, (m) => { currentWheelMinute = m; }, true);
+    }
+
+    function setTimeWheels(timeStr, smooth = false) {
+      if (!timeStr || !timeStr.includes(':')) return;
+      const [h, m] = timeStr.split(':'); currentWheelHour = h.padStart(2, '0'); currentWheelMinute = m.padStart(2, '0');
+      scrollToWheelIndex('wheel-hour', parseInt(currentWheelHour, 10), smooth);
+      scrollToWheelIndex('wheel-minute', parseInt(currentWheelMinute, 10), smooth);
+    }
+
+    function onDateChanged() {
+      const existing = entriesDB[selectedDateISO]; 
+      const autoShift = getAutoShiftForDate(selectedDateISO);
+      
+      if (existing) { 
+        draftEntry = JSON.parse(JSON.stringify(existing)); 
+        selectedShiftCode = draftEntry.shift || autoShift.shift; 
+      } else { 
+        selectedShiftCode = autoShift.shift; 
+        draftEntry = { shift: selectedShiftCode, in: '', out: '', blocks: [], docHours: '', paidHoliday: false, fillFS: false, unpaidChild: false, note: '' }; 
+      }
+
+      const hintEl = document.getElementById('shift-source-hint'); const planBadge = document.getElementById('roster-indicator');
+      if (rosterDB[selectedDateISO]) { planBadge.classList.remove('hidden'); hintEl.textContent = `Schichtplan: ${rosterDB[selectedDateISO]}`; }
+      else { planBadge.classList.add('hidden'); hintEl.textContent = autoShift.source; }
+
+      const holBadge = document.getElementById('holiday-badge'); const hol = isHoliday(selectedDateISO);
+      if (hol) { holBadge.textContent = `🎉 ${hol}`; holBadge.classList.remove('hidden'); } else { holBadge.classList.add('hidden'); }
+
+      const sIdx = Math.max(0, SHIFTS.findIndex(s => s.code === selectedShiftCode));
+      scrollToWheelIndex('wheel-shift', sIdx, true);
+      
+      if (draftEntry.in && !draftEntry.out) setActiveTimeCard('out', false); 
+      else setActiveTimeCard('in', false);
+
+      const targetVal = activeTimeTarget === 'in' ? draftEntry.in : draftEntry.out;
+      if (targetVal) {
+        setTimeWheels(targetVal, false); 
+      } else { 
+        const now = new Date(); 
+        setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, false); 
+      }
+
+      updateCardsAndPreview(); renderRecentFiveDays();
+    }
+
+    function setActiveTimeCard(target, syncWheels = true) {
+      activeTimeTarget = target;
+      const cardIn = document.getElementById('card-in'); const cardOut = document.getElementById('card-out');
+      const bIn = document.getElementById('badge-active-in'); const bOut = document.getElementById('badge-active-out');
+      const lbl = document.getElementById('label-wheel-target');
+
+      if (target === 'in') {
+        cardIn.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm';
+        cardOut.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm';
+        bIn.classList.remove('hidden'); bOut.classList.add('hidden');
+        lbl.textContent = 'Uhrzeit für KOMMEN wählen'; lbl.className = 'text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400';
+      } else {
+        cardOut.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-rose-500 ring-2 ring-rose-500/20 shadow-sm';
+        cardIn.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm';
+        bOut.classList.remove('hidden'); bIn.classList.add('hidden');
+        lbl.textContent = 'Uhrzeit für GEHEN wählen'; lbl.className = 'text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400';
+      }
+
+      if (syncWheels) {
+        const targetVal = target === 'in' ? draftEntry.in : draftEntry.out;
+        if (targetVal) {
+          setTimeWheels(targetVal, true);
+        } else {
+          const now = new Date();
+          setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true);
+        }
+      }
+    }
+
+    function applyWheelTimeToActiveCard() {
+      // Wenn Sonderschicht ausgewählt ist, ignorieren wir die Zeiteingabe beim Speichern aus dem Rad
+      const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
+      if (noTimeShifts.includes(selectedShiftCode)) {
+        draftEntry.in = '';
+        draftEntry.out = '';
+      } else {
+        const t = `${currentWheelHour}:${currentWheelMinute}`;
+        if (activeTimeTarget === 'in') draftEntry.in = t; else draftEntry.out = t;
+      }
+      
+      delete draftEntry.rawKnauf; updateCardsAndPreview();
+    }
+
+    function updateCardsAndPreview() {
+      draftEntry.shift = selectedShiftCode;
+      
+      // Optik in den Karten leeren, wenn es eine Schicht ohne Zeit ist
+      const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
+      if (noTimeShifts.includes(selectedShiftCode)) {
+         document.getElementById('val-time-in').textContent = '--:--';
+         document.getElementById('sub-time-in').textContent = 'Keine Zeit benötigt';
+         document.getElementById('val-time-out').textContent = '--:--';
+         document.getElementById('sub-time-out').textContent = 'Keine Zeit benötigt';
+      } else {
+         document.getElementById('val-time-in').textContent = draftEntry.in || '--:--'; 
+         document.getElementById('sub-time-in').textContent = draftEntry.in ? 'Gebucht / Bereit' : 'Nicht gebucht';
+         document.getElementById('val-time-out').textContent = draftEntry.out || '--:--'; 
+         document.getElementById('sub-time-out').textContent = draftEntry.out ? 'Gebucht / Bereit' : 'Nicht gebucht';
+      }
+
+      const hasSpecial = (draftEntry.docHours && parseDoctorInput(draftEntry.docHours) > 0) || draftEntry.paidHoliday || draftEntry.fillFS || draftEntry.unpaidChild || (draftEntry.blocks && draftEntry.blocks.some((b, i) => i > 0 && (b.in || b.out)));
+      document.getElementById('dot-special-active').classList.toggle('hidden', !hasSpecial);
+      updateLivePreview();
+    }
+
+    function updateLivePreview() {
+      draftEntry.shift = selectedShiftCode; const calc = calculateDay(selectedDateISO, draftEntry);
+      const sObj = SHIFTS.find(s => s.code === selectedShiftCode) || SHIFTS[0];
+
+      document.getElementById('live-card-title').textContent = formatDE(selectedDateISO); document.getElementById('live-card-shift').textContent = sObj.name;
+      
+      document.getElementById('live-ist').textContent = fmtDec(calc.ist);
+      document.getElementById('live-ist').className = `text-xs ${calc.isPreview ? 'text-slate-400 font-semibold' : 'font-bold text-slate-700 dark:text-slate-200'}`;
+      
+      document.getElementById('live-verr').textContent = fmtDec(calc.verr); 
+      document.getElementById('live-verr').className = `text-xs ${calc.isPreview ? 'text-slate-400 font-semibold' : 'font-extrabold text-slate-900 dark:text-white'}`;
+      
+      document.getElementById('live-soll').textContent = fmtDec(calc.soll);
+      
+      const mehrEl = document.getElementById('live-mehr');
+      mehrEl.textContent = calc.mehr > 0 ? '+' + fmtDec(calc.mehr) : (calc.mehr < 0 ? fmtDec(calc.mehr) : '0,00');
+      mehrEl.className = `text-xs font-extrabold ${calc.mehr > 0 ? 'text-emerald-600' : (calc.mehr < 0 ? 'text-rose-600' : 'text-slate-400')}`;
+      
+      document.getElementById('live-info-line').textContent = calc.info;
+    }
+
+    function renderRecentFiveDays() {
+      const container = document.getElementById('recent-days-list'); container.innerHTML = '';
+      const realToday = new Date(); const todayIso = toISODate(realToday);
+
+      for (let i = 1; i <= 5; i++) {
+        const d = new Date(realToday.getFullYear(), realToday.getMonth(), realToday.getDate() - i); const iso = toISODate(d);
+        const isCurrentlySelected = (iso === selectedDateISO); const e = entriesDB[iso]; const calc = calculateDay(iso, e);
+        
+        let shiftLabel = '';
+        if (e) shiftLabel = SHIFTS.find(s => s.code === e.shift)?.label || e.shift;
+        else if (rosterDB[iso]) shiftLabel = `Plan: ${rosterDB[iso] === 'URLAUB' ? 'Url.' : (rosterDB[iso] === 'KRANK' ? 'Krank' : rosterDB[iso])}`;
+        else shiftLabel = 'Offen';
+
+        const timeLines = getBookedTimeLines(e); const timesLabel = timeLines.length > 0 ? timeLines.join(' • ') : '--:--';
+        const row = document.createElement('button'); row.type = 'button';
+        row.className = `w-full p-2.5 rounded-xl border flex justify-between items-center text-xs transition ${isCurrentlySelected ? 'bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-500 ring-2 ring-blue-500/20 font-bold' : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/70'}`;
+        
+        const verrColor = calc.isPreview ? 'text-slate-400 font-semibold' : (calc.verr > 0 ? 'text-emerald-600 font-bold' : 'text-slate-400 font-bold');
+
+        row.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden">
+            <span class="font-bold w-16 shrink-0 text-left ${isCurrentlySelected ? 'text-blue-600 dark:text-blue-400' : ''}">${formatShortDE(iso).replace('Heute • ', '')}</span>
+            <span class="px-1.5 py-0.5 shrink-0 rounded bg-slate-200 dark:bg-slate-700 font-bold text-[10px]">${shiftLabel}</span>
+            <span class="text-slate-500 font-mono text-[11px] truncate">${timesLabel}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 ml-1">
+            <span class="${verrColor}">${fmtDec(calc.verr)}h</span>
+            <span class="${isCurrentlySelected ? 'text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-extrabold' : ''}">${isCurrentlySelected ? '✕ Schließen' : '✏️'}</span>
+          </div>
+        `;
+        row.addEventListener('click', () => {
+          const targetIso = (selectedDateISO === iso) ? todayIso : iso; const idx = dateWheelList.indexOf(targetIso);
+          if (idx >= 0) { selectedDateISO = targetIso; scrollToWheelIndex('wheel-date', idx, true); onDateChanged(); }
+        });
+        container.appendChild(row);
+      }
+    }
+
+    function saveCurrentDayInstant() {
+      const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
+      
+      // Wenn Sonderschicht gewählt ist, alle gestempelten Zeiten hart rauslöschen
+      if (noTimeShifts.includes(selectedShiftCode)) {
+        draftEntry.in = '';
+        draftEntry.out = '';
+        draftEntry.blocks = [];
+      } else {
+        if (activeTimeTarget === 'in' && !draftEntry.in) draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
+        if (activeTimeTarget === 'out' && !draftEntry.out) draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
+      }
+      
+      draftEntry.shift = selectedShiftCode; 
+      entriesDB[selectedDateISO] = JSON.parse(JSON.stringify(draftEntry)); 
+      saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); 
+      localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, selectedShiftCode);
+      
+      updateCardsAndPreview(); renderRecentFiveDays();
+      
+      const btn = document.getElementById('btn-save-entry'); const btnLabel = document.getElementById('btn-save-label');
+      if (btn && btnLabel) {
+        btnLabel.textContent = '✓ Gespeichert'; btn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); btn.classList.add('bg-emerald-600');
+        setTimeout(() => { btnLabel.textContent = 'Tag speichern'; btn.classList.remove('bg-emerald-600'); btn.classList.add('bg-blue-600', 'hover:bg-blue-700'); }, 650);
+      }
+      triggerBackgroundDriveSync();
+    }
+
     /********************************************************************
      * SCHICHTPLAN LOGIK
      ********************************************************************/
     let rosterYear = new Date().getFullYear();
     let activeSingleBrush = null;
     let activeWeekPattern = null;
-
-    function applyKombiVisibility() {
-      const boxSingle = document.getElementById('tool-box-single');
-      const boxKombi = document.getElementById('tool-box-kombi');
-      if (metaDB.showKombi) {
-        boxSingle.className = 'col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
-        boxKombi.className = 'col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
-      } else {
-        boxSingle.className = 'col-span-12 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all';
-        boxKombi.className = 'hidden';
-      }
-    }
 
     function updateToolUI() {
       document.querySelectorAll('.tool-single-btn').forEach(btn => { btn.classList.toggle('tool-active', btn.dataset.single === activeSingleBrush); });
@@ -433,14 +1323,14 @@
       } else if (activeWeekPattern) {
         hint.textContent = `⚡ Kombi [${activeWeekPattern}] aktiv: Auf „KW“ oder Zeile tippen zum Ausfüllen!`; hint.className = 'text-[10px] font-extrabold text-center py-1 px-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200';
       } else {
-        hint.textContent = '👆 Links Schicht wählen, dann unten auf Tage oder KW tippen.'; hint.className = 'text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+        hint.textContent = '👆 Links wählen (Tag tippen = Einzeltag | KW tippen = Füllen) oder Kombi wählen'; hint.className = 'text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
       }
     }
 
     function getShiftCellClass(code, isWeekend) {
       if (code === '0112') return 'shift-cell-0112'; if (code === '0111') return 'shift-cell-0111';
       if (code === '0113') return 'shift-cell-0113'; if (code === '0135') return 'shift-cell-0135';
-      if (code === 'URLAUB') return 'shift-cell-URLAUB'; if (code === 'KRANK') return 'shift-cell-KRANK';
+      if (code === 'URLAUB') return 'shift-cell-URLAUB'; if (code === 'KRANK') return 'shift-cell-KRANK'; if (code === 'FS') return 'shift-cell-FS';
       if (code === 'LEHRGANG') return 'shift-cell-LEHRGANG';
       return isWeekend ? 'shift-cell-FREI-we' : 'shift-cell-FREI-wd';
     }
@@ -459,7 +1349,7 @@
     }
 
     function scrollToRosterElement(el) {
-      if (!el) return; const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 135;
+      if (!el) return; const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 235;
       window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 8, behavior: 'smooth' });
     }
 
@@ -522,7 +1412,7 @@
             ${starHtml}
             <div class="text-[10px] font-extrabold leading-none mt-1">${WD_NAMES[dayObj.getDay()]}</div>
             <div class="text-[9px] font-semibold leading-tight my-0.5 ${hol ? 'text-rose-600 dark:text-rose-400' : 'opacity-80'}">${String(dayObj.getDate()).padStart(2, '0')}.${String(dayObj.getMonth() + 1).padStart(2, '0')}</div>
-            <div class="cell-letter h-4 flex items-center justify-center text-xs font-black leading-none mb-0.5">${getShiftShortLetter(code)}</div>
+            <div class="cell-letter h-4 flex items-center justify-center text-xs font-black leading-none mb-0.5">${getShiftShortLetter(code) || (hol ? 'Ft' : '')}</div>
           `;
 
           cell.addEventListener('click', () => {
@@ -554,23 +1444,292 @@
       if (!code || code === 'FREI') delete rosterDB[iso]; else rosterDB[iso] = code;
       const isToday = (iso === toISODate(new Date()));
       cellEl.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-lg border-2 select-none active:scale-95 transition ${getShiftCellClass(code, isWeekend)} ${isToday ? 'ring-2 ring-blue-600 dark:ring-blue-400' : ''}`;
-      cellEl.querySelector('.cell-letter').textContent = getShiftShortLetter(code);
+      const hol = isHoliday(iso); cellEl.querySelector('.cell-letter').textContent = getShiftShortLetter(code) || (hol ? 'Ft' : '');
+    }
+
+    /********************************************************************
+     * KOMPAKTE MONATSÜBERSICHT & STATISTIK & FS-KONTO LOGIK
+     ********************************************************************/
+    let overviewYear = new Date().getFullYear();
+    let overviewMonth = new Date().getMonth();
+    
+    function getFsPrevValueForMonth(year, monthIndex) {
+      const ymKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+      if (!metaDB.months) metaDB.months = {};
+      
+      if (metaDB.months[ymKey] && metaDB.months[ymKey].isManuallySet) {
+        return metaDB.months[ymKey].prevFS;
+      }
+      
+      if (year < 2026 || (year === 2026 && monthIndex < 9)) {
+        return (metaDB.months[ymKey] && metaDB.months[ymKey].prevFS !== undefined) ? metaDB.months[ymKey].prevFS : 143.69;
+      }
+      
+      let prevMonthIndex = monthIndex - 1;
+      let prevYear = year;
+      if (prevMonthIndex < 0) {
+        prevMonthIndex = 11;
+        prevYear--;
+      }
+      
+      const prevYmKey = `${prevYear}-${String(prevMonthIndex + 1).padStart(2, '0')}`;
+      const prevStartValue = getFsPrevValueForMonth(prevYear, prevMonthIndex); 
+      
+      let sumVerr = 0;
+      let sumFsUsed = 0;
+      let unpaidChildDays = 0;
+      const daysInPrevMonth = new Date(prevYear, prevMonthIndex + 1, 0).getDate();
+      
+      for (let d = 1; d <= daysInPrevMonth; d++) {
+        const iso = toISODate(new Date(prevYear, prevMonthIndex, d));
+        const entry = entriesDB[iso];
+        const calc = calculateDay(iso, entry);
+        if (entry && entry.unpaidChild) unpaidChildDays++;
+        sumVerr += calc.verr;
+        sumFsUsed += (calc.fsUsed || 0);
+      }
+      
+      const effectiveBaseline = PAYOUT_BASELINE_HOURS - (unpaidChildDays * 5.0);
+      const fsAufbau = (sumVerr > 0) ? Math.round((sumVerr - effectiveBaseline) * 100) / 100 : 0;
+      
+      const prevMeta = metaDB.months[prevYmKey] || { payout: 0, corr: 0 };
+      const payout = prevMeta.payout || 0;
+      const corr = prevMeta.corr || 0;
+      
+      return Math.round((prevStartValue + fsAufbau - sumFsUsed - payout + corr) * 100) / 100;
+    }
+
+    function renderOverview() {
+      const ymKey = `${overviewYear}-${String(overviewMonth + 1).padStart(2, '0')}`;
+      document.getElementById('overview-month-title').textContent = `${MONTH_NAMES[overviewMonth]} ${overviewYear}`;
+      document.getElementById('header-kostenstelle').textContent = metaDB.kostenstelle || 'Meine Kostenstelle';
+
+      const tbody = document.getElementById('overview-table-body');
+      const tfoot = document.getElementById('overview-table-foot');
+      tbody.innerHTML = '';
+
+      const daysInMonth = new Date(overviewYear, overviewMonth + 1, 0).getDate();
+      let sumIst = 0, sumVerr = 0, sumSoll = 0, sumMehr = 0, sumFsUsed = 0; 
+      let sumWorkedIst = 0, sumWorkedVerr = 0;
+      let unpaidChildDays = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateObj = new Date(overviewYear, overviewMonth, d); const iso = toISODate(dateObj);
+        const entry = entriesDB[iso]; const calc = calculateDay(iso, entry);
+        const hol = isHoliday(iso);
+
+        if (entry && entry.unpaidChild) unpaidChildDays++;
+        
+        sumIst += calc.ist; sumVerr += calc.verr; sumSoll += calc.soll; sumMehr += calc.mehr; sumFsUsed += (calc.fsUsed || 0);
+        
+        if (calc.isWorked) {
+          sumWorkedIst += calc.ist;
+          sumWorkedVerr += calc.verr;
+        }
+
+        const isWe = (dateObj.getDay() === 0 || dateObj.getDay() === 6); const isToday = (iso === toISODate(new Date()));
+        const planned = rosterDB[iso]; const displayShiftCode = entry ? calc.tazp : (planned || 'FREI');
+        
+        let badgeText = displayShiftCode;
+        if (badgeText === 'URLAUB' || badgeText === '0109') badgeText = 'Url.';
+        if (badgeText === 'KRANK') badgeText = 'Krank';
+        if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') badgeText = 'Ft.bzh'; 
+        if (badgeText === 'FS') badgeText = 'FS';
+        if (badgeText === 'LEHRGANG') badgeText = 'LG';
+
+        const badgeCls = getShiftCellClass(displayShiftCode, false);
+        const starIcon = hol ? `<span class="text-amber-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ml-1">★</span>` : '';
+
+        const timeLines = getBookedTimeLines(entry); let compactTime = '--';
+        if (timeLines.length > 0) {
+          compactTime = timeLines.join('<br>');
+        } else if (entry && entry.shift && entry.shift !== 'FREI') {
+          compactTime = calc.info;
+        } else if (planned && planned !== 'FREI') {
+          let planText = planned; if (planText === 'URLAUB') planText = 'Urlaub'; if (planText === 'KRANK') planText = 'Krank';
+          compactTime = `Plan: ${planText}`;
+        } else if (calc.info && calc.info.includes('Feiertag')) {
+          compactTime = calc.info;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = `cursor-pointer active:bg-blue-100 dark:active:bg-slate-800 transition ${isToday ? 'bg-blue-50/90 dark:bg-blue-950/50 font-bold' : (isWe ? 'bg-slate-50/80 dark:bg-slate-900/40' : '')}`;
+
+        let mehrHtml = calc.mehr > 0 ? '+' + fmtDec(calc.mehr) : (calc.mehr < 0 ? fmtDec(calc.mehr) : '');
+
+        const istColor = calc.isPreview ? 'text-slate-400 dark:text-slate-500 font-normal' : 'text-slate-900 dark:text-slate-100 font-bold';
+        const verrColor = calc.isPreview ? 'text-slate-400 dark:text-slate-500 font-normal' : 'text-slate-900 dark:text-slate-100 font-extrabold';
+
+        tr.innerHTML = `
+          <td class="py-2 px-1.5 font-bold whitespace-nowrap align-middle">${WD_NAMES[dateObj.getDay()]} ${String(d).padStart(2, '0')}${starIcon}</td>
+          <td class="py-1.5 px-1 text-center align-middle"><span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black border ${badgeCls}">${badgeText}</span></td>
+          <td class="py-1.5 px-1 font-mono text-[11px] leading-tight align-middle">${compactTime}</td>
+          <td class="py-2 px-1 text-right font-mono align-middle ${istColor}">${calc.ist > 0 ? fmtDec(calc.ist) : ''}</td>
+          <td class="py-2 px-1 text-right font-mono align-middle ${verrColor}">${calc.verr > 0 ? fmtDec(calc.verr) : ''}</td>
+          <td class="py-2 px-1.5 text-right font-mono font-bold align-middle ${calc.mehr > 0 ? 'text-emerald-600' : (calc.mehr < 0 ? 'text-rose-600' : '')}">${mehrHtml}</td>
+        `;
+        tr.addEventListener('click', () => {
+          selectedDateISO = iso; window.switchView('main');
+          const idx = dateWheelList.indexOf(iso); if (idx >= 0) scrollToWheelIndex('wheel-date', idx, false); onDateChanged();
+        });
+        tbody.appendChild(tr);
+      }
+
+      const effectiveBaseline = PAYOUT_BASELINE_HOURS - (unpaidChildDays * 5.0);
+      const fsAufbau = (sumVerr > 0) ? Math.round((sumVerr - effectiveBaseline) * 100) / 100 : 0;
+      
+      if (!metaDB.months) metaDB.months = {};
+      const calculatedPrevFS = getFsPrevValueForMonth(overviewYear, overviewMonth);
+      const mMeta = metaDB.months[ymKey] || { payout: 0, corr: 0 };
+      
+      const fsCurrent = Math.round((calculatedPrevFS + fsAufbau - sumFsUsed - (mMeta.payout || 0) + (mMeta.corr || 0)) * 100) / 100;
+
+      const yearStr = String(overviewYear); const vacationTakenInYear = getVacationTakenInYear(yearStr);
+      const sonderU = metaDB.vacationSonder && metaDB.vacationSonder[yearStr] ? parseFloat(metaDB.vacationSonder[yearStr]) : 0;
+      const baseVac = (metaDB.vacationBase && metaDB.vacationBase[yearStr] !== undefined) ? metaDB.vacationBase[yearStr] : DEFAULT_VACATION_DAYS;
+      const remainingBaseVac = baseVac - vacationTakenInYear; const totalRemainingVac = remainingBaseVac + sonderU;
+
+      document.getElementById('sum-verr-total').textContent = `${fmtDec(sumVerr)} h`;
+      document.getElementById('sum-fs-aufbau').textContent = `FS-Aufbau: ${fmtDec(fsAufbau, true)} h`;
+      document.getElementById('sum-fs-aufbau').className = `text-[11px] font-bold ${fsAufbau >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+      document.getElementById('sum-fs-current').textContent = `${fmtDec(fsCurrent)} h`;
+      document.getElementById('sum-fs-sub').textContent = `Vorm.: ${fmtDec(calculatedPrevFS)}h | Ausz.: ${fmtDec(mMeta.payout || 0)}h`;
+      
+      document.getElementById('sum-overtime-total').textContent = `${sumMehr > 0 ? '+' : ''}${fmtDec(sumMehr)} h`;
+
+      document.getElementById('sum-vacation-left').textContent = String(remainingBaseVac).replace('.', ',');
+      const badgeSonder = document.getElementById('badge-sonderurlaub-overview');
+      if (sonderU > 0) {
+        badgeSonder.classList.remove('hidden'); badgeSonder.textContent = `+${String(sonderU).replace('.',',')}`;
+        document.getElementById('sum-vacation-sub').textContent = `Gesamt: ${String(totalRemainingVac).replace('.', ',')} Tg. (inkl. Sonderurl.)`;
+      } else {
+        badgeSonder.classList.add('hidden');
+        document.getElementById('sum-vacation-sub').textContent = `${vacationTakenInYear} Tg. in App als U gebucht`;
+      }
+
+      let sumMehrHtml = sumMehr > 0 ? '+' + fmtDec(sumMehr) : (sumMehr < 0 ? fmtDec(sumMehr) : '0,00');
+      tfoot.innerHTML = `
+        <tr>
+          <td colspan="3" class="py-2 px-1.5">Summe (165h Basis)</td>
+          <td class="py-2 px-1 text-right font-mono">${fmtDec(sumIst)}</td>
+          <td class="py-2 px-1 text-right font-mono text-blue-600 dark:text-blue-400">${fmtDec(sumVerr)}</td>
+          <td class="py-2 px-1.5 text-right font-mono ${sumMehr > 0 ? 'text-emerald-600' : (sumMehr < 0 ? 'text-rose-600' : 'text-slate-400')}">${sumMehrHtml}</td>
+        </tr>
+        <tr class="text-slate-400 dark:text-slate-500 text-[10px] border-t border-slate-200 dark:border-slate-700">
+          <td colspan="3" class="py-1.5 px-1.5 font-semibold text-right">Reine Arbeitszeit (F/S/N/Z/LG):</td>
+          <td class="py-1.5 px-1 text-right font-mono">${fmtDec(sumWorkedIst)}</td>
+          <td class="py-1.5 px-1 text-right font-mono">${fmtDec(sumWorkedVerr)}</td>
+          <td class="py-1.5 px-1.5"></td>
+        </tr>
+      `;
+    }
+
+    function renderStats() {
+      document.getElementById('stats-year-title').textContent = overviewYear;
+      const tbody = document.getElementById('stats-table-body');
+      const tfoot = document.getElementById('stats-table-foot');
+      tbody.innerHTML = '';
+      
+      let total = { F: 0, S: 0, N: 0, Z: 0, LG: 0, U: 0, K: 0 };
+      
+      for (let m = 0; m < 12; m++) {
+        const daysInMonth = new Date(overviewYear, m + 1, 0).getDate();
+        let counts = { F: 0, S: 0, N: 0, Z: 0, LG: 0, U: 0, K: 0 };
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+          const iso = toISODate(new Date(overviewYear, m, d));
+          const entry = entriesDB[iso];
+          const planned = rosterDB[iso];
+          const shift = entry ? (entry.tazp || entry.shift) : planned;
+          
+          if (shift === '0112') counts.F++;
+          else if (shift === '0111') counts.S++;
+          else if (shift === '0113') counts.N++;
+          else if (shift === '0135') counts.Z++;
+          else if (shift === 'LEHRGANG') counts.LG++;
+          else if (shift === 'URLAUB' || shift === '0109') counts.U++;
+          else if (shift === 'KRANK') counts.K++;
+        }
+        
+        total.F += counts.F; total.S += counts.S; total.N += counts.N;
+        total.Z += counts.Z; total.LG += counts.LG; total.U += counts.U; total.K += counts.K;
+
+        const isCurrentMonth = (m === overviewMonth);
+        const tr = document.createElement('tr');
+        tr.className = isCurrentMonth ? 'bg-blue-100/50 dark:bg-blue-900/30 font-extrabold ring-1 ring-blue-500 rounded-lg' : '';
+        tr.innerHTML = `
+          <td class="py-2 px-1 text-left ${isCurrentMonth ? 'text-blue-700 dark:text-blue-300' : ''}">${MONTH_SHORT[m]}</td>
+          <td class="py-2 px-1 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
+          <td class="py-2 px-1 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
+          <td class="py-2 px-1 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
+          <td class="py-2 px-1 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
+          <td class="py-2 px-1 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
+          <td class="py-2 px-1 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
+          <td class="py-2 px-1 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+      
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-2 px-1 text-left">JAHR</td>
+          <td class="py-2 px-1 text-yellow-600 dark:text-yellow-400">${total.F}</td>
+          <td class="py-2 px-1 text-green-600 dark:text-green-400">${total.S}</td>
+          <td class="py-2 px-1 text-cyan-600 dark:text-cyan-400">${total.N}</td>
+          <td class="py-2 px-1 text-pink-600 dark:text-pink-400">${total.Z}</td>
+          <td class="py-2 px-1 text-slate-600 dark:text-slate-400">${total.LG}</td>
+          <td class="py-2 px-1 text-purple-600 dark:text-purple-400">${total.U}</td>
+          <td class="py-2 px-1 text-red-600 dark:text-red-400">${total.K}</td>
+        </tr>
+      `;
+    }
+
+    function openFsAndVacationModal(focusVacation = false) {
+      const ymKey = `${overviewYear}-${String(overviewMonth + 1).padStart(2, '0')}`;
+      const yearStr = String(overviewYear);
+      const mMeta = (metaDB.months && metaDB.months[ymKey]) || { payout: 0, corr: 0 };
+      
+      const calculatedStart = getFsPrevValueForMonth(overviewYear, overviewMonth);
+
+      document.getElementById('fs-modal-month-label').textContent = `${MONTH_SHORT[overviewMonth]} ${overviewYear}`;
+      document.getElementById('vac-modal-year-label').textContent = yearStr;
+      
+      document.getElementById('fs-input-prev').value = calculatedStart;
+      
+      document.getElementById('fs-input-payout').value = mMeta.payout || 0;
+      document.getElementById('fs-input-corr').value = mMeta.corr || 0;
+
+      const taken = getVacationTakenInYear(yearStr);
+      const baseVac = (metaDB.vacationBase && metaDB.vacationBase[yearStr] !== undefined) ? metaDB.vacationBase[yearStr] : DEFAULT_VACATION_DAYS;
+      const sonderU = (metaDB.vacationSonder && metaDB.vacationSonder[yearStr] !== undefined) ? metaDB.vacationSonder[yearStr] : 0;
+      
+      document.getElementById('vac-input-current').value = baseVac - taken;
+      document.getElementById('vac-input-sonder').value = sonderU;
+      
+      document.getElementById('modal-fs').classList.remove('hidden');
+      if (focusVacation) setTimeout(() => document.getElementById('vac-input-current').focus(), 50);
     }
 
     /********************************************************************
      * CSV EXPORT / IMPORT
      ********************************************************************/
     function exportFullBackupCSV() {
-      const rows = [['RECORD_TYPE', 'KEY_OR_DATE', 'SHIFT', 'JSON_DATA']];
+      const rows = [['RECORD_TYPE', 'KEY_OR_DATE', 'SHIFT', 'IN', 'OUT', 'IST', 'VERR', 'SOLL', 'MEHR', 'NACHT', 'DOC_HOURS', 'FLAGS_JSON', 'NOTE']];
+      Object.keys(entriesDB).sort().forEach(iso => {
+        const e = entriesDB[iso]; const c = calculateDay(iso, e);
+        const flags = JSON.stringify({ blocks: e.blocks || [], paidHoliday: !!e.paidHoliday, fillFS: !!e.fillFS, unpaidChild: !!e.unpaidChild, rawImport: !!(e.rawKnauf || e.rawImport), fsUsed: c.fsUsed || 0, tazp: c.tazp || e.shift });
+        rows.push(['ENTRY', iso, e.shift || '', e.in || '', e.out || '', c.ist, c.verr, c.soll, c.mehr, c.nacht, e.docHours || '', flags, (e.note || '').replace(/;/g, ',')]);
+      });
+      Object.keys(rosterDB).sort().forEach(iso => { rows.push(['ROSTER', iso, rosterDB[iso], '', '', '', '', '', '', '', '', '', '']); });
       
-      Object.keys(rosterDB).sort().forEach(iso => { rows.push(['ROSTER', iso, rosterDB[iso], '']); });
-      
-      rows.push(['META', 'FULL_META_JSON', '', JSON.stringify(metaDB)]);
+      const fullMetaBackup = { ...metaDB, lastShift: localStorage.getItem(STORAGE_KEYS.LAST_SHIFT) || '0112' };
+      rows.push(['META', 'FULL_META_JSON', '', '', '', '', '', '', '', '', '', JSON.stringify(fullMetaBackup), '']);
 
       const csvContent = '\uFEFF' + rows.map(r => r.map(f => `"${String(f ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `PWA_Schichtplan_Backup_${toTimestampFilename()}.csv`; a.click();
+      a.download = `PWA_Arbeitszeiten_Backup_${toTimestampFilename()}.csv`; a.click();
     }
 
     function importFullBackupCSV(file) {
@@ -578,17 +1737,40 @@
       reader.onload = (e) => {
         try {
           const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
-          const newRoster = {};
+          const newEntries = {}; const newRoster = {};
           for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
-            if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { newRoster[cols[1]] = cols[2]; }
-            else if (cols[0] === 'META' && cols[3]) { const parsedMeta = JSON.parse(cols[3]); metaDB = parsedMeta; }
+            if (cols[0] === 'ENTRY' && cols[1]) {
+              const flags = cols[11] ? JSON.parse(cols[11]) : {};
+              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidHoliday: !!flags.paidHoliday, fillFS: !!flags.fillFS, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
+            } else if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { newRoster[cols[1]] = cols[2]; }
+            else if (cols[0] === 'META' && cols[11]) { const parsedMeta = JSON.parse(cols[11]); if (parsedMeta.lastShift) localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, parsedMeta.lastShift); metaDB = parsedMeta; }
           }
-          rosterDB = newRoster;
-          saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
-          triggerBackgroundDriveSync(); alert('Schichtplan erfolgreich wiederhergestellt!'); window.location.reload();
+          entriesDB = newEntries; rosterDB = newRoster;
+          saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
+          triggerBackgroundDriveSync(); alert('Backup erfolgreich wiederhergestellt!'); window.location.reload();
         } catch (err) { alert('Fehler beim Import: ' + err.message); }
       }; reader.readAsText(file, 'UTF-8');
+    }
+
+    function generateMonthOrYearCSV(isYear = false) {
+      const rows = [['Datum', 'Schicht', 'Kommt-Geht', 'IST', 'VERR', 'Mehr']];
+      const startMonth = isYear ? 0 : overviewMonth;
+      const endMonth = isYear ? 11 : overviewMonth;
+      
+      for (let m = startMonth; m <= endMonth; m++) {
+        const daysInMonth = new Date(overviewYear, m + 1, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+          const iso = toISODate(new Date(overviewYear, m, d));
+          const e = entriesDB[iso]; const c = calculateDay(iso, e);
+          rows.push([iso, c.tazp, getBookedTimeLines(e).join(' / '), fmtDec(c.ist), fmtDec(c.verr), fmtDec(c.mehr)]);
+        }
+      }
+      
+      const blob = new Blob(['\uFEFF' + rows.map(r => r.join(';')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = isYear ? `PWA_Jahresuebersicht_${overviewYear}.csv` : `PWA_Monatsuebersicht_${MONTH_NAMES[overviewMonth]}_${overviewYear}.csv`;
+      a.click();
     }
 
     function applyTheme(mode) {
@@ -605,12 +1787,9 @@
      * INITIALISIERUNG
      ********************************************************************/
     window.addEventListener('DOMContentLoaded', () => {
-      applyTheme(metaDB.theme || 'system'); 
-      applyKombiVisibility();
-      document.getElementById('setting-show-kombi').checked = !!metaDB.showKombi;
-      document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday;
+      applyTheme(metaDB.theme || 'system'); initWheels();
 
-      renderRosterYear(true);
+      const startIdx = dateWheelList.indexOf(selectedDateISO); scrollToWheelIndex('wheel-date', startIdx >= 0 ? startIdx : 90, false); onDateChanged();
 
       document.querySelectorAll('.tool-single-btn').forEach(btn => {
         btn.addEventListener('click', () => { activeWeekPattern = null; activeSingleBrush = (activeSingleBrush === btn.dataset.single) ? null : btn.dataset.single; updateToolUI(); });
@@ -623,16 +1802,101 @@
       document.getElementById('btn-roster-year-next').addEventListener('click', () => { rosterYear++; renderRosterYear(false); });
       document.getElementById('btn-roster-scroll-today').addEventListener('click', () => { rosterYear = new Date().getFullYear(); renderRosterYear(true); });
 
-      // EINSTELLUNGEN
-      document.getElementById('btn-open-settings-modal').addEventListener('click', () => { document.getElementById('modal-settings').classList.remove('hidden'); });
-      document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
-      document.getElementById('btn-save-settings').addEventListener('click', () => { 
-        metaDB.nightShiftSunday = document.getElementById('setting-night-sunday').checked; 
-        metaDB.showKombi = document.getElementById('setting-show-kombi').checked;
-        saveJSON(STORAGE_KEYS.META, metaDB); 
-        applyKombiVisibility();
-        document.getElementById('modal-settings').classList.add('hidden'); 
+      document.getElementById('card-in').addEventListener('click', () => setActiveTimeCard('in', true));
+      document.getElementById('card-out').addEventListener('click', () => setActiveTimeCard('out', true));
+      document.getElementById('btn-jump-today').addEventListener('click', () => { const tIso = toISODate(new Date()); const idx = dateWheelList.indexOf(tIso); if (idx >= 0) { selectedDateISO = tIso; scrollToWheelIndex('wheel-date', idx, true); onDateChanged(); } });
+      
+      document.getElementById('btn-set-now').addEventListener('click', () => { const now = new Date(); setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true); applyWheelTimeToActiveCard(); });
+      document.getElementById('btn-set-default').addEventListener('click', () => { const sObj = SHIFTS.find(s => s.code === selectedShiftCode); if (sObj) { setTimeWheels(activeTimeTarget === 'in' ? sObj.start : sObj.end, true); applyWheelTimeToActiveCard(); } });
+      document.getElementById('btn-clear-time').addEventListener('click', () => { if (activeTimeTarget === 'in') draftEntry.in = ''; else draftEntry.out = ''; updateCardsAndPreview(); });
+      
+      document.getElementById('btn-save-entry').addEventListener('click', saveCurrentDayInstant);
+
+      document.getElementById('btn-delete-day').addEventListener('click', () => { document.getElementById('delete-modal-date-text').textContent = formatDE(selectedDateISO); document.getElementById('modal-delete-confirm').classList.remove('hidden'); });
+      document.getElementById('btn-confirm-delete-no').addEventListener('click', () => document.getElementById('modal-delete-confirm').classList.add('hidden'));
+      document.getElementById('btn-confirm-delete-yes').addEventListener('click', () => { delete entriesDB[selectedDateISO]; saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); document.getElementById('modal-delete-confirm').classList.add('hidden'); onDateChanged(); triggerBackgroundDriveSync(); });
+
+      // SONDERBUCHUNGEN
+      document.getElementById('btn-open-special').addEventListener('click', () => {
+        document.getElementById('special-modal-title').textContent = `⚙️ Sonderbuchung (${formatDE(selectedDateISO)})`;
+        document.getElementById('sp-in-1').value = draftEntry.in || ''; document.getElementById('sp-out-1').value = draftEntry.out || '';
+        const b2 = (draftEntry.blocks && draftEntry.blocks[1]) || { in: '', out: '' }; const b3 = (draftEntry.blocks && draftEntry.blocks[2]) || { in: '', out: '' };
+        document.getElementById('sp-in-2').value = b2.in || ''; document.getElementById('sp-out-2').value = b2.out || '';
+        document.getElementById('sp-in-3').value = b3.in || ''; document.getElementById('sp-out-3').value = b3.out || '';
+        document.getElementById('sp-doctor-hours').value = draftEntry.docHours || ''; document.getElementById('sp-paid-holiday').checked = !!draftEntry.paidHoliday;
+        document.getElementById('sp-fill-fs').checked = !!draftEntry.fillFS; document.getElementById('sp-unpaid-child').checked = !!draftEntry.unpaidChild;
+        document.getElementById('sp-note').value = draftEntry.note || ''; document.getElementById('modal-special').classList.remove('hidden');
       });
+      document.getElementById('btn-close-special').addEventListener('click', () => document.getElementById('modal-special').classList.add('hidden'));
+      document.getElementById('btn-save-special').addEventListener('click', () => {
+        draftEntry.in = document.getElementById('sp-in-1').value; draftEntry.out = document.getElementById('sp-out-1').value;
+        draftEntry.blocks = [{ in: draftEntry.in, out: draftEntry.out }, { in: document.getElementById('sp-in-2').value, out: document.getElementById('sp-out-2').value }, { in: document.getElementById('sp-in-3').value, out: document.getElementById('sp-out-3').value }];
+        draftEntry.docHours = document.getElementById('sp-doctor-hours').value.trim(); draftEntry.paidHoliday = document.getElementById('sp-paid-holiday').checked;
+        draftEntry.fillFS = document.getElementById('sp-fill-fs').checked; draftEntry.unpaidChild = document.getElementById('sp-unpaid-child').checked;
+        draftEntry.note = document.getElementById('sp-note').value.trim(); delete draftEntry.rawKnauf; delete draftEntry.rawImport;
+        document.getElementById('modal-special').classList.add('hidden'); saveCurrentDayInstant();
+      });
+
+      // VERR & KOSTENSTELLE MODAL
+      document.getElementById('btn-open-verr-modal').addEventListener('click', () => {
+        document.getElementById('input-kostenstelle').value = metaDB.kostenstelle || 'Meine Kostenstelle';
+        document.getElementById('setting-cap-early').checked = metaDB.capEarlyShift !== false;
+        document.getElementById('modal-verr').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-verr').addEventListener('click', () => document.getElementById('modal-verr').classList.add('hidden'));
+      document.getElementById('btn-save-verr').addEventListener('click', () => {
+        metaDB.kostenstelle = document.getElementById('input-kostenstelle').value.trim();
+        metaDB.capEarlyShift = document.getElementById('setting-cap-early').checked;
+        saveJSON(STORAGE_KEYS.META, metaDB); triggerBackgroundDriveSync();
+        document.getElementById('modal-verr').classList.add('hidden'); renderOverview(); onDateChanged();
+      });
+
+      // MEHRARBEIT STATISTIK MODAL (Jetzt über Header Button aufrufbar)
+      document.getElementById('btn-open-stats-modal').addEventListener('click', () => {
+        renderStats(); document.getElementById('modal-stats').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-stats').addEventListener('click', () => document.getElementById('modal-stats').classList.add('hidden'));
+
+      document.getElementById('btn-prev-month').addEventListener('click', () => { overviewMonth--; if (overviewMonth < 0) { overviewMonth = 11; overviewYear--; } renderOverview(); });
+      document.getElementById('btn-next-month').addEventListener('click', () => { overviewMonth++; if (overviewMonth > 11) { overviewMonth = 0; overviewYear++; } renderOverview(); });
+
+      // FS-KONTO & URLAUB SPEICHERN
+      document.getElementById('btn-open-fs-modal').addEventListener('click', () => openFsAndVacationModal(false));
+      document.getElementById('btn-open-vac-modal').addEventListener('click', () => openFsAndVacationModal(true));
+      document.getElementById('btn-close-fs').addEventListener('click', () => document.getElementById('modal-fs').classList.add('hidden'));
+
+      document.getElementById('btn-save-fs').addEventListener('click', () => {
+        const ymKey = `${overviewYear}-${String(overviewMonth + 1).padStart(2, '0')}`; const yearStr = String(overviewYear);
+        if (!metaDB.months) metaDB.months = {};
+        
+        const inputPrevVal = parseFloat(document.getElementById('fs-input-prev').value) || 0;
+        const autoPrevVal = getFsPrevValueForMonth(overviewYear, overviewMonth);
+        const isManuallySet = (Math.abs(inputPrevVal - autoPrevVal) > 0.01);
+
+        metaDB.months[ymKey] = { 
+          prevFS: inputPrevVal, 
+          payout: parseFloat(document.getElementById('fs-input-payout').value) || 0, 
+          corr: parseFloat(document.getElementById('fs-input-corr').value) || 0,
+          isManuallySet: isManuallySet
+        };
+
+        const taken = getVacationTakenInYear(yearStr); 
+        const desiredCurrentRest = parseFloat(String(document.getElementById('vac-input-current').value).replace(',', '.'));
+        const inputSonder = parseFloat(String(document.getElementById('vac-input-sonder').value).replace(',', '.'));
+        
+        if (!metaDB.vacationBase) metaDB.vacationBase = {}; 
+        if (!isNaN(desiredCurrentRest)) metaDB.vacationBase[yearStr] = desiredCurrentRest + taken;
+        
+        if (!metaDB.vacationSonder) metaDB.vacationSonder = {};
+        metaDB.vacationSonder[yearStr] = isNaN(inputSonder) ? 0 : inputSonder;
+        
+        saveJSON(STORAGE_KEYS.META, metaDB); triggerBackgroundDriveSync(); document.getElementById('modal-fs').classList.add('hidden'); renderOverview();
+      });
+
+      // EINSTELLUNGEN
+      document.getElementById('btn-open-settings-modal').addEventListener('click', () => { document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday; document.getElementById('modal-settings').classList.remove('hidden'); });
+      document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
+      document.getElementById('btn-save-settings').addEventListener('click', () => { metaDB.nightShiftSunday = document.getElementById('setting-night-sunday').checked; saveJSON(STORAGE_KEYS.META, metaDB); document.getElementById('modal-settings').classList.add('hidden'); });
       document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
 
       // BACKUP
@@ -641,6 +1905,9 @@
       
       document.getElementById('btn-full-backup-export').addEventListener('click', exportFullBackupCSV);
       document.getElementById('input-full-backup-import').addEventListener('change', (e) => { if (e.target.files[0]) importFullBackupCSV(e.target.files[0]); });
+      
+      document.getElementById('btn-month-csv-export').addEventListener('click', () => generateMonthOrYearCSV(false));
+      document.getElementById('btn-year-csv-export').addEventListener('click', () => generateMonthOrYearCSV(true));
 
       // DRIVE SYNC & KOPIEREN
       document.getElementById('btn-open-drive-modal').addEventListener('click', () => {
@@ -663,7 +1930,7 @@
       });
 
       document.getElementById('btn-copy-script').addEventListener('click', function() {
-        const folderPath = document.getElementById('drive-folder-input').value.trim() || 'Schicht/PWA_Schichtplan';
+        const folderPath = document.getElementById('drive-folder-input').value.trim() || 'Schicht/PWA_Zeiterfassung';
         const scriptCode = `function getFolderByPath(path) {
   var parts = path.split('/');
   var folder = DriveApp.getRootFolder();
@@ -676,7 +1943,7 @@
   return folder;
 }
 
-var FILE_NAME = 'PWA_Schichtplan_Backup.json';
+var FILE_NAME = 'PWA_Arbeitszeiten_Backup.json';
 
 function doPost(e) {
   try {
@@ -718,28 +1985,19 @@ function doGet(e) {
       // ==========================================
       // AUTOMATISCHER OFFLINE-RECOVERY SYNC
       // ==========================================
-      
-      // 1. Beim Start prüfen, ob wir online sind
       if (navigator.onLine && metaDB.driveAuto && metaDB.driveUrl) {
-        // 2 Sekunden warten, damit die App erst ruckelfrei lädt
-        setTimeout(() => {
-          syncPushToGoogleDrive(false); // false = ohne störende Alert-Popups
-        }, 2000);
+        setTimeout(() => { syncPushToGoogleDrive(false); }, 2000);
       }
-
-      // 2. Lauschen, ob das Internet plötzlich wiederkommt, während die App offen ist
       window.addEventListener('online', () => {
-        if (metaDB.driveAuto && metaDB.driveUrl) {
-          syncPushToGoogleDrive(false);
-        }
+        if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false);
       });
 
     });
   </script>
- <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
- </script> 
+  <script>
+   if ('serviceWorker' in navigator) {
+     navigator.serviceWorker.register('./sw.js');
+   }
+  </script>
 </body>
 </html>
