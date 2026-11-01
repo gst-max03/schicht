@@ -82,27 +82,25 @@
         <div id="tool-grid-container" class="flex flex-col gap-1.5">
           
           <!-- Einzelschichten -->
-          <div id="tool-box-single" class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
-            <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Tag oder KW (Mo–Fr)</div>
+          <div id="tool-box-single" class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
             <div id="single-btn-grid" class="grid grid-cols-4 gap-1">
-              <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
-              <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
-              <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
-              <button type="button" data-single="0135" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0135 opacity-75 transition">Z</button>
-              <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
-              <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
-              <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
-              <button type="button" data-single="FS" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-FS opacity-75 transition flex items-center justify-center" title="Freischicht">FS</button>
+              <button type="button" data-single="0112" class="tool-single-btn h-[36px] rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
+              <button type="button" data-single="0111" class="tool-single-btn h-[36px] rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
+              <button type="button" data-single="0113" class="tool-single-btn h-[36px] rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
+              <button type="button" data-single="0135" class="tool-single-btn h-[36px] rounded-lg text-xs font-black border shift-cell-0135 opacity-75 transition">Z</button>
+              <button type="button" data-single="URLAUB" class="tool-single-btn h-[36px] rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
+              <button type="button" data-single="KRANK" class="tool-single-btn h-[36px] rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
+              <button type="button" data-single="LEHRGANG" class="tool-single-btn h-[36px] rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
+              <button type="button" data-single="FS" class="tool-single-btn h-[36px] rounded-lg text-[10px] font-black border shift-cell-FS opacity-75 transition flex items-center justify-center" title="Freischicht">FS</button>
             </div>
           </div>
 
           <!-- Kombi-Wochen -->
-          <div id="tool-box-kombi" class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all">
-            <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Kombi</div>
+          <div id="tool-box-kombi" class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
             <div id="kombi-btn-grid" class="grid grid-cols-3 gap-1">
-                <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn py-2 rounded-md text-[9px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none">FF-SSS</button>
-                <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn py-2 rounded-md text-[9px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
-                <button type="button" data-pattern="NN-FF" class="tool-pattern-btn py-2 rounded-md text-[9px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
+                <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn h-[36px] rounded-md text-[10px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">FF-SSS</button>
+                <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn h-[36px] rounded-md text-[10px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">SS-NNN</button>
+                <button type="button" data-pattern="NN-FF" class="tool-pattern-btn h-[36px] rounded-md text-[10px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">NN-FF</button>
             </div>
           </div>
         </div>
@@ -123,7 +121,7 @@
     <div id="roster-kw-list" class="flex flex-col gap-3"></div>
 
     <div class="text-center mt-6 mb-2 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v016
+      v017
     </div>
   </main>
 
@@ -494,7 +492,9 @@
     }
 
     function scrollToRosterElement(el) {
-      if (!el) return; const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 135;
+      if (!el) return;
+      // Header Height anpassen, da die Schriften oben weg sind, ist er nun etwas kompakter.
+      const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 135;
       window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 8, behavior: 'smooth' });
     }
 
@@ -735,6 +735,12 @@
         saveJSON(STORAGE_KEYS.META, metaDB); 
         applyKombiVisibility();
         document.getElementById('modal-settings').classList.add('hidden'); 
+        
+        // Nach Speichern der Einstellung den Spacer-Bereich aktualisieren:
+        setTimeout(() => {
+          const h = document.getElementById('roster-fixed-header')?.offsetHeight;
+          if (h) document.getElementById('roster-header-spacer').style.height = (h + 6) + 'px';
+        }, 50);
       });
       document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
 
