@@ -246,7 +246,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v055
+      v056
     </div>
   </main>
 
@@ -929,7 +929,7 @@
       if (activeShiftCode === 'FREI') return { ist: 0, verr: 0, soll: 0, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'FREI', tazp: 'FREI', isPreview: false, isWorked: false };
       if (activeShiftCode === 'URLAUB') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Urlaub', tazp: '0109', isPreview: false, isWorked: false };
       if (activeShiftCode === 'KRANK') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Krank m. Attest', tazp: '0109', isPreview: false, isWorked: false };
-      if (activeShiftCode === 'FS') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 8, info: 'Freischicht (-8h FS)', tazp: '0109', isPreview: false, isWorked: false };
+      if (activeShiftCode === 'FS') return { ist: 0, verr: 0, soll: 0, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Freischicht', tazp: 'FS', isPreview: false, isWorked: false };
       if (activeShiftCode === 'FEIERTAG' || (entry && entry.paidHoliday)) {
          return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Feiertag bezahlt', tazp: 'Ft.bzh', isPreview: false, isWorked: false };
       }
@@ -1531,13 +1531,15 @@
         const planned = rosterDB[iso]; const displayShiftCode = entry ? calc.tazp : (planned || 'FREI');
         
         let badgeText = displayShiftCode;
-        if (badgeText === 'URLAUB' || badgeText === '0109') badgeText = 'Url.';
-        if (badgeText === 'KRANK') badgeText = 'Krank';
-        if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') badgeText = 'Ft.bzh'; 
-        if (badgeText === 'FS') badgeText = 'FS';
-        if (badgeText === 'LEHRGANG') badgeText = 'LG';
+        let styleCode = displayShiftCode;
 
-        const badgeCls = getShiftCellClass(displayShiftCode, false);
+        if (badgeText === 'URLAUB' || badgeText === '0109') { badgeText = 'Url.'; styleCode = 'URLAUB'; }
+        if (badgeText === 'KRANK') { badgeText = 'Krank'; styleCode = 'KRANK'; }
+        if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') { badgeText = 'Ft.bzh'; styleCode = 'FEIERTAG'; }
+        if (badgeText === 'FS') { badgeText = 'FS'; styleCode = 'FS'; }
+        if (badgeText === 'LEHRGANG') { badgeText = 'LG'; styleCode = 'LEHRGANG'; }
+
+        const badgeCls = getShiftCellClass(styleCode, false);
         const starIcon = hol ? `<span class="text-amber-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ml-1">★</span>` : '';
 
         const timeLines = getBookedTimeLines(entry); let compactTime = '--';
