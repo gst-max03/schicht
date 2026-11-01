@@ -122,7 +122,7 @@
     <div id="roster-kw-list" class="flex flex-col gap-3"></div>
 
     <div class="text-center mt-6 mb-2 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v013
+      v015
     </div>
   </main>
 
@@ -248,6 +248,13 @@
   <!-- JAVASCRIPT LOGIK                                          -->
   <!-- ========================================================= -->
   <script>
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Falls wir später hier auch den Install-Button freischalten wollen
+    });
+
     const SHIFTS = [
       { code: '0112', short: 'F' },
       { code: '0111', short: 'S' },
@@ -322,7 +329,15 @@
     const MONTH_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 
     function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-    function toGermanDateFilename(d) { return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; }
+    
+    // Neuer Dateiname Generator mit Zeitstempel für Schichtplan
+    function toTimestampFilename() { 
+      const d = new Date();
+      const datePart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const timePart = `${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+      return `${datePart}_${timePart}`; 
+    }
+    
     function parseISODate(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); }
 
     function getISOWeek(d) {
@@ -555,7 +570,7 @@
       const csvContent = '\uFEFF' + rows.map(r => r.map(f => `"${String(f ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `PWA_Schichtplan_Backup_${toGermanDateFilename(new Date())}.csv`; a.click();
+      a.download = `PWA_Schichtplan_Backup_${toTimestampFilename()}.csv`; a.click();
     }
 
     function importFullBackupCSV(file) {
@@ -699,6 +714,26 @@ function doGet(e) {
           setTimeout(() => { this.textContent = origText; this.classList.replace('bg-emerald-600', 'bg-slate-800'); this.classList.replace('dark:bg-emerald-600', 'dark:bg-slate-600'); }, 2000);
         }).catch(err => { alert('Kopieren fehlgeschlagen: ' + err); });
       });
+
+      // ==========================================
+      // AUTOMATISCHER OFFLINE-RECOVERY SYNC
+      // ==========================================
+      
+      // 1. Beim Start prüfen, ob wir online sind
+      if (navigator.onLine && metaDB.driveAuto && metaDB.driveUrl) {
+        // 2 Sekunden warten, damit die App erst ruckelfrei lädt
+        setTimeout(() => {
+          syncPushToGoogleDrive(false); // false = ohne störende Alert-Popups
+        }, 2000);
+      }
+
+      // 2. Lauschen, ob das Internet plötzlich wiederkommt, während die App offen ist
+      window.addEventListener('online', () => {
+        if (metaDB.driveAuto && metaDB.driveUrl) {
+          syncPushToGoogleDrive(false);
+        }
+      });
+
     });
   </script>
  <script>
