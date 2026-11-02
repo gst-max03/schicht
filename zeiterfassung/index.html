@@ -114,19 +114,28 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
 
+  <!-- NEU: Update Banner -->
+  <div id="update-banner" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-blue-600 text-white p-3.5 rounded-2xl shadow-2xl z-[100] hidden flex-col items-center gap-2 border-2 border-blue-400">
+    <span class="text-sm font-extrabold text-center">🎉 Eine neue Version ist verfügbar!</span>
+    <button type="button" id="btn-apply-update" class="w-full py-2.5 bg-white text-blue-700 font-extrabold rounded-xl text-xs active:scale-95 transition shadow-sm">
+      Jetzt aktualisieren 🚀
+    </button>
+  </div>
+
   <!-- ========================================================= -->
   <!-- ANSICHT 1: HAUPTANSICHT (STEMPELN)                        -->
   <!-- ========================================================= -->
   <main id="view-main" class="max-w-md mx-auto px-2.5 pt-2.5 pb-8 flex flex-col gap-2.5">
     <header class="flex justify-end items-center gap-2 py-0.5">
-      <button type="button" onclick="window.switchView('roster')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
+      <button type="button" id="btn-nav-roster" onclick="window.switchView('roster')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
         <span>🗓️</span>
         <span>Schichtplan</span>
       </button>
-      <button type="button" onclick="window.switchView('overview')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
+      <button type="button" id="btn-nav-overview" onclick="window.switchView('overview')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
         <span>📅</span>
         <span>Übersicht</span>
       </button>
+      <button type="button" class="btn-open-settings-modal flex items-center justify-center px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-base shadow-sm active:scale-95 transition" title="Einstellungen & Design">⚙️</button>
     </header>
 
     <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
@@ -246,7 +255,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v056
+      v059
     </div>
   </main>
 
@@ -257,7 +266,7 @@
     <div id="roster-fixed-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-2 px-2 border-b border-slate-300 dark:border-slate-800 shadow-md">
       <div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 flex flex-col gap-2">
         <div class="flex justify-between items-center gap-1">
-          <button type="button" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95">
+          <button type="button" id="btn-roster-back" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95">
             ⬅ Zurück
           </button>
           <div class="flex items-center gap-1">
@@ -265,33 +274,30 @@
             <span id="roster-year-title" class="text-sm font-black px-2">2026</span>
             <button type="button" id="btn-roster-year-next" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">▶</button>
           </div>
-          <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95">
-            📍 Heute
-          </button>
+          <div class="flex items-center gap-1">
+            <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95">
+              📍 Heute
+            </button>
+            <button type="button" id="btn-open-roster-stats" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Plan-Jahresstatistik">📊</button>
+            <button type="button" class="btn-open-settings-modal px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm active:scale-95 transition" title="Einstellungen">⚙️</button>
+          </div>
         </div>
 
-        <div class="grid grid-cols-12 gap-1.5 items-stretch">
-          <div class="col-span-9 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-            <div class="text-[9px] font-extrabold uppercase text-slate-400 text-center mb-1">Tag oder KW (Mo–Fr)</div>
-            <div class="grid grid-cols-7 gap-1">
-              <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
-              <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
-              <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
-              <button type="button" data-single="0135" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0135 opacity-75 transition">Z</button>
-              <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
-              <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
-              <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
-            </div>
+        <div class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-1.5 transition-all">
+          <div class="grid grid-cols-8 gap-1">
+            <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
+            <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
+            <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
+            <button type="button" data-single="0135" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0135 opacity-75 transition">Z</button>
+            <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
+            <button type="button" data-single="FS" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-FS opacity-75 transition flex items-center justify-center" title="Freischicht">FS</button>
+            <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
+            <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
           </div>
-
-          <div class="col-span-3 bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between h-full">
-            <div class="grid grid-cols-2 gap-1 h-full items-stretch">
-              <div class="flex flex-col gap-1 h-full">
-                <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none">FF-SSS</button>
-                <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn flex-1 rounded-md text-[8px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none">SS-NNN</button>
-              </div>
-              <button type="button" data-pattern="NN-FF" class="tool-pattern-btn h-full rounded-md text-[8px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none">NN-FF</button>
-            </div>
+          <div id="roster-pattern-container" class="flex justify-center gap-1.5">
+            <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn px-2.5 py-1.5 rounded-md text-[10px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">FF-SSS</button>
+            <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn px-2.5 py-1.5 rounded-md text-[10px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">SS-NNN</button>
+            <button type="button" data-pattern="NN-FF" class="tool-pattern-btn px-2.5 py-1.5 rounded-md text-[10px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">NN-FF</button>
           </div>
         </div>
 
@@ -313,14 +319,12 @@
   <section id="view-overview" class="hidden max-w-md mx-auto px-2 pt-2.5 pb-14 flex flex-col gap-2.5">
     
     <div class="flex justify-between items-center gap-1 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-      <button type="button" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition">
+      <button type="button" id="btn-overview-back" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition">
         ⬅ Zurück
       </button>
       <div class="flex items-center gap-1.5">
         <button type="button" id="btn-open-stats-modal" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-slate-800 rounded-xl text-base active:scale-95 transition shadow-sm" title="Jahresstatistik">📊</button>
-        <button type="button" id="btn-open-drive-modal" class="px-2.5 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-slate-800 rounded-xl text-base active:scale-95 transition shadow-sm" title="Google Drive Sync">☁️</button>
-        <button type="button" id="btn-open-backup-modal" class="px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Lokales Backup">💾</button>
-        <button type="button" id="btn-open-settings-modal" class="px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Einstellungen & Design">⚙️</button>
+        <button type="button" class="btn-open-settings-modal px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Einstellungen & Design">⚙️</button>
       </div>
     </div>
 
@@ -400,7 +404,7 @@
   <!-- MODALS (Einstellungen, Backup, Drive, etc.)               -->
   <!-- ========================================================= -->
   
-  <!-- MODAL: Einstellungen (Theme & Sonntag) -->
+  <!-- MODAL: Einstellungen -->
   <div id="modal-settings" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -419,14 +423,38 @@
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Nachtschicht-Rhythmus</div>
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
-            <div>
-              <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
-              <span class="text-xs text-slate-500 block leading-snug">Wenn aktiv: Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche.</span>
-            </div>
-          </label>
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Daten & Backup</div>
+          <div class="flex gap-2">
+            <button type="button" id="btn-open-drive-modal" class="flex-1 py-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-slate-700 rounded-lg text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">☁️ Drive Sync</button>
+            <button type="button" id="btn-open-backup-modal" class="flex-1 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">💾 Lokales Backup</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Verhalten</div>
+          <div class="flex flex-col gap-3">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
+              <div>
+                <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
+                <span class="text-xs text-slate-500 block leading-snug">Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="setting-hide-patterns" class="w-5 h-5 mt-0.5 accent-blue-600">
+              <div>
+                <span class="font-bold text-sm block">Schicht-Kombis ausblenden</span>
+                <span class="text-xs text-slate-500 block leading-snug">Versteckt die Kombi-Buttons (z.B. FF-SSS) im Schichtplan.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="setting-roster-only" class="w-5 h-5 mt-0.5 accent-blue-600">
+              <div>
+                <span class="font-bold text-sm block">Nur Schichtplan anzeigen</span>
+                <span class="text-xs text-slate-500 block leading-snug">Blendet alles andere (Stempeluhr, Übersicht) aus.</span>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -468,7 +496,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Jahres-Statistik (Schichten) -->
+  <!-- MODAL: Jahres-Statistik (Gebuchte Schichten) -->
   <div id="modal-stats" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2">
     <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3">
       <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -480,20 +508,55 @@
         <table class="w-full text-center border-collapse table-fixed">
           <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px]">
             <tr>
-              <th class="py-2 px-1 text-left w-[20%]">Monat</th>
-              <th class="py-2 px-1 text-yellow-600 dark:text-yellow-400">F</th>
-              <th class="py-2 px-1 text-green-600 dark:text-green-400">S</th>
-              <th class="py-2 px-1 text-cyan-600 dark:text-cyan-400">N</th>
-              <th class="py-2 px-1 text-pink-600 dark:text-pink-400">Z</th>
-              <th class="py-2 px-1 text-slate-600 dark:text-slate-400">LG</th>
-              <th class="py-2 px-1 text-purple-600 dark:text-purple-400">U</th>
-              <th class="py-2 px-1 text-red-600 dark:text-red-400">K</th>
+              <th class="py-2 px-1 text-left w-[18%]">Monat</th>
+              <th class="py-2 px-0.5 text-yellow-600 dark:text-yellow-400">F</th>
+              <th class="py-2 px-0.5 text-green-600 dark:text-green-400">S</th>
+              <th class="py-2 px-0.5 text-cyan-600 dark:text-cyan-400">N</th>
+              <th class="py-2 px-0.5 text-pink-600 dark:text-pink-400">Z</th>
+              <th class="py-2 px-0.5 text-slate-600 dark:text-slate-400">LG</th>
+              <th class="py-2 px-0.5 text-purple-600 dark:text-purple-400">U</th>
+              <th class="py-2 px-0.5 text-red-600 dark:text-red-400">K</th>
+              <th class="py-2 px-0.5 text-teal-600 dark:text-teal-400">FS</th>
             </tr>
           </thead>
           <tbody id="stats-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold">
             <!-- Befüllt via JS -->
           </tbody>
           <tfoot id="stats-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold text-[11px] border-t-2 border-slate-300 dark:border-slate-700">
+            <!-- Befüllt via JS -->
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Jahres-Statistik (NUR SCHICHTPLAN) -->
+  <div id="modal-roster-stats" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-base font-extrabold text-indigo-600 dark:text-indigo-400">📊 Plan-Übersicht <span id="roster-stats-year-title"></span></h3>
+        <button type="button" id="btn-close-roster-stats" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
+      </div>
+      
+      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-center border-collapse table-fixed">
+          <thead class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-extrabold uppercase text-[10px]">
+            <tr>
+              <th class="py-2 px-1 text-left w-[18%]">Monat</th>
+              <th class="py-2 px-0.5 text-yellow-600 dark:text-yellow-400">F</th>
+              <th class="py-2 px-0.5 text-green-600 dark:text-green-400">S</th>
+              <th class="py-2 px-0.5 text-cyan-600 dark:text-cyan-400">N</th>
+              <th class="py-2 px-0.5 text-pink-600 dark:text-pink-400">Z</th>
+              <th class="py-2 px-0.5 text-slate-600 dark:text-slate-400">LG</th>
+              <th class="py-2 px-0.5 text-purple-600 dark:text-purple-400">U</th>
+              <th class="py-2 px-0.5 text-red-600 dark:text-red-400">K</th>
+              <th class="py-2 px-0.5 text-teal-600 dark:text-teal-400">FS</th>
+            </tr>
+          </thead>
+          <tbody id="roster-stats-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold">
+            <!-- Befüllt via JS -->
+          </tbody>
+          <tfoot id="roster-stats-table-foot" class="bg-indigo-50/50 dark:bg-indigo-900/20 font-extrabold text-[11px] border-t-2 border-indigo-200 dark:border-indigo-800">
             <!-- Befüllt via JS -->
           </tfoot>
         </table>
@@ -748,7 +811,8 @@
     let rosterDB  = loadJSON(STORAGE_KEYS.ROSTER, {});
     let metaDB    = loadJSON(STORAGE_KEYS.META, {
       theme: 'system', nightShiftSunday: false, capEarlyShift: true, kostenstelle: 'Meine Kostenstelle',
-      driveAuto: false, driveUrl: '', vacationBase: { '2026': 30, '2027': 30 }, vacationSonder: { '2026': 0, '2027': 0 }, months: {}
+      driveAuto: false, driveUrl: '', vacationBase: { '2026': 30, '2027': 30 }, vacationSonder: { '2026': 0, '2027': 0 }, months: {},
+      rosterOnly: false, hidePatterns: false
     });
 
     if (metaDB.sonderurlaub && !metaDB.vacationSonder) {
@@ -919,13 +983,10 @@
     }
 
     function calculateDay(isoDate, entry) {
-      // Wenn der User am Drehrad eine Sonderschicht ausgewählt hat, MUSS diese erzwungen werden
-      // (auch wenn noch ein verwaister Eintrag aus einer versehentlichen Buchung drinsteht).
       const activeShiftCode = entry ? entry.shift : (rosterDB[isoDate] || 'FREI');
       const hol = isHoliday(isoDate);
       const isShift = (code) => ['0112', '0111', '0113', '0135', 'LEHRGANG'].includes(code);
 
-      // Zwangskorrektur für Sonderschichten
       if (activeShiftCode === 'FREI') return { ist: 0, verr: 0, soll: 0, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'FREI', tazp: 'FREI', isPreview: false, isWorked: false };
       if (activeShiftCode === 'URLAUB') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Urlaub', tazp: '0109', isPreview: false, isWorked: false };
       if (activeShiftCode === 'KRANK') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Krank m. Attest', tazp: '0109', isPreview: false, isWorked: false };
@@ -1184,7 +1245,6 @@
     }
 
     function applyWheelTimeToActiveCard() {
-      // Wenn Sonderschicht ausgewählt ist, ignorieren wir die Zeiteingabe beim Speichern aus dem Rad
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
       if (noTimeShifts.includes(selectedShiftCode)) {
         draftEntry.in = '';
@@ -1200,7 +1260,6 @@
     function updateCardsAndPreview() {
       draftEntry.shift = selectedShiftCode;
       
-      // Optik in den Karten leeren, wenn es eine Schicht ohne Zeit ist
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
       if (noTimeShifts.includes(selectedShiftCode)) {
          document.getElementById('val-time-in').textContent = '--:--';
@@ -1281,7 +1340,6 @@
     function saveCurrentDayInstant() {
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
       
-      // Wenn Sonderschicht gewählt ist, alle gestempelten Zeiten hart rauslöschen
       if (noTimeShifts.includes(selectedShiftCode)) {
         draftEntry.in = '';
         draftEntry.out = '';
@@ -1323,7 +1381,7 @@
       } else if (activeWeekPattern) {
         hint.textContent = `⚡ Kombi [${activeWeekPattern}] aktiv: Auf „KW“ oder Zeile tippen zum Ausfüllen!`; hint.className = 'text-[10px] font-extrabold text-center py-1 px-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200';
       } else {
-        hint.textContent = '👆 Links wählen (Tag tippen = Einzeltag | KW tippen = Füllen) oder Kombi wählen'; hint.className = 'text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+        hint.textContent = '👆 Links wählen (Tag tippen = Einzeltag | KW tippen = Mo–Fr) oder rechts Kombi wählen'; hint.className = 'text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
       }
     }
 
@@ -1687,6 +1745,62 @@
       `;
     }
 
+    function renderRosterStats() {
+      document.getElementById('roster-stats-year-title').textContent = rosterYear;
+      const tbody = document.getElementById('roster-stats-table-body');
+      const tfoot = document.getElementById('roster-stats-table-foot');
+      tbody.innerHTML = '';
+      
+      let total = { F: 0, S: 0, N: 0, Z: 0, LG: 0, U: 0, K: 0 };
+      
+      for (let m = 0; m < 12; m++) {
+        const daysInMonth = new Date(rosterYear, m + 1, 0).getDate();
+        let counts = { F: 0, S: 0, N: 0, Z: 0, LG: 0, U: 0, K: 0 };
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+          const iso = toISODate(new Date(rosterYear, m, d));
+          const shift = rosterDB[iso]; 
+          
+          if (shift === '0112') counts.F++;
+          else if (shift === '0111') counts.S++;
+          else if (shift === '0113') counts.N++;
+          else if (shift === '0135') counts.Z++;
+          else if (shift === 'LEHRGANG') counts.LG++;
+          else if (shift === 'URLAUB' || shift === '0109') counts.U++;
+          else if (shift === 'KRANK') counts.K++;
+        }
+        
+        total.F += counts.F; total.S += counts.S; total.N += counts.N;
+        total.Z += counts.Z; total.LG += counts.LG; total.U += counts.U; total.K += counts.K;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-2 px-1 text-left">${MONTH_SHORT[m]}</td>
+          <td class="py-2 px-1 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
+          <td class="py-2 px-1 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
+          <td class="py-2 px-1 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
+          <td class="py-2 px-1 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
+          <td class="py-2 px-1 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
+          <td class="py-2 px-1 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
+          <td class="py-2 px-1 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+      
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-2 px-1 text-left">JAHR</td>
+          <td class="py-2 px-1 text-yellow-600 dark:text-yellow-400">${total.F}</td>
+          <td class="py-2 px-1 text-green-600 dark:text-green-400">${total.S}</td>
+          <td class="py-2 px-1 text-cyan-600 dark:text-cyan-400">${total.N}</td>
+          <td class="py-2 px-1 text-pink-600 dark:text-pink-400">${total.Z}</td>
+          <td class="py-2 px-1 text-slate-600 dark:text-slate-400">${total.LG}</td>
+          <td class="py-2 px-1 text-purple-600 dark:text-purple-400">${total.U}</td>
+          <td class="py-2 px-1 text-red-600 dark:text-red-400">${total.K}</td>
+        </tr>
+      `;
+    }
+
     function openFsAndVacationModal(focusVacation = false) {
       const ymKey = `${overviewYear}-${String(overviewMonth + 1).padStart(2, '0')}`;
       const yearStr = String(overviewYear);
@@ -1786,6 +1900,33 @@
     }
 
     /********************************************************************
+     * UI-ZUSTÄNDE (Muster ausblenden, Schichtplan-Only Modus)
+     ********************************************************************/
+    function applyHidePatternsState() {
+      const container = document.getElementById('roster-pattern-container');
+      if (container) {
+        container.style.display = metaDB.hidePatterns ? 'none' : 'flex';
+      }
+    }
+
+    function applyRosterOnlyState() {
+      const isRosterOnly = !!metaDB.rosterOnly;
+      const elsToHide = [
+        document.getElementById('btn-nav-roster'),
+        document.getElementById('btn-nav-overview'),
+        document.getElementById('btn-roster-back'),
+        document.getElementById('btn-overview-back')
+      ];
+      elsToHide.forEach(el => {
+        if (el) el.style.display = isRosterOnly ? 'none' : '';
+      });
+
+      if (isRosterOnly && document.getElementById('view-roster').classList.contains('hidden')) {
+        window.switchView('roster');
+      }
+    }
+
+    /********************************************************************
      * INITIALISIERUNG
      ********************************************************************/
     window.addEventListener('DOMContentLoaded', () => {
@@ -1853,11 +1994,17 @@
         document.getElementById('modal-verr').classList.add('hidden'); renderOverview(); onDateChanged();
       });
 
-      // MEHRARBEIT STATISTIK MODAL (Jetzt über Header Button aufrufbar)
+      // MEHRARBEIT STATISTIK MODAL
       document.getElementById('btn-open-stats-modal').addEventListener('click', () => {
         renderStats(); document.getElementById('modal-stats').classList.remove('hidden');
       });
       document.getElementById('btn-close-stats').addEventListener('click', () => document.getElementById('modal-stats').classList.add('hidden'));
+
+      // PLAN-JAHRESSTATISTIK MODAL (Schichtplan)
+      document.getElementById('btn-open-roster-stats').addEventListener('click', () => {
+        renderRosterStats(); document.getElementById('modal-roster-stats').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-roster-stats').addEventListener('click', () => document.getElementById('modal-roster-stats').classList.add('hidden'));
 
       document.getElementById('btn-prev-month').addEventListener('click', () => { overviewMonth--; if (overviewMonth < 0) { overviewMonth = 11; overviewYear--; } renderOverview(); });
       document.getElementById('btn-next-month').addEventListener('click', () => { overviewMonth++; if (overviewMonth > 11) { overviewMonth = 0; overviewYear++; } renderOverview(); });
@@ -1895,14 +2042,32 @@
         saveJSON(STORAGE_KEYS.META, metaDB); triggerBackgroundDriveSync(); document.getElementById('modal-fs').classList.add('hidden'); renderOverview();
       });
 
-      // EINSTELLUNGEN
-      document.getElementById('btn-open-settings-modal').addEventListener('click', () => { document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday; document.getElementById('modal-settings').classList.remove('hidden'); });
+      // EINSTELLUNGEN & ZAHNRAD (Global)
+      document.querySelectorAll('.btn-open-settings-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday;
+          document.getElementById('setting-hide-patterns').checked = !!metaDB.hidePatterns;
+          document.getElementById('setting-roster-only').checked = !!metaDB.rosterOnly;
+          document.getElementById('modal-settings').classList.remove('hidden');
+        });
+      });
       document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
-      document.getElementById('btn-save-settings').addEventListener('click', () => { metaDB.nightShiftSunday = document.getElementById('setting-night-sunday').checked; saveJSON(STORAGE_KEYS.META, metaDB); document.getElementById('modal-settings').classList.add('hidden'); });
+      document.getElementById('btn-save-settings').addEventListener('click', () => { 
+        metaDB.nightShiftSunday = document.getElementById('setting-night-sunday').checked; 
+        metaDB.hidePatterns = document.getElementById('setting-hide-patterns').checked;
+        metaDB.rosterOnly = document.getElementById('setting-roster-only').checked;
+        saveJSON(STORAGE_KEYS.META, metaDB); 
+        document.getElementById('modal-settings').classList.add('hidden'); 
+        applyHidePatternsState();
+        applyRosterOnlyState();
+      });
       document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
 
       // BACKUP
-      document.getElementById('btn-open-backup-modal').addEventListener('click', () => document.getElementById('modal-backup').classList.remove('hidden'));
+      document.getElementById('btn-open-backup-modal').addEventListener('click', () => {
+        document.getElementById('modal-settings').classList.add('hidden');
+        document.getElementById('modal-backup').classList.remove('hidden');
+      });
       document.getElementById('btn-close-backup').addEventListener('click', () => document.getElementById('modal-backup').classList.add('hidden'));
       
       document.getElementById('btn-full-backup-export').addEventListener('click', exportFullBackupCSV);
@@ -1913,6 +2078,7 @@
 
       // DRIVE SYNC & KOPIEREN
       document.getElementById('btn-open-drive-modal').addEventListener('click', () => {
+        document.getElementById('modal-settings').classList.add('hidden');
         document.getElementById('drive-auto-sync').checked = !!metaDB.driveAuto; document.getElementById('drive-url-input').value = metaDB.driveUrl || '';
         document.getElementById('drive-sync-status').classList.add('hidden'); document.getElementById('drive-help-text').classList.add('hidden');
         document.getElementById('btn-drive-help').textContent = '📖 Anleitung für Google Drive anzeigen';
@@ -1993,13 +2159,52 @@ function doGet(e) {
       window.addEventListener('online', () => {
         if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false);
       });
+      
+      // Start-Logik für Ausblendungen ausführen
+      applyHidePatternsState();
+      applyRosterOnlyState();
 
     });
   </script>
+
+  <!-- NEU: Service Worker Registrierung mit Update-Logik -->
   <script>
-   if ('serviceWorker' in navigator) {
-     navigator.serviceWorker.register('./sw.js');
-   }
+    if ('serviceWorker' in navigator) {
+      let newWorker;
+      const updateBanner = document.getElementById('update-banner');
+      const btnUpdate = document.getElementById('btn-apply-update');
+
+      // Klick auf den Update-Button sendet den Befehl an die sw.js
+      if (btnUpdate) {
+        btnUpdate.addEventListener('click', () => {
+          if (newWorker) {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      }
+
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            // Wenn der neue Worker installiert ist und schon ein alter Worker existiert (Update)
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              updateBanner.classList.remove('hidden');
+              updateBanner.classList.add('flex');
+            }
+          });
+        });
+      });
+
+      // Sobald der neue Worker das Kommando übernommen hat, lade die Seite neu
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
   </script>
 </body>
 </html>
