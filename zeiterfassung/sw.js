@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zeiterfassung-offline-v059'; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
+const CACHE_NAME = 'zeiterfassung-offline-v0591'; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
 
 // Alte Caches aufräumen, damit der Speicher nicht vollläuft
 self.addEventListener('activate', (event) => {
