@@ -121,7 +121,7 @@
     <div id="roster-kw-list" class="flex flex-col gap-3"></div>
 
     <div class="text-center mt-6 mb-2 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v017
+      v018
     </div>
   </main>
 
@@ -222,6 +222,9 @@
           <div class="flex flex-col gap-2">
             <button type="button" id="btn-full-backup-export" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition">
               <span>📤</span> Schichtplan Exportieren
+            </button>
+            <button type="button" id="btn-export-zeiterfassung" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition">
+              <span>🚀</span> Export für Zeiterfassung
             </button>
             <label class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition">
               <span>📥</span> Schichtplan Wiederherstellen
@@ -493,7 +496,6 @@
 
     function scrollToRosterElement(el) {
       if (!el) return;
-      // Header Height anpassen, da die Schriften oben weg sind, ist er nun etwas kompakter.
       const headerHeight = document.getElementById('roster-fixed-header')?.offsetHeight || 135;
       window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 8, behavior: 'smooth' });
     }
@@ -669,6 +671,22 @@
       a.download = `PWA_Schichtplan_Backup_${toTimestampFilename()}.csv`; a.click();
     }
 
+    function exportForZeiterfassungCSV() {
+      // Baut die exakt 13-spaltige CSV Struktur der Zeiterfassung auf
+      const rows = [['RECORD_TYPE', 'KEY_OR_DATE', 'SHIFT', 'IN', 'OUT', 'IST', 'VERR', 'SOLL', 'MEHR', 'NACHT', 'DOC_HOURS', 'FLAGS_JSON', 'NOTE']];
+      
+      Object.keys(rosterDB).sort().forEach(iso => { 
+        rows.push(['ROSTER', iso, rosterDB[iso], '', '', '', '', '', '', '', '', '', '']); 
+      });
+      
+      rows.push(['META', 'FULL_META_JSON', '', '', '', '', '', '', '', '', '', JSON.stringify(metaDB), '']);
+
+      const csvContent = '\uFEFF' + rows.map(r => r.map(f => `"${String(f ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `PWA_Zeiterfassung_Import_${toTimestampFilename()}.csv`; a.click();
+    }
+
     function importFullBackupCSV(file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -677,8 +695,18 @@
           const newRoster = {};
           for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
-            if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { newRoster[cols[1]] = cols[2]; }
-            else if (cols[0] === 'META' && cols[3]) { const parsedMeta = JSON.parse(cols[3]); metaDB = parsedMeta; }
+            
+            if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { 
+              newRoster[cols[1]] = cols[2]; 
+            }
+            else if (cols[0] === 'META') { 
+              // Erkennt automatisch altes Format (Index 3) und Zeiterfassungs-Format (Index 11)
+              const metaJson = cols[11] ? cols[11] : cols[3];
+              if (metaJson) {
+                const parsedMeta = JSON.parse(metaJson); 
+                metaDB = parsedMeta; 
+              }
+            }
           }
           rosterDB = newRoster;
           saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.META, metaDB);
@@ -749,6 +777,7 @@
       document.getElementById('btn-close-backup').addEventListener('click', () => document.getElementById('modal-backup').classList.add('hidden'));
       
       document.getElementById('btn-full-backup-export').addEventListener('click', exportFullBackupCSV);
+      document.getElementById('btn-export-zeiterfassung').addEventListener('click', exportForZeiterfassungCSV);
       document.getElementById('input-full-backup-import').addEventListener('change', (e) => { if (e.target.files[0]) importFullBackupCSV(e.target.files[0]); });
 
       // DRIVE SYNC & KOPIEREN
