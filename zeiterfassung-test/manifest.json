@@ -1,6 +1,6 @@
 {
-  "name": "Zeiterfassung",
-  "short_name": "Zeiterfassung",
+  "name": "Zeiterfassung-Test",
+  "short_name": "Zeiterfassung-Test",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
