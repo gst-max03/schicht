@@ -2549,7 +2549,7 @@ function doGet(e) {
         });
       }
 
-      navigator.serviceWorker.register('./sw.js').then(reg => {
+      navigator.serviceWorker.register('/schicht/zeiterfassung-test/sw.js', { scope: '/schicht/zeiterfassung-test/' }).then(reg => {
         reg.addEventListener('updatefound', () => {
           newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
