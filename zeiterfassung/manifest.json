@@ -1,5 +1,5 @@
 {
-  "id": "/schicht/zeiterfassung/",
+  "id": "app-zeiterfassung",
   "name": "Zeiterfassung",
   "short_name": "Zeiterfassung",
   "start_url": "/schicht/zeiterfassung/index.html",
