@@ -1,8 +1,8 @@
 {
-  "id": "app-schichtplan",
+  "id": "/schicht/schichtplan/",
   "name": "Schichtplan",
   "short_name": "Schicht",
-  "start_url": "/schicht/schichtplan/index.html",
+  "start_url": "/schicht/schichtplan/index.html?app=schichtplan",
   "scope": "/schicht/schichtplan/",
   "display": "standalone",
   "background_color": "#0f172a",
