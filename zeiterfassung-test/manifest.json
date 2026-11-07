@@ -1,8 +1,9 @@
 {
+  "id": "/schicht/zeiterfassung-test/",
   "name": "Zeiterfassung-Test",
   "short_name": "Zeiterfassung-Test",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/schicht/zeiterfassung-test/index.html",
+  "scope": "/schicht/zeiterfassung-test/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#1e293b",
