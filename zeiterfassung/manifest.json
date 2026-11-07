@@ -1,8 +1,8 @@
 {
-  "id": "app-zeiterfassung",
+  "id": "schicht/zeiterfassung/",
   "name": "Zeiterfassung",
   "short_name": "Zeiterfassung",
-  "start_url": "/schicht/zeiterfassung/index.html",
+  "start_url": "/schicht/zeiterfassung/index.html?app=zeiterfassung",
   "scope": "/schicht/zeiterfassung/",
   "display": "standalone",
   "background_color": "#0f172a",
