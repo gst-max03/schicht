@@ -1,8 +1,9 @@
 {
+  "id": "/schicht/schichtplan/",
   "name": "Schichtplan",
   "short_name": "Schicht",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/schicht/schichtplan/index.html",
+  "scope": "/schicht/schichtplan/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#1e293b",
