@@ -1,5 +1,5 @@
 {
-  "id": "/schicht/schichtplan/",
+  "id": "app-schichtplan",
   "name": "Schichtplan",
   "short_name": "Schicht",
   "start_url": "/schicht/schichtplan/index.html",
