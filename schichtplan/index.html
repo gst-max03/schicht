@@ -876,7 +876,7 @@ function doGet(e) {
   </script>
  <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
+    navigator.serviceWorker.register('/schicht/schichtplan/sw.js', { scope: '/schicht/schichtplan/' }).then(reg => {
   }
  </script> 
 </body>
