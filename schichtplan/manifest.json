@@ -1,7 +1,7 @@
 {
   "id": "/schicht/schichtplan/",
   "name": "Schichtplan",
-  "short_name": "Schicht",
+  "short_name": "Schicht-ALT",
   "start_url": "/schicht/schichtplan/index.html?app=schichtplan",
   "scope": "/schicht/schichtplan/",
   "display": "standalone",
