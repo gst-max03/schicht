@@ -284,7 +284,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v060
+      v061
     </div>
   </main>
 
@@ -1564,12 +1564,12 @@
 
         const isCurrentWeek = w.days.some(dayObj => toISODate(dayObj) === todayIso);
         const kwBlock = document.createElement('div'); if (isCurrentWeek) kwBlock.id = 'roster-current-kw';
-        kwBlock.className = `p-1.5 rounded-xl border transition ${isCurrentWeek ? 'bg-blue-50/50 dark:bg-blue-950/30 border-2 border-blue-500' : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'}`;
+        kwBlock.className = `p-1.5 rounded-xl border transition ${isCurrentWeek ? 'bg-slate-100 dark:bg-slate-800/60 border-2 border-black dark:border-black' : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'}`;
 
         const rowGrid = document.createElement('div'); rowGrid.className = 'grid grid-cols-8 gap-1 items-stretch';
         const kwBtn = document.createElement('button'); kwBtn.type = 'button';
         // NEU: Aktuelle KW stark hervorheben (.current-kw-strong)
-        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 ${isCurrentWeek ? 'current-kw-strong' : 'border-slate-300 dark:border-slate-700'}`;
+        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 ${isCurrentWeek ? 'current-kw-strong' : 'border-slate-300 dark:border-slate-700'}`;
         kwBtn.innerHTML = `<span>KW</span><span class="text-xs leading-none mt-0.5">${w.kw}</span>`;
 
         const dayCells = [];
@@ -1610,7 +1610,7 @@
             const diffDays = (cellD - realToday) / (1000 * 60 * 60 * 24);
             const isNear = diffDays >= 0 && diffDays <= 2; // Pulsieren für heute, morgen, übermorgen
             const pinStr = evs.length > 1 ? '📌📌' : '📌';
-            const pinClass = isNear ? 'pin-blink text-rose-600 dark:text-rose-500 drop-shadow-md' : 'text-rose-600 dark:text-rose-500 drop-shadow-sm';
+            const pinClass = isNear ? 'pin-blink text-black dark:text-black drop-shadow-md' : 'text-black dark:text-black drop-shadow-sm';
             pinHtml = `<div class="absolute bottom-0.5 right-0.5 text-[9px] leading-none ${pinClass}">${pinStr}</div>`;
           }
 
@@ -1684,7 +1684,7 @@
         const diffDays = (cellD - realToday) / (1000 * 60 * 60 * 24);
         const isNear = diffDays >= 0 && diffDays <= 2; 
         const pinStr = evs.length > 1 ? '📌📌' : '📌';
-        const pinClass = isNear ? 'pin-blink text-rose-600 dark:text-rose-500 drop-shadow-md' : 'text-rose-600 dark:text-rose-500 drop-shadow-sm';
+        const pinClass = isNear ? 'pin-blink text-black dark:text-black drop-shadow-md' : 'text-black dark:text-black drop-shadow-sm';
         pinHtml = `<div class="absolute bottom-0.5 right-0.5 text-[9px] leading-none ${pinClass}">${pinStr}</div>`;
       }
       
