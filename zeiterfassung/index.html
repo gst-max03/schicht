@@ -1774,20 +1774,44 @@
     document.getElementById('btn-close-day-events').addEventListener('click', () => { document.getElementById('modal-day-events').classList.add('hidden'); renderRosterYear(false); });
     document.getElementById('btn-save-day-events').addEventListener('click', () => { document.getElementById('modal-day-events').classList.add('hidden'); renderRosterYear(false); });
 
-    // NEU: Globale Terminliste rendern
+    // NEU: Globale Terminliste rendern (Nach KW sortiert & alte ausgeblendet)
     function renderGlobalEventsList() {
       const container = document.getElementById('events-global-container');
       container.innerHTML = '';
       
-      const allIsos = Object.keys(eventsDB).sort();
+      const realToday = new Date();
+      const realTodayIso = toISODate(realToday);
+      
+      // Datum vor exakt 14 Tagen berechnen
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(realToday.getDate() - 14);
+      const twoWeeksAgoIso = toISODate(twoWeeksAgo);
+
+      // Nur ISO-Daten behalten, die neuer oder gleich 14 Tage alt sind
+      const allIsos = Object.keys(eventsDB)
+        .filter(iso => iso >= twoWeeksAgoIso)
+        .sort();
+
       if (allIsos.length === 0) {
-        container.innerHTML = '<div class="text-sm text-slate-500 italic text-center p-4">Keine Termine vorhanden.</div>';
+        container.innerHTML = '<div class="text-sm text-slate-500 italic text-center p-4">Keine aktuellen Termine vorhanden.</div>';
         return;
       }
       
-      const realTodayIso = toISODate(new Date());
+      let currentKW = -1;
 
       allIsos.forEach(iso => {
+        const d = parseISODate(iso);
+        const kw = getISOWeek(d);
+        
+        // Überschrift für neue KW einfügen
+        if (kw !== currentKW) {
+          const kwHeader = document.createElement('div');
+          kwHeader.className = 'text-xs font-black text-rose-600 dark:text-rose-400 mt-3 mb-1 pl-1 border-b-2 border-rose-200 dark:border-rose-900/50 uppercase tracking-wider';
+          kwHeader.textContent = `KW ${kw} (${d.getFullYear()})`;
+          container.appendChild(kwHeader);
+          currentKW = kw;
+        }
+
         const evs = eventsDB[iso];
         const isPast = iso < realTodayIso;
         
@@ -1806,12 +1830,10 @@
           ${evHtml}
         `;
         
-        // Klick auf den Termin bringt einen (wenn möglich) zum entsprechenden Monat
         if (!isPast) {
           wrapper.classList.add('cursor-pointer', 'active:scale-95', 'transition');
           wrapper.addEventListener('click', () => {
              document.getElementById('modal-events-list').classList.add('hidden');
-             const d = parseISODate(iso);
              if (d.getFullYear() === rosterYear) {
                scrollToRosterElement(document.getElementById(`roster-month-sec-${d.getMonth()}`));
              }
