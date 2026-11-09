@@ -1334,7 +1334,7 @@
 
     function applyWheelTimeToActiveCard() {
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
-      if (noTimeShifts.includes(selectedShiftCode)) {
+      if (noTimeShifts.includes(selectedShiftCode) || draftEntry.unpaidChild) {
         draftEntry.in = '';
         draftEntry.out = '';
       } else {
@@ -1349,7 +1349,7 @@
       draftEntry.shift = selectedShiftCode;
       
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
-      if (noTimeShifts.includes(selectedShiftCode)) {
+      if (noTimeShifts.includes(selectedShiftCode) || draftEntry.unpaidChild) {
          document.getElementById('val-time-in').textContent = '--:--';
          document.getElementById('sub-time-in').textContent = 'Keine Zeit benötigt';
          document.getElementById('val-time-out').textContent = '--:--';
@@ -1428,7 +1428,7 @@
     function saveCurrentDayInstant() {
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
       
-      if (noTimeShifts.includes(selectedShiftCode)) {
+      if (noTimeShifts.includes(selectedShiftCode) || draftEntry.unpaidChild) {
         draftEntry.in = '';
         draftEntry.out = '';
         draftEntry.blocks = [];
@@ -2407,6 +2407,10 @@
         draftEntry.paidDoctor = document.getElementById('sp-paid-doctor').checked;
         draftEntry.unpaidChild = document.getElementById('sp-unpaid-child').checked;
         draftEntry.note = document.getElementById('sp-note').value.trim(); delete draftEntry.rawKnauf; delete draftEntry.rawImport;
+        
+        // Wenn "Kind krank" aktiv ist, löschen wir sicherheitshalber alle Zeiten aus dem Modal
+        if (draftEntry.unpaidChild) { draftEntry.in = ''; draftEntry.out = ''; draftEntry.blocks = []; draftEntry.docHours = ''; }
+        
         document.getElementById('modal-special').classList.add('hidden'); saveCurrentDayInstant();
       });
 
