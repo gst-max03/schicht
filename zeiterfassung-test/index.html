@@ -1938,15 +1938,17 @@
         }
 
         const isWe = (dateObj.getDay() === 0 || dateObj.getDay() === 6); const isToday = (iso === toISODate(new Date()));
-        const planned = rosterDB[iso]; const displayShiftCode = entry ? calc.tazp : (planned || 'FREI');
+        const planned = rosterDB[iso]; 
+        // FIX: Wir werten für die Anzeige entry.shift aus, da KRANK und URLAUB sonst beide den Abrechnungscode "0109" haben
+        const displayShiftCode = entry ? (entry.shift || calc.tazp) : (planned || 'FREI');
         
         let badgeText = displayShiftCode;
         let styleCode = displayShiftCode;
 
         // 1. Abzeichen & Klassen Logik (Kind krank = rot, Urlaub voll ausschreiben etc.)
         if (entry && entry.unpaidChild) { badgeText = 'Ki.kr'; styleCode = 'KRANK'; }
-        else if (badgeText === 'URLAUB' || badgeText === '0109') { badgeText = 'Urlaub'; styleCode = 'URLAUB'; }
         else if (badgeText === 'KRANK') { badgeText = 'Krank'; styleCode = 'KRANK'; }
+        else if (badgeText === 'URLAUB' || badgeText === '0109') { badgeText = 'Urlaub'; styleCode = 'URLAUB'; }
         else if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') { badgeText = 'Ft.bzh'; styleCode = 'FEIERTAG'; }
         else if (badgeText === 'FS') { badgeText = 'FS'; styleCode = 'FS'; }
         else if (badgeText === 'LEHRGANG') { badgeText = 'LG'; styleCode = 'LEHRGANG'; }
