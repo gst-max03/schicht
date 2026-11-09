@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1e293b">
+  <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,6 +24,10 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
+
+    /* NEU: Verhindert das automatische Abdunkeln durch Samsung/Chrome */
+    html.light { color-scheme: light !important; }
+    html.dark { color-scheme: dark !important; }
 
     /* Wheel Picker */
     .wheel-wrapper {
