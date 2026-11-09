@@ -1942,15 +1942,14 @@
 
         const isWe = (dateObj.getDay() === 0 || dateObj.getDay() === 6); const isToday = (iso === toISODate(new Date()));
         const planned = rosterDB[iso]; 
-        // FIX: Wir werten für die Anzeige entry.shift aus, da KRANK und URLAUB sonst beide den Abrechnungscode "0109" haben
         const displayShiftCode = entry ? (entry.shift || calc.tazp) : (planned || 'FREI');
         
         let badgeText = displayShiftCode;
         let styleCode = displayShiftCode;
 
-        // 1. Abzeichen & Klassen Logik (Kind krank = rot, Arzt = Feiertag-Style, etc.)
+        // 1. Abzeichen & Klassen Logik
         if (entry && entry.unpaidChild) { badgeText = 'Ki.kr'; styleCode = 'KRANK'; }
-        else if (entry && entry.paidDoctor) { badgeText = 'Arzt'; styleCode = 'FEIERTAG'; }
+        // Arztbesuch greift nicht mehr in das Badge ein - die normale Schicht (z.B. Früh) bleibt optisch!
         else if (badgeText === 'KRANK') { badgeText = 'Krank'; styleCode = 'KRANK'; }
         else if (badgeText === 'URLAUB' || badgeText === '0109') { badgeText = 'Urlaub'; styleCode = 'URLAUB'; }
         else if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') { badgeText = 'Ft.bzh'; styleCode = 'FEIERTAG'; }
@@ -1960,22 +1959,37 @@
         const badgeCls = getShiftCellClass(styleCode, false);
         const starIcon = hol ? `<span class="text-amber-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ml-1">★</span>` : '';
 
-        // 2. Text-Logik (Kommt-Geht Spalte) strikt auf "Plan: XXX" zwingen
+        // 2. Text-Logik (Kommt-Geht Spalte)
         const timeLines = getBookedTimeLines(entry); 
         let compactTime = '--';
         
         if (entry && entry.unpaidChild) {
-          // Zeiten ignorieren! Zeigt ursprünglichen Plan wieder an.
           let planText = planned || entry.shift;
           if (planText === 'URLAUB' || planText === '0109') planText = 'Urlaub';
           compactTime = `Plan: ${planText}`;
         } 
         else if (timeLines.length > 0) {
-          // Ganz normal gebuchte Zeiten
           compactTime = timeLines.join('<br>');
+          // Arzt-Label in der passenden Farbe unter die Zeit hängen
+          if (entry && entry.paidDoctor) {
+            let c = 'text-slate-600 dark:text-slate-400';
+            if (styleCode === '0112') c = 'text-yellow-600 dark:text-yellow-500';
+            else if (styleCode === '0111') c = 'text-green-600 dark:text-green-500';
+            else if (styleCode === '0113') c = 'text-cyan-600 dark:text-cyan-500';
+            else if (styleCode === '0135') c = 'text-pink-500 dark:text-pink-400';
+            compactTime += `<br><span class="text-[10px] font-black ${c}">Arzt (8,00h)</span>`;
+          }
         } 
+        else if (entry && entry.paidDoctor) {
+          // Fallback: Arzt gewählt, aber vergessen Zeiten zu stempeln
+          let c = 'text-slate-600 dark:text-slate-400';
+          if (styleCode === '0112') c = 'text-yellow-600 dark:text-yellow-500';
+          else if (styleCode === '0111') c = 'text-green-600 dark:text-green-500';
+          else if (styleCode === '0113') c = 'text-cyan-600 dark:text-cyan-500';
+          else if (styleCode === '0135') c = 'text-pink-500 dark:text-pink-400';
+          compactTime = `<span class="text-[10px] font-black ${c}">Arzt (8,00h)</span>`;
+        }
         else if (planned && planned !== 'FREI') {
-          // Keine Zeiten gebucht, also Plan-Text ausgeben (ohne "m. Attest" etc.)
           let planText = planned; 
           if (planText === 'URLAUB' || planText === '0109') planText = 'Urlaub';
           if (planText === 'KRANK') planText = 'Krank';
@@ -1984,7 +1998,6 @@
           compactTime = `Plan: ${planText}`;
         } 
         else if (entry && entry.shift && entry.shift !== 'FREI') {
-          // Fallback für manuell gesetzte Schichten ohne Plan-Hintergrund
           let planText = entry.shift;
           if (planText === 'URLAUB' || planText === '0109') planText = 'Urlaub';
           if (planText === 'KRANK') planText = 'Krank';
