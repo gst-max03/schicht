@@ -111,33 +111,24 @@
       outline-color: #60a5fa !important;
     }
 
-    /* NEU: Pulsierende Stecknadel für nahe Termine */
+    /* NEU: Pulsierende Stecknadel für nahe Termine in Schwarz */
     .pin-blink {
       animation: pulsate 1.5s infinite ease-in-out;
     }
     @keyframes pulsate {
       0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 3px rgba(225,29,72,0.9)); }
+      50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 3px rgba(0,0,0,0.8)); }
       100% { transform: scale(1); opacity: 0.8; }
     }
 
-    /* NEU: Optisches Upgrade für HEUTE und aktuelle KW */
+    /* NEU: Optisches Upgrade für HEUTE (Rahmen in Schwarz statt Blau) */
     .current-day-strong {
-      box-shadow: 0 0 0 3px #3b82f6 !important;
+      box-shadow: 0 0 0 3px #000000 !important;
       z-index: 10;
       transform: scale(1.02);
     }
     .dark .current-day-strong {
-      box-shadow: 0 0 0 3px #60a5fa !important;
-    }
-    .current-kw-strong {
-      background-color: #3b82f6 !important;
-      color: #ffffff !important;
-      border-color: #2563eb !important;
-    }
-    .dark .current-kw-strong {
-      background-color: #2563eb !important;
-      border-color: #1d4ed8 !important;
+      box-shadow: 0 0 0 3px #ffffff !important;
     }
   </style>
 </head>
@@ -1564,12 +1555,12 @@
 
         const isCurrentWeek = w.days.some(dayObj => toISODate(dayObj) === todayIso);
         const kwBlock = document.createElement('div'); if (isCurrentWeek) kwBlock.id = 'roster-current-kw';
-        kwBlock.className = `p-1.5 rounded-xl border transition ${isCurrentWeek ? 'bg-slate-100 dark:bg-slate-800/60 border-2 border-black dark:border-black' : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'}`;
+        kwBlock.className = `p-1.5 rounded-xl border transition ${isCurrentWeek ? 'bg-slate-50/70 dark:bg-slate-800/40 border-2 border-black dark:border-black' : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'}`;
 
         const rowGrid = document.createElement('div'); rowGrid.className = 'grid grid-cols-8 gap-1 items-stretch';
         const kwBtn = document.createElement('button'); kwBtn.type = 'button';
-        // NEU: Aktuelle KW stark hervorheben (.current-kw-strong)
-        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 ${isCurrentWeek ? 'current-kw-strong' : 'border-slate-300 dark:border-slate-700'}`;
+        // Normale KW Ansicht (keine blaue Einfärbung)
+        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 ${isCurrentWeek ? 'border-slate-800 dark:border-slate-200' : 'border-slate-300 dark:border-slate-700'}`;
         kwBtn.innerHTML = `<span>KW</span><span class="text-xs leading-none mt-0.5">${w.kw}</span>`;
 
         const dayCells = [];
@@ -1610,7 +1601,7 @@
             const diffDays = (cellD - realToday) / (1000 * 60 * 60 * 24);
             const isNear = diffDays >= 0 && diffDays <= 2; // Pulsieren für heute, morgen, übermorgen
             const pinStr = evs.length > 1 ? '📌📌' : '📌';
-            const pinClass = isNear ? 'pin-blink text-black dark:text-black drop-shadow-md' : 'text-black dark:text-black drop-shadow-sm';
+            const pinClass = isNear ? 'pin-blink grayscale brightness-0 dark:invert drop-shadow-md' : 'grayscale brightness-0 dark:invert drop-shadow-sm';
             pinHtml = `<div class="absolute bottom-0.5 right-0.5 text-[9px] leading-none ${pinClass}">${pinStr}</div>`;
           }
 
@@ -1684,7 +1675,7 @@
         const diffDays = (cellD - realToday) / (1000 * 60 * 60 * 24);
         const isNear = diffDays >= 0 && diffDays <= 2; 
         const pinStr = evs.length > 1 ? '📌📌' : '📌';
-        const pinClass = isNear ? 'pin-blink text-black dark:text-black drop-shadow-md' : 'text-black dark:text-black drop-shadow-sm';
+        const pinClass = isNear ? 'pin-blink grayscale brightness-0 dark:invert drop-shadow-md' : 'grayscale brightness-0 dark:invert drop-shadow-sm';
         pinHtml = `<div class="absolute bottom-0.5 right-0.5 text-[9px] leading-none ${pinClass}">${pinStr}</div>`;
       }
       
