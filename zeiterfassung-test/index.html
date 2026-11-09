@@ -2,12 +2,13 @@
 <html lang="de" class="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Schicht</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Schicht- & Zeiterfassung</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e293b">
+  <meta name="theme-color" content="#f8fafc" id="meta-theme-color">
+  <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,32 +23,64 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      background-color: #f1f5f9; /* slate-100 */
+    }
+    .dark body { background-color: #020617; /* slate-950 */ }
+
+    /* Safe Area Insets für moderne Smartphones */
+    .pt-safe { padding-top: env(safe-area-inset-top); }
+    .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
+    .nav-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+    /* Verhindert das automatische Abdunkeln durch Samsung/Chrome */
+    html.light { color-scheme: light !important; }
+    html.dark { color-scheme: dark !important; }
+
+    /* App Container Mockup für Desktop */
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background-color: #f8fafc;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow-x: hidden;
+    }
+    .dark .app-container {
+      background-color: #0f172a;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     }
 
-    /* Wheel Picker */
+    /* Wheel Picker im neuen Design */
     .wheel-wrapper {
       position: relative;
       height: 132px;
       overflow: hidden;
-      border-radius: 0.75rem;
+      border-radius: 1rem;
       user-select: none;
+      background: linear-gradient(to bottom, rgba(241,245,249,0.5) 0%, rgba(248,250,252,0.8) 50%, rgba(241,245,249,0.5) 100%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .dark .wheel-wrapper {
+      background: linear-gradient(to bottom, rgba(30,41,59,0.3) 0%, rgba(15,23,42,0.6) 50%, rgba(30,41,59,0.3) 100%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
     .wheel-highlight {
       position: absolute;
       top: 50%;
-      left: 4px;
-      right: 4px;
-      height: 36px;
+      left: 6px;
+      right: 6px;
+      height: 38px;
       transform: translateY(-50%);
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
       pointer-events: none;
       z-index: 1;
-      background: rgba(59, 130, 246, 0.14);
-      border: 1px solid rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
     .dark .wheel-highlight {
-      background: rgba(59, 130, 246, 0.24);
-      border-color: rgba(96, 165, 250, 0.5);
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(96, 165, 250, 0.3);
     }
     .wheel-scroller {
       height: 100%;
@@ -68,19 +101,20 @@
       align-items: center;
       justify-content: center;
       scroll-snap-align: center;
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: #64748b;
-      transition: all 0.1s ease;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #94a3b8;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       white-space: nowrap;
       padding: 0 4px;
     }
-    .dark .wheel-item { color: #94a3b8; }
+    .dark .wheel-item { color: #64748b; }
     .wheel-item.active {
-      font-size: 1rem;
-      font-weight: 800;
+      font-size: 1.1rem;
+      font-weight: 900;
       color: #0f172a;
+      transform: scale(1.05);
     }
     .dark .wheel-item.active { color: #f8fafc; }
 
@@ -97,715 +131,808 @@
     .shift-cell-FREI-we { background-color: #f8fafc; color: #c2410c; border-color: #fb923c; }
     .dark .shift-cell-FREI-we { background-color: #1e293b; color: #fdba74; border-color: #ea580c; }
     
-    .shift-cell-FREI-wd { background-color: #ffffff; color: #64748b; border-color: #cbd5e1; }
-    .dark .shift-cell-FREI-wd { background-color: #0f172a; color: #64748b; border-color: #334155; }
+    .shift-cell-FREI-wd { background-color: #ffffff; color: #64748b; border-color: #e2e8f0; }
+    .dark .shift-cell-FREI-wd { background-color: #1e293b; color: #64748b; border-color: #334155; }
 
     .tool-active {
-      outline: 3px solid #2563eb !important;
-      outline-offset: 1px;
-      transform: scale(1.04);
+      outline: 3px solid #3b82f6 !important;
+      outline-offset: 2px;
+      transform: scale(1.05);
       opacity: 1 !important;
-      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
     .dark .tool-active {
       outline-color: #60a5fa !important;
     }
 
-    /* NEU: Pulsierende Stecknadel für nahe Termine */
+    /* Pulsierende Stecknadel für nahe Termine */
     .pin-blink {
       animation: pulsate 1.5s infinite ease-in-out;
     }
     @keyframes pulsate {
       0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 3px rgba(225,29,72,0.9)); }
+      50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 4px rgba(0,0,0,0.8)); }
       100% { transform: scale(1); opacity: 0.8; }
     }
 
-    /* NEU: Optisches Upgrade für HEUTE und aktuelle KW */
+    /* Optisches Upgrade für HEUTE (Rahmen) */
     .current-day-strong {
-      box-shadow: 0 0 0 3px #3b82f6 !important;
+      box-shadow: 0 0 0 3px #0f172a !important;
       z-index: 10;
-      transform: scale(1.02);
+      transform: scale(1.03);
     }
     .dark .current-day-strong {
-      box-shadow: 0 0 0 3px #60a5fa !important;
+      box-shadow: 0 0 0 3px #f8fafc !important;
     }
-    .current-kw-strong {
-      background-color: #3b82f6 !important;
-      color: #ffffff !important;
-      border-color: #2563eb !important;
-    }
-    .dark .current-kw-strong {
-      background-color: #2563eb !important;
-      border-color: #1d4ed8 !important;
-    }
+
+    /* Custom Animations */
+    .modal-backdrop { backdrop-filter: blur(4px); }
   </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+<body class="text-slate-800 dark:text-slate-100 transition-colors duration-200 selection:bg-blue-200">
 
-  <!-- NEU: Update Banner -->
-  <div id="update-banner" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-blue-600 text-white p-3.5 rounded-2xl shadow-2xl z-[100] hidden flex-col items-center gap-2 border-2 border-blue-400">
-    <span class="text-sm font-extrabold text-center">🎉 Eine neue Version ist verfügbar!</span>
-    <button type="button" id="btn-apply-update" class="w-full py-2.5 bg-white text-blue-700 font-extrabold rounded-xl text-xs active:scale-95 transition shadow-sm">
+<div class="app-container flex flex-col">
+
+  <!-- Update Banner -->
+  <div id="update-banner" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-3xl shadow-2xl z-[100] hidden flex-col items-center gap-3 border border-blue-400/50">
+    <span class="text-sm font-black text-center">🎉 Neues Update verfügbar!</span>
+    <button type="button" id="btn-apply-update" class="w-full py-3 bg-white text-blue-700 font-extrabold rounded-xl text-xs active:scale-95 transition shadow-md">
       Jetzt aktualisieren 🚀
     </button>
   </div>
 
+  <!-- GLOBALE TOP-NAV (Nur auf Main sichtbar) -->
+  <header id="global-header" class="pt-safe sticky top-0 z-40 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 py-3 flex justify-between items-center transition-all">
+    <div class="font-black text-xl text-slate-800 dark:text-slate-100 flex items-center gap-2">
+      <span class="text-blue-600 dark:text-blue-500">⏱️</span> Zeiterfassung
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="btn-open-settings-modal w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm active:scale-95 transition" title="Einstellungen">
+        <span class="text-lg">⚙️</span>
+      </button>
+    </div>
+  </header>
+
   <!-- ========================================================= -->
   <!-- ANSICHT 1: HAUPTANSICHT (STEMPELN)                        -->
   <!-- ========================================================= -->
-  <main id="view-main" class="max-w-md mx-auto px-2.5 pt-2.5 pb-8 flex flex-col gap-2.5">
-    <header class="flex justify-end items-center gap-2 py-0.5">
-      <button type="button" id="btn-nav-roster" onclick="window.switchView('roster')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
-        <span>🗓️</span>
-        <span>Schichtplan</span>
-      </button>
-      <button type="button" id="btn-nav-overview" onclick="window.switchView('overview')" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
-        <span>📅</span>
-        <span>Übersicht</span>
-      </button>
-      <button type="button" class="btn-open-settings-modal flex items-center justify-center px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-base shadow-sm active:scale-95 transition" title="Einstellungen & Design">⚙️</button>
-    </header>
+  <main id="view-main" class="flex-1 px-4 pt-4 pb-28 flex flex-col gap-4">
+    
+    <!-- Alte Navigationsbuttons (versteckt, um keine IDs zu löschen) -->
+    <div class="hidden">
+      <button id="btn-nav-roster" onclick="window.switchView('roster')">Plan</button>
+      <button id="btn-nav-overview" onclick="window.switchView('overview')">Übersicht</button>
+    </div>
 
-    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
-      <div class="grid grid-cols-2 gap-2 text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
-        <div>Datum wählen</div>
-        <div class="flex items-center justify-center gap-1">
-          <span>Schicht (TAZP)</span>
-          <span id="roster-indicator" class="hidden text-[9px] px-1.5 py-0.2 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded font-extrabold">PLAN</span>
+    <!-- Sektion: Datum & Schicht -->
+    <section class="bg-white dark:bg-slate-900 rounded-[1.5rem] p-4 shadow-sm border border-slate-200/60 dark:border-slate-800/60">
+      <div class="grid grid-cols-2 gap-3 text-center text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+        <div>Datum</div>
+        <div class="flex items-center justify-center gap-1.5">
+          <span>Schicht</span>
+          <span id="roster-indicator" class="hidden text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded font-black border border-blue-200 dark:border-blue-800">PLAN</span>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="wheel-wrapper border border-slate-200 dark:border-slate-700/50">
           <div class="wheel-highlight"></div>
           <div id="wheel-date" class="wheel-scroller"></div>
         </div>
-        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+        <div class="wheel-wrapper border border-slate-200 dark:border-slate-700/50">
           <div class="wheel-highlight"></div>
           <div id="wheel-shift" class="wheel-scroller"></div>
         </div>
       </div>
-      <div class="flex justify-between items-center mt-2 px-1">
-        <button type="button" id="btn-jump-today" class="text-xs font-semibold text-blue-600 dark:text-blue-400 active:opacity-70">⟲ Auf Heute springen</button>
-        <span id="shift-source-hint" class="text-[10px] text-slate-400 dark:text-slate-500 font-medium"></span>
-        <span id="holiday-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 hidden">🎉 Feiertag</span>
+      <div class="flex justify-between items-center mt-3 px-1">
+        <button type="button" id="btn-jump-today" class="text-xs font-bold text-blue-600 dark:text-blue-400 active:opacity-70 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg transition">⟲ Auf Heute</button>
+        <span id="shift-source-hint" class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"></span>
+        <span id="holiday-badge" class="text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 hidden border border-amber-200 dark:border-amber-800">🎉 Feiertag</span>
       </div>
     </section>
 
-    <section class="grid grid-cols-2 gap-2">
-      <button type="button" id="card-in" class="p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">🟢 Kommen</span>
-          <span id="badge-active-in" class="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded">Rad aktiv</span>
+    <!-- Sektion: Kommen / Gehen Karten -->
+    <section class="grid grid-cols-2 gap-3">
+      <button type="button" id="card-in" class="p-4 rounded-[1.5rem] border-[2.5px] text-left transition-all bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-500 shadow-md ring-4 ring-emerald-500/10 relative overflow-hidden">
+        <div class="absolute -right-2 -top-2 text-6xl opacity-[0.03] dark:opacity-5">🟢</div>
+        <div class="flex items-center justify-between relative z-10">
+          <span class="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Kommen</span>
+          <span id="badge-active-in" class="text-[9px] font-black bg-emerald-500 text-white shadow-sm px-2 py-0.5 rounded-md uppercase tracking-wider">Aktiv</span>
         </div>
-        <div id="val-time-in" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 tracking-tight">--:--</div>
-        <div id="sub-time-in" class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">Nicht gebucht</div>
+        <div id="val-time-in" class="text-3xl font-black text-slate-900 dark:text-white mt-2 tracking-tighter relative z-10">--:--</div>
+        <div id="sub-time-in" class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1 truncate relative z-10">Nicht gebucht</div>
       </button>
 
-      <button type="button" id="card-out" class="p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-rose-600 dark:text-rose-400">🔴 Gehen</span>
-          <span id="badge-active-out" class="text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded hidden">Rad aktiv</span>
+      <button type="button" id="card-out" class="p-4 rounded-[1.5rem] border-[2.5px] text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="absolute -right-2 -top-2 text-6xl opacity-[0.03] dark:opacity-5">🔴</div>
+        <div class="flex items-center justify-between relative z-10">
+          <span class="text-xs font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">Gehen</span>
+          <span id="badge-active-out" class="text-[9px] font-black bg-rose-500 text-white shadow-sm px-2 py-0.5 rounded-md uppercase tracking-wider hidden">Aktiv</span>
         </div>
-        <div id="val-time-out" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 tracking-tight">--:--</div>
-        <div id="sub-time-out" class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">Nicht gebucht</div>
+        <div id="val-time-out" class="text-3xl font-black text-slate-900 dark:text-white mt-2 tracking-tighter relative z-10">--:--</div>
+        <div id="sub-time-out" class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1 truncate relative z-10">Nicht gebucht</div>
       </button>
     </section>
 
-    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
-      <div class="flex justify-between items-center mb-1 px-1">
-        <span id="label-wheel-target" class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Uhrzeit für KOMMEN wählen</span>
-        <div class="flex gap-2.5 text-xs font-semibold">
-          <button type="button" id="btn-set-now" class="text-blue-600 dark:text-blue-400 active:opacity-70">⚡ Jetzt</button>
-          <button type="button" id="btn-set-default" class="text-slate-500 dark:text-slate-400 active:opacity-70">Kernzeit</button>
-          <button type="button" id="btn-clear-time" class="text-rose-500 active:opacity-70">Löschen</button>
+    <!-- Sektion: Uhrzeit Picker -->
+    <section class="bg-white dark:bg-slate-900 rounded-[1.5rem] p-4 shadow-sm border border-slate-200/60 dark:border-slate-800/60">
+      <div class="flex justify-between items-center mb-2 px-1">
+        <span id="label-wheel-target" class="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Zeit für Kommen</span>
+        <div class="flex gap-2 text-[11px] font-bold">
+          <button type="button" id="btn-set-now" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg active:scale-95 transition">⚡ Jetzt</button>
+          <button type="button" id="btn-set-default" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg active:scale-95 transition">Kern</button>
+          <button type="button" id="btn-clear-time" class="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-3 py-1.5 rounded-lg active:scale-95 transition">Löschen</button>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-2 items-center relative">
-        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+      <div class="grid grid-cols-2 gap-3 items-center relative mt-1">
+        <div class="wheel-wrapper border border-slate-200 dark:border-slate-700/50">
           <div class="wheel-highlight"></div>
           <div id="wheel-hour" class="wheel-scroller"></div>
         </div>
-        <div class="wheel-wrapper bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+        <div class="wheel-wrapper border border-slate-200 dark:border-slate-700/50">
           <div class="wheel-highlight"></div>
           <div id="wheel-minute" class="wheel-scroller"></div>
         </div>
-        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-lg text-slate-400 pointer-events-none">:</div>
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-2xl text-slate-300 dark:text-slate-700 pointer-events-none drop-shadow-sm">:</div>
       </div>
     </section>
 
-    <div class="flex gap-2">
-      <button type="button" id="btn-save-entry" class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2 text-sm">
-        <span>💾</span>
+    <!-- Sektion: Action Buttons -->
+    <div class="flex gap-3">
+      <button type="button" id="btn-save-entry" class="flex-1 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 text-[15px]">
+        <span class="text-xl drop-shadow-sm">💾</span>
         <span id="btn-save-label">Tag speichern</span>
       </button>
-      <button type="button" id="btn-delete-day" title="Eintrag für diesen Tag löschen" class="w-12 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 hover:border-rose-500 text-rose-600 dark:text-rose-400 font-bold rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center">
-        <span class="text-lg">🗑️</span>
+      <button type="button" id="btn-open-special" title="Sonderbuchung & Optionen" class="w-14 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center relative">
+        <span class="text-xl">⚙️</span>
+        <span id="dot-special-active" class="w-3 h-3 rounded-full bg-emerald-500 absolute -top-1 -right-1 hidden border-2 border-white dark:border-slate-900"></span>
       </button>
-      <button type="button" id="btn-open-special" title="Sonderbuchung & Optionen" class="w-12 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 hover:border-blue-500 text-slate-700 dark:text-slate-200 font-bold rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center relative">
-        <span class="text-lg">⚙️</span>
-        <span id="dot-special-active" class="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -top-1 -right-1 hidden"></span>
+      <button type="button" id="btn-delete-day" title="Tag löschen" class="w-14 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-rose-500 font-bold rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center">
+        <span class="text-xl">🗑️</span>
       </button>
     </div>
 
-    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm">
-      <div class="flex justify-between items-center mb-1.5">
-        <span id="live-card-title" class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Heute</span>
-        <span id="live-card-shift" class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300">Früh (0112)</span>
+    <!-- Sektion: Live Preview Dashboard -->
+    <section class="bg-white dark:bg-slate-900 rounded-[1.5rem] p-4 border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+      <div class="flex justify-between items-center mb-3 ml-2">
+        <span id="live-card-title" class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Heute</span>
+        <span id="live-card-shift" class="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">Früh (0112)</span>
       </div>
-      <div class="grid grid-cols-4 gap-1 text-center py-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+      <div class="grid grid-cols-4 gap-2 text-center py-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/80 ml-2">
         <div>
-          <div class="text-[10px] text-slate-400 font-semibold">IST</div>
-          <div id="live-ist" class="text-xs font-bold text-slate-700 dark:text-slate-200">0,00</div>
+          <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">IST</div>
+          <div id="live-ist" class="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">0,00</div>
         </div>
         <div>
-          <div class="text-[10px] text-slate-400 font-semibold">VERR</div>
-          <div id="live-verr" class="text-xs font-extrabold text-slate-900 dark:text-white">0,00</div>
+          <div class="text-[9px] text-blue-500 font-bold uppercase tracking-wide">VERR</div>
+          <div id="live-verr" class="text-sm font-black text-slate-900 dark:text-white mt-0.5">0,00</div>
         </div>
         <div>
-          <div class="text-[10px] text-slate-400 font-semibold">SOLL</div>
-          <div id="live-soll" class="text-xs font-bold text-slate-600 dark:text-slate-400">8,00</div>
+          <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">SOLL</div>
+          <div id="live-soll" class="text-sm font-black text-slate-600 dark:text-slate-400 mt-0.5">8,00</div>
         </div>
         <div>
-          <div class="text-[10px] text-slate-400 font-semibold">MEHR</div>
-          <div id="live-mehr" class="text-xs font-extrabold text-slate-400">0,00</div>
+          <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">MEHR</div>
+          <div id="live-mehr" class="text-sm font-black text-slate-400 mt-0.5">0,00</div>
         </div>
       </div>
-      <div id="live-info-line" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 text-center font-medium">
+      <div id="live-info-line" class="text-[11px] text-slate-500 dark:text-slate-400 mt-3 text-center font-bold ml-2 bg-slate-100 dark:bg-slate-800 py-1.5 rounded-lg">
         Noch keine Buchung für diesen Tag
       </div>
     </section>
 
-    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm">
-      <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-        Die letzten 5 Tage (Antippen = Bearbeiten • Nochmal = Zurück ✏️)
+    <!-- Sektion: Letzte 5 Tage -->
+    <section class="bg-white dark:bg-slate-900 rounded-[1.5rem] p-4 border border-slate-200/60 dark:border-slate-800/60 shadow-sm">
+      <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3 text-center">
+        Die letzten 5 Tage
       </div>
-      <div id="recent-days-list" class="flex flex-col gap-1.5"></div>
+      <div id="recent-days-list" class="flex flex-col gap-2"></div>
     </section>
     
-    <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v060
+    <div class="text-center mt-2 pb-6 text-[9px] text-slate-400 font-black tracking-widest uppercase">
+      Finanzfahrt Design v1.0
     </div>
   </main>
 
   <!-- ========================================================= -->
   <!-- ANSICHT 2: SCHICHTPLAN                                    -->
   <!-- ========================================================= -->
-  <section id="view-roster" class="hidden max-w-lg mx-auto px-2 pb-16 pt-2">
-    <div id="roster-fixed-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 px-2 border-b border-slate-300 dark:border-slate-800 shadow-md">
-      <div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-2.5 rounded-t-2xl border border-b-0 border-slate-300 dark:border-slate-700 flex flex-col gap-2 relative">
-        <div class="flex justify-between items-center gap-1">
-          <button type="button" id="btn-roster-back" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95">
-            ⬅ Zurück
-          </button>
-          <div class="flex items-center gap-1">
-            <button type="button" id="btn-roster-year-prev" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">◀</button>
-            <span id="roster-year-title" class="text-sm font-black px-2">2026</span>
-            <button type="button" id="btn-roster-year-next" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">▶</button>
+  <section id="view-roster" class="hidden flex-1 px-3 pb-24 relative">
+    
+    <div id="roster-fixed-header" class="pt-safe sticky top-0 left-0 right-0 z-40 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm mx-[-12px] px-3 pb-2 transition-all">
+      
+      <!-- Alte Buttons für Fallback-Logik -->
+      <button type="button" id="btn-roster-back" onclick="window.switchView('main')" class="hidden">Zurück</button>
+
+      <div class="flex flex-col gap-3 pt-3">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1">
+            <button type="button" id="btn-roster-year-prev" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black active:scale-95 transition">◀</button>
+            <span id="roster-year-title" class="text-sm font-black w-14 text-center">2026</span>
+            <button type="button" id="btn-roster-year-next" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black active:scale-95 transition">▶</button>
           </div>
-          <div class="flex items-center gap-1">
-            <button type="button" id="btn-roster-scroll-today" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-bold active:scale-95">
+          
+          <div class="flex items-center gap-2">
+            <button type="button" id="btn-roster-scroll-today" class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-[11px] font-black shadow-md active:scale-95 transition">
               📍 Heute
             </button>
-            <!-- NEU: Termin-Liste Button (Global) -->
-            <button type="button" id="btn-open-events-list" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Alle Termine">📅</button>
-            <button type="button" id="btn-open-roster-stats" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Plan-Jahresstatistik">📊</button>
-            <button type="button" class="btn-open-settings-modal px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm active:scale-95 transition" title="Einstellungen">⚙️</button>
+            <button type="button" id="btn-open-events-list" class="w-9 h-9 flex items-center justify-center bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl active:scale-95 transition border border-rose-200 dark:border-rose-900/50 shadow-sm" title="Termine">📅</button>
+            <button type="button" id="btn-open-roster-stats" class="w-9 h-9 flex items-center justify-center bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-xl active:scale-95 transition border border-indigo-200 dark:border-indigo-900/50 shadow-sm" title="Statistik">📊</button>
           </div>
         </div>
 
-        <!-- NEU: Ausblendbare Werkzeugleiste -->
-        <div id="roster-tools-collapse" class="hidden flex-col gap-1.5 transition-all">
-          <div class="bg-slate-50 dark:bg-slate-800/70 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-1.5">
-            <div class="grid grid-cols-8 gap-1">
-              <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0112 opacity-75 transition">F</button>
-              <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0111 opacity-75 transition">S</button>
-              <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0113 opacity-75 transition">N</button>
-              <button type="button" data-single="0135" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-0135 opacity-75 transition">Z</button>
-              <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-URLAUB opacity-75 transition">U</button>
-              <button type="button" data-single="FS" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-FS opacity-75 transition flex items-center justify-center" title="Freischicht">FS</button>
-              <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-lg text-xs font-black border shift-cell-KRANK opacity-75 transition">K</button>
-              <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-lg text-[10px] font-black border shift-cell-LEHRGANG opacity-75 transition flex items-center justify-center" title="Lehrgang">LG</button>
+        <!-- Werkzeugleiste ausblendbar -->
+        <div id="roster-tools-collapse" class="hidden flex-col gap-2 transition-all">
+          <div class="bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+            <div class="grid grid-cols-8 gap-1.5">
+              <button type="button" data-single="0112" class="tool-single-btn py-2 rounded-xl text-xs font-black border shift-cell-0112 opacity-80 transition shadow-sm">F</button>
+              <button type="button" data-single="0111" class="tool-single-btn py-2 rounded-xl text-xs font-black border shift-cell-0111 opacity-80 transition shadow-sm">S</button>
+              <button type="button" data-single="0113" class="tool-single-btn py-2 rounded-xl text-xs font-black border shift-cell-0113 opacity-80 transition shadow-sm">N</button>
+              <button type="button" data-single="0135" class="tool-single-btn py-2 rounded-xl text-xs font-black border shift-cell-0135 opacity-80 transition shadow-sm">Z</button>
+              <button type="button" data-single="URLAUB" class="tool-single-btn py-2 rounded-xl text-xs font-black border shift-cell-URLAUB opacity-80 transition shadow-sm">U</button>
+              <button type="button" data-single="FS" class="tool-single-btn py-2 rounded-xl text-[10px] font-black border shift-cell-FS opacity-80 transition flex items-center justify-center shadow-sm">FS</button>
+              <button type="button" data-single="KRANK" class="tool-single-btn py-2 rounded-xl text-xs font-black border shift-cell-KRANK opacity-80 transition shadow-sm">K</button>
+              <button type="button" data-single="LEHRGANG" class="tool-single-btn py-2 rounded-xl text-[10px] font-black border shift-cell-LEHRGANG opacity-80 transition flex items-center justify-center shadow-sm">LG</button>
             </div>
-            <div id="roster-pattern-container" class="flex justify-center gap-1.5">
-              <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn px-2.5 py-1.5 rounded-md text-[10px] font-black border bg-gradient-to-r from-yellow-300 to-green-500 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">FF-SSS</button>
-              <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn px-2.5 py-1.5 rounded-md text-[10px] font-black border bg-gradient-to-r from-green-500 to-cyan-400 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">SS-NNN</button>
-              <button type="button" data-pattern="NN-FF" class="tool-pattern-btn px-2.5 py-1.5 rounded-md text-[10px] font-black border bg-gradient-to-r from-cyan-400 via-white to-yellow-300 text-black border-slate-400 opacity-80 transition leading-none flex items-center justify-center">NN-FF</button>
+            <div id="roster-pattern-container" class="flex justify-center gap-2 mt-1">
+              <button type="button" data-pattern="FF-SSS" class="tool-pattern-btn px-3 py-2 rounded-xl text-[10px] font-black border bg-gradient-to-r from-yellow-300 to-green-400 text-black border-slate-300 opacity-90 transition shadow-sm">FF-SSS</button>
+              <button type="button" data-pattern="SS-NNN" class="tool-pattern-btn px-3 py-2 rounded-xl text-[10px] font-black border bg-gradient-to-r from-green-400 to-cyan-300 text-black border-slate-300 opacity-90 transition shadow-sm">SS-NNN</button>
+              <button type="button" data-pattern="NN-FF" class="tool-pattern-btn px-3 py-2 rounded-xl text-[10px] font-black border bg-gradient-to-r from-cyan-300 via-white to-yellow-300 text-black border-slate-300 opacity-90 transition shadow-sm">NN-FF</button>
             </div>
           </div>
-          <div id="roster-tool-hint" class="text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            👆 Links wählen (Tag tippen = Einzeltag | KW tippen = Mo–Fr) oder rechts Kombi wählen
+          <div id="roster-tool-hint" class="text-[9px] font-black uppercase tracking-wider text-center py-1.5 px-2 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 text-slate-500">
+            👆 Werkzeug wählen
           </div>
         </div>
 
-        <!-- NEU: 3-Tage InfoBox Termine -->
-        <div id="upcoming-events-box" class="hidden text-[11px] font-bold text-left p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60 leading-relaxed shadow-sm"></div>
-
-        <div id="roster-month-pills" class="grid grid-cols-6 gap-1 text-[10px] font-bold"></div>
+        <div id="upcoming-events-box" class="hidden text-[11px] font-bold text-left p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/60 shadow-sm leading-relaxed"></div>
+        
+        <!-- Month Pills -->
+        <div id="roster-month-pills" class="grid grid-cols-6 gap-1.5 text-[10px] font-black"></div>
       </div>
-      <!-- NEU: Toggle-Button (Der kleine Reiter unten rechts) -->
-      <div class="max-w-lg mx-auto flex justify-end pr-3 relative z-0 -mt-[1px]">
-        <button type="button" id="btn-toggle-tools" class="px-3.5 py-0.5 bg-white dark:bg-slate-900 border border-t-0 border-slate-300 dark:border-slate-700 rounded-b-xl text-[10px] font-extrabold text-slate-500 dark:text-slate-400 shadow-md active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800">
-          🔽 Werkzeuge
+      
+      <!-- Toggle Button (Floating in Header Bottom) -->
+      <div class="absolute -bottom-3 right-4 z-50">
+        <button type="button" id="btn-toggle-tools" class="px-4 py-1 bg-slate-800 dark:bg-white text-white dark:text-slate-900 rounded-full text-[10px] font-black shadow-lg shadow-slate-900/20 active:scale-95 transition-transform flex items-center gap-1 border border-slate-700 dark:border-slate-200">
+          ⚙️ Werkzeuge
         </button>
       </div>
     </div>
 
-    <div id="roster-header-spacer" class="h-[155px]"></div>
-    <div id="roster-kw-list" class="flex flex-col gap-3"></div>
+    <div id="roster-header-spacer" class="h-[180px]"></div>
+    <div id="roster-kw-list" class="flex flex-col gap-4 mt-2"></div>
   </section>
 
   <!-- ========================================================= -->
-  <!-- ANSICHT 3: MONATSÜBERSICHT (NEUES HEADER DESIGN)          -->
+  <!-- ANSICHT 3: MONATSÜBERSICHT                                -->
   <!-- ========================================================= -->
-  <section id="view-overview" class="hidden max-w-md mx-auto px-2 pt-2.5 pb-14 flex flex-col gap-2.5">
+  <section id="view-overview" class="hidden flex-1 px-4 pt-4 pb-28 flex flex-col gap-4">
     
-    <div class="flex justify-between items-center gap-1 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-      <button type="button" id="btn-overview-back" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition">
-        ⬅ Zurück
-      </button>
-      <div class="flex items-center gap-1.5">
-        <!-- NEU: Termin-Liste Button (Global) -->
-        <button type="button" id="btn-open-events-list-ov" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-slate-800 rounded-xl text-base active:scale-95 transition shadow-sm" title="Alle Termine">📅</button>
-        <button type="button" id="btn-open-stats-modal" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-slate-800 rounded-xl text-base active:scale-95 transition shadow-sm" title="Jahresstatistik">📊</button>
-        <button type="button" class="btn-open-settings-modal px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Einstellungen & Design">⚙️</button>
+    <!-- Alte Buttons verbergen -->
+    <button type="button" id="btn-overview-back" onclick="window.switchView('main')" class="hidden">Zurück</button>
+
+    <!-- Top Action Bar (wird vom Global Header überdeckt, daher weglassen oder integrieren) -->
+    <!-- Wir nutzen einen eigenen lokalen Header für die Übersicht -->
+    <div class="flex justify-between items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm">
+      <div class="flex items-center gap-1 px-2">
+        <span class="text-xl">📊</span>
+        <span class="text-sm font-black text-slate-700 dark:text-slate-200">Übersicht</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-open-events-list-ov" class="w-9 h-9 flex items-center justify-center bg-rose-50 text-rose-600 dark:bg-rose-900/30 rounded-xl active:scale-95 transition border border-rose-100 dark:border-slate-800" title="Termine">📅</button>
+        <button type="button" id="btn-open-stats-modal" class="w-9 h-9 flex items-center justify-center bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 rounded-xl active:scale-95 transition border border-indigo-100 dark:border-slate-800" title="Jahresstatistik">📈</button>
       </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
-      <button type="button" id="btn-prev-month" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm active:scale-95">◀</button>
-      <div class="text-center">
-        <div id="overview-month-title" class="text-sm font-extrabold text-slate-900 dark:text-white">Oktober 2026</div>
-        <div class="text-[10px] text-slate-400"><span id="header-kostenstelle">Meine Kostenstelle</span> • 165,00 h Auszahlungs-Basis</div>
-      </div>
-      <button type="button" id="btn-next-month" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm active:scale-95">▶</button>
-    </div>
-
-    <!-- 4 Kacheln -->
-    <div class="grid grid-cols-2 gap-2">
-      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative">
-        <div class="flex justify-between items-center">
-          <span class="text-[10px] font-bold uppercase text-slate-400">VERR (165h Basis)</span>
-          <button type="button" id="btn-open-verr-modal" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 underline">⚙️ Anpassen</button>
+    <!-- Monats-Auswahl Card -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-1 rounded-[1.5rem] shadow-lg shadow-blue-600/20">
+      <div class="bg-white dark:bg-slate-900 rounded-[1.4rem] p-3 flex justify-between items-center">
+        <button type="button" id="btn-prev-month" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-slate-600 dark:text-slate-300 active:scale-95 transition">◀</button>
+        <div class="text-center flex flex-col items-center">
+          <div id="overview-month-title" class="text-[15px] font-black text-slate-900 dark:text-white uppercase tracking-wider">Oktober 2026</div>
+          <div class="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md mt-1"><span id="header-kostenstelle">Kostenstelle</span> • 165h</div>
         </div>
-        <div id="sum-verr-total" class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">0,00 h</div>
-        <div id="sum-fs-aufbau" class="text-[11px] font-bold text-emerald-600">FS-Aufbau: +0,00 h</div>
-      </div>
-
-      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="flex justify-between items-center">
-          <span class="text-[10px] font-bold uppercase text-slate-400">FS-Konto</span>
-          <button type="button" id="btn-open-fs-modal" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 underline">⚙️ Anpassen</button>
-        </div>
-        <div id="sum-fs-current" class="text-base font-extrabold text-blue-600 dark:text-blue-400 mt-0.5">143,69 h</div>
-        <div id="sum-fs-sub" class="text-[10px] text-slate-400 truncate">Vorm.: 143,69 h</div>
-      </div>
-
-      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="text-[10px] font-bold uppercase text-slate-400">Mehrarbeit</div>
-        <div id="sum-overtime-total" class="text-base font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">0,00 h</div>
-      </div>
-
-      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="flex justify-between items-center">
-          <span class="text-[10px] font-bold uppercase text-slate-400">Resturlaub</span>
-          <button type="button" id="btn-open-vac-modal" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 underline">⚙️ Anpassen</button>
-        </div>
-        <div class="flex items-baseline gap-1 mt-0.5">
-          <span id="sum-vacation-left" class="text-base font-extrabold text-slate-900 dark:text-white">30</span>
-          <span class="text-[11px] font-bold text-slate-500">Tage</span>
-          <span id="badge-sonderurlaub-overview" class="hidden px-1.5 py-0.2 text-[11px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded border border-emerald-400">+1</span>
-        </div>
-        <div id="sum-vacation-sub" class="text-[10px] text-slate-400 truncate">Aktueller Stand</div>
+        <button type="button" id="btn-next-month" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-slate-600 dark:text-slate-300 active:scale-95 transition">▶</button>
       </div>
     </div>
 
-    <!-- KOMPAKTE SMARTPHONE-TABELLE -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-200 dark:border-slate-800 shadow-sm">
-      <div class="flex justify-between items-center px-1 mb-1.5">
-        <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Monatsliste (Antippen zum Ändern ✏️)</span>
+    <!-- 4 Kacheln Grid -->
+    <div class="grid grid-cols-2 gap-3">
+      <!-- VERR -->
+      <div class="bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-bl-[2rem] flex items-start justify-end p-2 transition-transform group-hover:scale-110">
+           <button type="button" id="btn-open-verr-modal" class="text-blue-600 dark:text-blue-400 opacity-70 hover:opacity-100">⚙️</button>
+        </div>
+        <div class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">VERR-Summe</div>
+        <div id="sum-verr-total" class="text-xl font-black text-slate-900 dark:text-white mt-1">0,00 h</div>
+        <div id="sum-fs-aufbau" class="text-[10px] font-bold text-emerald-600 mt-1.5 bg-emerald-50 dark:bg-emerald-900/20 inline-block px-2 py-0.5 rounded-md">Aufbau: +0,00 h</div>
       </div>
-      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+
+      <!-- FS-KONTO -->
+      <div class="bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-bl-[2rem] flex items-start justify-end p-2 transition-transform group-hover:scale-110">
+           <button type="button" id="btn-open-fs-modal" class="text-blue-600 dark:text-blue-400 opacity-70 hover:opacity-100">⚙️</button>
+        </div>
+        <div class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">FS-Konto</div>
+        <div id="sum-fs-current" class="text-xl font-black text-blue-600 dark:text-blue-400 mt-1">143,69 h</div>
+        <div id="sum-fs-sub" class="text-[9px] font-bold text-slate-400 truncate mt-1.5">Vorm.: 143,69 h</div>
+      </div>
+
+      <!-- MEHRARBEIT -->
+      <div class="bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200/60 dark:border-slate-800/60 shadow-sm">
+        <div class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Mehrarbeit</div>
+        <div id="sum-overtime-total" class="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">0,00 h</div>
+      </div>
+
+      <!-- RESTURLAUB -->
+      <div class="bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-[2rem] flex items-start justify-end p-2 transition-transform group-hover:scale-110">
+           <button type="button" id="btn-open-vac-modal" class="text-emerald-600 dark:text-emerald-400 opacity-70 hover:opacity-100">⚙️</button>
+        </div>
+        <div class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Resturlaub</div>
+        <div class="flex items-baseline gap-1 mt-1">
+          <span id="sum-vacation-left" class="text-xl font-black text-slate-900 dark:text-white">30</span>
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Tage</span>
+          <span id="badge-sonderurlaub-overview" class="hidden ml-1 px-1.5 py-0.5 text-[9px] font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-200 dark:border-emerald-800">+1</span>
+        </div>
+        <div id="sum-vacation-sub" class="text-[9px] font-bold text-slate-400 truncate mt-1.5">Aktueller Stand</div>
+      </div>
+    </div>
+
+    <!-- Kompakte Smartphone Tabelle -->
+    <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] p-3 border border-slate-200/60 dark:border-slate-800/60 shadow-sm mt-1">
+      <div class="px-2 py-1 mb-2 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-slate-800">
+        Monatsliste (Tippen zum Ändern ✏️)
+      </div>
+      <div class="w-full overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800">
         <table class="w-full text-left border-collapse table-fixed">
-          <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px]">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-black uppercase text-[9px] tracking-wider">
             <tr>
-              <th class="py-2 px-1.5 w-[16%]">Tag</th>
-              <th class="py-2 px-1 w-[14%] text-center">Sch.</th>
-              <th class="py-2 px-1 w-[31%]">Kommt–Geht</th>
-              <th class="py-2 px-1 w-[11%] text-right">IST</th>
-              <th class="py-2 px-1 w-[12%] text-right">VERR</th>
-              <th class="py-2 px-1.5 w-[14%] text-right">Mehr</th>
+              <th class="py-2.5 px-2 w-[18%]">Tag</th>
+              <th class="py-2.5 px-1 w-[12%] text-center">Sch.</th>
+              <th class="py-2.5 px-1 w-[28%]">Zeit</th>
+              <th class="py-2.5 px-1 w-[12%] text-right">IST</th>
+              <th class="py-2.5 px-1 w-[14%] text-right text-blue-500">VERR</th>
+              <th class="py-2.5 px-2 w-[16%] text-right">Mehr</th>
             </tr>
           </thead>
-          <tbody id="overview-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]"></tbody>
-          <tfoot id="overview-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold text-[11px] border-t-2 border-slate-300 dark:border-slate-700"></tfoot>
+          <tbody id="overview-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-[11px]"></tbody>
+          <tfoot id="overview-table-foot" class="bg-slate-50/80 dark:bg-slate-800/80 font-black text-[10px] border-t-2 border-slate-200 dark:border-slate-700"></tfoot>
         </table>
       </div>
     </div>
   </section>
 
   <!-- ========================================================= -->
-  <!-- MODALS (Einstellungen, Backup, Drive, Termine etc.)       -->
+  <!-- FIXED BOTTOM NAVIGATION BAR                               -->
   <!-- ========================================================= -->
-  
-  <!-- MODAL: Tag Termine (Long Press) -->
-  <div id="modal-day-events" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3 my-auto">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 id="day-events-title" class="text-sm font-extrabold">📌 Termine</h3>
-        <button type="button" id="btn-close-day-events" class="text-slate-400 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div id="day-events-list" class="flex flex-col gap-2 max-h-48 overflow-y-auto">
-         <!-- Rendered via JS -->
-      </div>
-
-      <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-2 mt-1">
-         <div class="text-[10px] font-extrabold text-slate-500 uppercase">Neuen Termin hinzufügen</div>
-         <div class="flex gap-2">
-           <input type="time" id="ev-in" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 font-bold text-xs border border-slate-300 dark:border-slate-600">
-           <input type="time" id="ev-out" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 font-bold text-xs border border-slate-300 dark:border-slate-600">
-         </div>
-         <input type="text" id="ev-text" placeholder="Beschreibung (z.B. Schulung)" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 font-bold text-xs border border-slate-300 dark:border-slate-600">
-         <button type="button" id="btn-add-day-event" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm active:scale-95 transition mt-1">➕ Termin hinzufügen</button>
-      </div>
-      <button type="button" id="btn-save-day-events" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md mt-1">Fertig</button>
-    </div>
-  </div>
-
-  <!-- MODAL: Globale Terminübersicht -->
-  <div id="modal-events-list" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3 my-auto h-[80vh]">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2 shrink-0">
-        <h3 class="text-base font-extrabold text-rose-600 dark:text-rose-400">📅 Alle Termine</h3>
-        <button type="button" id="btn-close-events-list" class="text-slate-400 text-lg font-bold px-2">✕</button>
-      </div>
-      <div id="events-global-container" class="flex flex-col gap-2.5 overflow-y-auto pb-4">
-         <!-- Rendered via JS -->
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Einstellungen -->
-  <div id="modal-settings" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold">⚙️ Einstellungen</h3>
-        <button type="button" id="btn-close-settings" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div class="flex flex-col gap-3">
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Erscheinungsbild</div>
-          <div class="flex gap-2">
-            <button type="button" id="theme-light" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">☀️ Hell</button>
-            <button type="button" id="theme-dark" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">🌙 Dunkel</button>
-            <button type="button" id="theme-system" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">💻 Sys</button>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Daten & Backup</div>
-          <div class="flex gap-2">
-            <button type="button" id="btn-open-drive-modal" class="flex-1 py-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-slate-700 rounded-lg text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">☁️ Drive Sync</button>
-            <button type="button" id="btn-open-backup-modal" class="flex-1 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">💾 Lokales Backup</button>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Verhalten</div>
-          <div class="flex flex-col gap-3">
-            <label class="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
-              <div>
-                <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
-                <span class="text-xs text-slate-500 block leading-snug">Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche.</span>
-              </div>
-            </label>
-            <label class="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" id="setting-hide-patterns" class="w-5 h-5 mt-0.5 accent-blue-600">
-              <div>
-                <span class="font-bold text-sm block">Schicht-Kombis ausblenden</span>
-                <span class="text-xs text-slate-500 block leading-snug">Versteckt die Kombi-Buttons (z.B. FF-SSS) im Schichtplan.</span>
-              </div>
-            </label>
-            <label class="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" id="setting-roster-only" class="w-5 h-5 mt-0.5 accent-blue-600">
-              <div>
-                <span class="font-bold text-sm block">Nur Schichtplan anzeigen</span>
-                <span class="text-xs text-slate-500 block leading-snug">Blendet alles andere (Stempeluhr, Übersicht) aus.</span>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <button type="button" id="btn-save-settings" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md active:scale-95 transition mt-2">
-        Speichern & Schließen
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/80 z-[60] pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+    <div class="flex justify-around items-center h-16 px-2">
+      <!-- IDs werden hier angepasst, damit window.switchView sie stylen kann -->
+      <button onclick="window.switchView('main')" id="nav-tab-main" class="nav-tab-btn flex flex-col items-center justify-center w-full h-full text-blue-600 dark:text-blue-500 transition-colors duration-300">
+        <span class="text-2xl mb-1 drop-shadow-sm transition-transform active:scale-90">🏠</span>
+        <span class="text-[10px] font-black uppercase tracking-wider">Stempeln</span>
+      </button>
+      <button onclick="window.switchView('roster')" id="btn-nav-roster-bottom" class="nav-tab-btn flex flex-col items-center justify-center w-full h-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300">
+        <span class="text-2xl mb-1 drop-shadow-sm transition-transform active:scale-90 opacity-80">🗓️</span>
+        <span class="text-[10px] font-black uppercase tracking-wider">Plan</span>
+      </button>
+      <button onclick="window.switchView('overview')" id="btn-nav-overview-bottom" class="nav-tab-btn flex flex-col items-center justify-center w-full h-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300">
+        <span class="text-2xl mb-1 drop-shadow-sm transition-transform active:scale-90 opacity-80">📊</span>
+        <span class="text-[10px] font-black uppercase tracking-wider">Übersicht</span>
       </button>
     </div>
+  </nav>
+
+</div> <!-- End App Container -->
+
+<!-- ========================================================= -->
+<!-- MODALS (Einstellungen, Backup, Drive, Termine etc.)       -->
+<!-- ========================================================= -->
+
+<!-- MODAL: Tag Termine (Long Press) -->
+<div id="modal-day-events" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 modal-backdrop transition-opacity">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4 my-auto transform transition-transform scale-100">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 id="day-events-title" class="text-[15px] font-black text-slate-800 dark:text-slate-100">📌 Termine</h3>
+      <button type="button" id="btn-close-day-events" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <div id="day-events-list" class="flex flex-col gap-2.5 max-h-48 overflow-y-auto pr-1"></div>
+
+    <div class="bg-slate-50/80 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50 flex flex-col gap-3">
+       <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Neuen Termin eintragen</div>
+       <div class="flex gap-2">
+         <input type="time" id="ev-in" class="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 font-black text-sm border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+         <input type="time" id="ev-out" class="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 font-black text-sm border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+       </div>
+       <input type="text" id="ev-text" placeholder="Beschreibung (z.B. Schulung)" class="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 font-bold text-sm border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+       <button type="button" id="btn-add-day-event" class="py-3 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 font-black rounded-xl text-xs active:scale-95 transition mt-1 border border-emerald-200 dark:border-emerald-800">➕ Hinzufügen</button>
+    </div>
+    <button type="button" id="btn-save-day-events" class="py-3.5 bg-blue-600 text-white font-black rounded-xl text-sm shadow-md active:scale-95 transition">Fertig</button>
   </div>
+</div>
 
-  <!-- MODAL: VERR & Kostenstelle anpassen -->
-  <div id="modal-verr" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold">⚙️ VERR & Kostenstelle</h3>
-        <button type="button" id="btn-close-verr" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div class="flex flex-col gap-3">
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <label class="text-[11px] font-extrabold uppercase text-slate-500 block mb-1">Kostenstelle (Anzeige oben)</label>
-          <input type="text" id="input-kostenstelle" placeholder="Z. B. Instandhaltung" class="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-sm">
+<!-- MODAL: Globale Terminübersicht -->
+<div id="modal-events-list" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4 my-auto h-[80vh]">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
+      <h3 class="text-[16px] font-black text-rose-600 dark:text-rose-400">📅 Alle Termine</h3>
+      <button type="button" id="btn-close-events-list" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    <div id="events-global-container" class="flex flex-col gap-3 overflow-y-auto pb-4 pr-1"></div>
+  </div>
+</div>
+
+<!-- MODAL: Einstellungen (mit Bottom-Sheet Anmutung auf Mobile) -->
+<div id="modal-settings" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-6 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto pb-safe">
+    <div class="flex justify-between items-center pb-2">
+      <h3 class="text-lg font-black">⚙️ Einstellungen</h3>
+      <button type="button" id="btn-close-settings" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <div class="flex flex-col gap-4">
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Erscheinungsbild</div>
+        <div class="flex gap-2 bg-slate-200/50 dark:bg-slate-900 p-1 rounded-xl">
+          <button type="button" id="theme-light" class="flex-1 py-2 rounded-lg text-xs font-black transition-all">☀️ Hell</button>
+          <button type="button" id="theme-dark" class="flex-1 py-2 rounded-lg text-xs font-black transition-all">🌙 Dunkel</button>
+          <button type="button" id="theme-system" class="flex-1 py-2 rounded-lg text-xs font-black transition-all">💻 Sys</button>
         </div>
+      </div>
 
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Berechnungs-Regeln</div>
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" id="setting-cap-early" class="w-5 h-5 mt-0.5 accent-blue-600">
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Daten & Backup</div>
+        <div class="flex flex-col gap-2">
+          <button type="button" id="btn-open-drive-modal" class="w-full py-3 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 rounded-xl text-sm font-black active:scale-95 transition shadow-sm flex items-center justify-center gap-2">☁️ Drive Sync</button>
+          <button type="button" id="btn-open-backup-modal" class="w-full py-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-black active:scale-95 transition shadow-sm flex items-center justify-center gap-2">💾 Lokales Backup</button>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Verhalten</div>
+        <div class="flex flex-col gap-4">
+          <label class="flex items-start gap-3 cursor-pointer group">
+            <div class="relative flex items-center justify-center mt-0.5">
+              <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+              <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+            </div>
             <div>
-              <span class="font-bold text-sm block">Kappung der VERR-Zeit vor Schichtbeginn</span>
-              <span class="text-xs text-slate-500 block leading-snug">Wenn aktiv, werden z.B. bei der Frühschicht (Beginn 05:45) Einstempel-Zeiten vor 05:45 Uhr nicht zur VERR-Zeit addiert.</span>
+              <span class="font-black text-sm block group-active:text-blue-500 transition">Nachtschicht Start So.</span>
+              <span class="text-[11px] text-slate-500 font-medium block leading-snug mt-1">Ein Klick auf "KW" füllt bei (N) den Sonntag der Vorwoche sowie Mo-Do.</span>
+            </div>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer group">
+            <div class="relative flex items-center justify-center mt-0.5">
+              <input type="checkbox" id="setting-hide-patterns" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+              <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+            </div>
+            <div>
+              <span class="font-black text-sm block group-active:text-blue-500 transition">Kombis ausblenden</span>
+              <span class="text-[11px] text-slate-500 font-medium block leading-snug mt-1">Versteckt die Muster (z.B. FF-SSS) im Plan.</span>
+            </div>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer group">
+            <div class="relative flex items-center justify-center mt-0.5">
+              <input type="checkbox" id="setting-roster-only" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+              <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+            </div>
+            <div>
+              <span class="font-black text-sm block group-active:text-blue-500 transition">Nur Plan zeigen</span>
+              <span class="text-[11px] text-slate-500 font-medium block leading-snug mt-1">Blendet Stempeln/Übersicht aus.</span>
             </div>
           </label>
         </div>
       </div>
-
-      <button type="button" id="btn-save-verr" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md active:scale-95 transition mt-2">
-        Speichern & Schließen
-      </button>
     </div>
-  </div>
 
-  <!-- MODAL: Jahres-Statistik (Gebuchte Schichten) -->
-  <div id="modal-stats" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold">📊 Jahresübersicht <span id="stats-year-title"></span></h3>
-        <button type="button" id="btn-close-stats" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-        <table class="w-full text-center border-collapse table-fixed">
-          <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px]">
-            <tr>
-              <th class="py-2 px-1 text-left w-[18%]">Monat</th>
-              <th class="py-2 px-0.5 text-yellow-600 dark:text-yellow-400">F</th>
-              <th class="py-2 px-0.5 text-green-600 dark:text-green-400">S</th>
-              <th class="py-2 px-0.5 text-cyan-600 dark:text-cyan-400">N</th>
-              <th class="py-2 px-0.5 text-pink-600 dark:text-pink-400">Z</th>
-              <th class="py-2 px-0.5 text-slate-600 dark:text-slate-400">LG</th>
-              <th class="py-2 px-0.5 text-purple-600 dark:text-purple-400">U</th>
-              <th class="py-2 px-0.5 text-red-600 dark:text-red-400">K</th>
-              <th class="py-2 px-0.5 text-teal-600 dark:text-teal-400">FS</th>
-            </tr>
-          </thead>
-          <tbody id="stats-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold">
-            <!-- Befüllt via JS -->
-          </tbody>
-          <tfoot id="stats-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold text-[11px] border-t-2 border-slate-300 dark:border-slate-700">
-            <!-- Befüllt via JS -->
-          </tfoot>
-        </table>
-      </div>
+    <button type="button" id="btn-save-settings" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl text-sm shadow-md shadow-blue-600/20 active:scale-95 transition mt-2">
+      Speichern & Schließen
+    </button>
+  </div>
+</div>
+
+<!-- MODAL: VERR & Kostenstelle anpassen -->
+<div id="modal-verr" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-base font-black">⚙️ VERR & Kostenstelle</h3>
+      <button type="button" id="btn-close-verr" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
     </div>
-  </div>
+    
+    <div class="flex flex-col gap-4">
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Kostenstelle (Anzeige oben)</label>
+        <input type="text" id="input-kostenstelle" placeholder="Z. B. Instandhaltung" class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none transition">
+      </div>
 
-  <!-- MODAL: Jahres-Statistik (NUR SCHICHTPLAN) -->
-  <div id="modal-roster-stats" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold text-indigo-600 dark:text-indigo-400">📊 Plan-Übersicht <span id="roster-stats-year-title"></span></h3>
-        <button type="button" id="btn-close-roster-stats" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-        <table class="w-full text-center border-collapse table-fixed">
-          <thead class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-extrabold uppercase text-[10px]">
-            <tr>
-              <th class="py-2 px-1 text-left w-[18%]">Monat</th>
-              <th class="py-2 px-0.5 text-yellow-600 dark:text-yellow-400">F</th>
-              <th class="py-2 px-0.5 text-green-600 dark:text-green-400">S</th>
-              <th class="py-2 px-0.5 text-cyan-600 dark:text-cyan-400">N</th>
-              <th class="py-2 px-0.5 text-pink-600 dark:text-pink-400">Z</th>
-              <th class="py-2 px-0.5 text-slate-600 dark:text-slate-400">LG</th>
-              <th class="py-2 px-0.5 text-purple-600 dark:text-purple-400">U</th>
-              <th class="py-2 px-0.5 text-red-600 dark:text-red-400">K</th>
-              <th class="py-2 px-0.5 text-teal-600 dark:text-teal-400">FS</th>
-            </tr>
-          </thead>
-          <tbody id="roster-stats-table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold">
-            <!-- Befüllt via JS -->
-          </tbody>
-          <tfoot id="roster-stats-table-foot" class="bg-indigo-50/50 dark:bg-indigo-900/20 font-extrabold text-[11px] border-t-2 border-indigo-200 dark:border-indigo-800">
-            <!-- Befüllt via JS -->
-          </tfoot>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Backup & Export -->
-  <div id="modal-backup" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold">💾 Backup & Export (CSV)</h3>
-        <button type="button" id="btn-close-backup" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div class="flex flex-col gap-3">
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Daten-Export (Für Excel)</div>
-          <div class="flex flex-col gap-2">
-            <button type="button" id="btn-month-csv-export" class="w-full py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition">
-              📥 Ausgewählten Monat als CSV
-            </button>
-            <button type="button" id="btn-year-csv-export" class="w-full py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition">
-              📥 Ausgewähltes Jahr als CSV
-            </button>
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Regeln</div>
+        <label class="flex items-start gap-3 cursor-pointer group">
+          <div class="relative flex items-center justify-center mt-0.5">
+            <input type="checkbox" id="setting-cap-early" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+            <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
           </div>
-        </div>
-
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Backup (App-Daten)</div>
-          <div class="flex flex-col gap-2">
-            <button type="button" id="btn-full-backup-export" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition">
-              <span>📤</span> Backup Exportieren
-            </button>
-            <label class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition">
-              <span>📥</span> Backup Wiederherstellen
-              <input type="file" id="input-full-backup-import" accept=".csv, text/csv, text/plain, */*" class="hidden">
-            </label>
+          <div>
+            <span class="font-black text-sm block">VERR-Kappung</span>
+            <span class="text-[11px] text-slate-500 font-medium block leading-snug mt-1">Einstempel-Zeiten vor Schichtbeginn zählen nicht zu VERR.</span>
           </div>
-        </div>
+        </label>
       </div>
     </div>
-  </div>
 
-  <div id="modal-delete-confirm" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col items-center text-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl">🗑️</div>
-      <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tag löschen?</h3>
-      <p id="delete-modal-date-text" class="text-xs text-slate-500 dark:text-slate-400 font-semibold"></p>
-      <div class="grid grid-cols-2 gap-2.5 w-full mt-1">
-        <button type="button" id="btn-confirm-delete-yes" class="py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs shadow-sm active:scale-95 transition">JA</button>
-        <button type="button" id="btn-confirm-delete-no" class="py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold rounded-xl text-xs active:scale-95 transition">NEIN</button>
-      </div>
+    <button type="button" id="btn-save-verr" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl text-sm shadow-md active:scale-95 transition mt-2">
+      Speichern
+    </button>
+  </div>
+</div>
+
+<!-- MODAL: Jahres-Statistik (Gebuchte Schichten) -->
+<div id="modal-stats" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-2 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-[2rem] p-4 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-[15px] font-black">📊 Jahresübersicht <span id="stats-year-title" class="text-blue-500"></span></h3>
+      <button type="button" id="btn-close-stats" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <div class="w-full overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800">
+      <table class="w-full text-center border-collapse table-fixed">
+        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-black uppercase text-[9px] tracking-wider">
+          <tr>
+            <th class="py-2.5 px-1 text-left w-[18%]">Mon.</th>
+            <th class="py-2.5 px-0.5 text-yellow-500">F</th>
+            <th class="py-2.5 px-0.5 text-green-500">S</th>
+            <th class="py-2.5 px-0.5 text-cyan-500">N</th>
+            <th class="py-2.5 px-0.5 text-pink-500">Z</th>
+            <th class="py-2.5 px-0.5 text-slate-500">LG</th>
+            <th class="py-2.5 px-0.5 text-purple-500">U</th>
+            <th class="py-2.5 px-0.5 text-red-500">K</th>
+            <th class="py-2.5 px-0.5 text-teal-500">FS</th>
+          </tr>
+        </thead>
+        <tbody id="stats-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-bold">
+          <!-- Befüllt via JS -->
+        </tbody>
+        <tfoot id="stats-table-foot" class="bg-slate-50 dark:bg-slate-800/90 font-black text-[10px] border-t-2 border-slate-200 dark:border-slate-700">
+          <!-- Befüllt via JS -->
+        </tfoot>
+      </table>
     </div>
   </div>
+</div>
 
-  <div id="modal-special" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3 my-auto">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 id="special-modal-title" class="text-sm font-extrabold">⚙️ Sonderbuchung & Optionen</h3>
-        <button type="button" id="btn-close-special" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <div class="text-xs font-bold text-slate-500">1. Zeitblöcke an diesem Tag (bis zu 3x Kommen/Gehen):</div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div><label class="text-[10px] text-slate-400">Block 1 Kommt</label><input type="time" id="sp-in-1" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
-          <div><label class="text-[10px] text-slate-400">Block 1 Geht</label><input type="time" id="sp-out-1" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
-          <div><label class="text-[10px] text-slate-400">Block 2 Kommt</label><input type="time" id="sp-in-2" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
-          <div><label class="text-[10px] text-slate-400">Block 2 Geht</label><input type="time" id="sp-out-2" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
-          <div><label class="text-[10px] text-slate-400">Block 3 Kommt</label><input type="time" id="sp-in-3" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
-          <div><label class="text-[10px] text-slate-400">Block 3 Geht</label><input type="time" id="sp-out-3" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold"></div>
-        </div>
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-bold text-slate-500">2. Zusatzstunden / Bezahlter Arztbesuch (z.B. 1,5):</label>
-        <input type="text" id="sp-doctor-hours" placeholder="0,0 (oder 01:30)" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm border border-slate-300 dark:border-slate-700">
-      </div>
-      <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
-        <div class="font-bold text-slate-500 uppercase text-[10px]">3. Tagestyp-Optionen</div>
-        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-paid-holiday" class="w-4 h-4 accent-blue-600"><span>Feiertag bezahlt (Nicht gearbeitet → 8,00h VERR)</span></label>
-        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-fill-fs" class="w-4 h-4 accent-blue-600"><span>Fehlzeit bis 8,00h aus FS-Konto auffüllen (Freizeit FS)</span></label>
-        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-unpaid-child" class="w-4 h-4 accent-amber-600"><span>Kind krank unbezahlt (Reduziert 165h-Basis)</span></label>
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-bold text-slate-500">4. Notiz / Bemerkung:</label>
-        <input type="text" id="sp-note" placeholder="z.B. Arztbesuch, Umbau..." class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
-      </div>
-      <button type="button" id="btn-save-special" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md">💾 Übernehmen & Speichern</button>
+<!-- MODAL: Jahres-Statistik (NUR SCHICHTPLAN) -->
+<div id="modal-roster-stats" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-2 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-[2rem] p-4 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-[15px] font-black text-indigo-600 dark:text-indigo-400">📊 Plan-Übersicht <span id="roster-stats-year-title"></span></h3>
+      <button type="button" id="btn-close-roster-stats" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <div class="w-full overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+      <table class="w-full text-center border-collapse table-fixed">
+        <thead class="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-400 font-black uppercase text-[9px] tracking-wider">
+          <tr>
+            <th class="py-2.5 px-1 text-left w-[18%]">Mon.</th>
+            <th class="py-2.5 px-0.5 text-yellow-500">F</th>
+            <th class="py-2.5 px-0.5 text-green-500">S</th>
+            <th class="py-2.5 px-0.5 text-cyan-500">N</th>
+            <th class="py-2.5 px-0.5 text-pink-500">Z</th>
+            <th class="py-2.5 px-0.5 text-slate-500">LG</th>
+            <th class="py-2.5 px-0.5 text-purple-500">U</th>
+            <th class="py-2.5 px-0.5 text-red-500">K</th>
+            <th class="py-2.5 px-0.5 text-teal-500">FS</th>
+          </tr>
+        </thead>
+        <tbody id="roster-stats-table-body" class="divide-y divide-indigo-50 dark:divide-slate-800/60 text-xs font-bold">
+          <!-- Befüllt via JS -->
+        </tbody>
+        <tfoot id="roster-stats-table-foot" class="bg-indigo-50/50 dark:bg-indigo-900/10 font-black text-[10px] border-t-2 border-indigo-200 dark:border-indigo-800/50">
+          <!-- Befüllt via JS -->
+        </tfoot>
+      </table>
     </div>
   </div>
+</div>
 
-  <div id="modal-fs" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3 my-auto">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-sm font-extrabold">⚙️ FS-Konto & Urlaub anpassen</h3>
-        <button type="button" id="btn-close-fs" class="text-slate-400 text-lg font-bold px-2">✕</button>
-      </div>
-      <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
-        <div class="font-extrabold uppercase text-[10px] text-blue-600 dark:text-blue-400">1. FS-Konto (Monat: <span id="fs-modal-month-label"></span>)</div>
-        <div>
-          <label class="font-bold">FS-Konto Vormonat (Startwert in Std.):</label>
-          <input type="number" step="0.01" id="fs-input-prev" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold" placeholder="z.B. 143,69">
-          <div class="text-[10px] text-slate-500 mt-1">Hinweis: Wird ohne manuelle Eingabe automatisch aus dem Vormonat übernommen.</div>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold">Auszahlung (Std.):</label><input type="number" step="0.01" id="fs-input-payout" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold"></div>
-          <div><label class="font-bold">Korrektur (+/- Std.):</label><input type="number" step="0.01" id="fs-input-corr" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold"></div>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
-        <div class="font-extrabold uppercase text-[10px] text-emerald-600 dark:text-emerald-400">2. Urlaubs-Anspruch (<span id="vac-modal-year-label">2026</span>)</div>
-        <div>
-          <label class="font-bold">Basis-Urlaubsanspruch (z.B. 30 Tage):</label>
-          <input type="number" step="0.5" id="vac-input-current" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-sm">
-        </div>
-        <div class="pt-1">
-          <label class="font-bold text-emerald-700 dark:text-emerald-400">Zusätzlicher Sonderurlaub (Tage):</label>
-          <input type="number" step="0.5" id="vac-input-sonder" class="w-full p-2 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-sm text-emerald-700">
-        </div>
-        <div id="vac-modal-taken-hint" class="text-[10px] text-slate-400 mt-1">Trage den generellen Anspruch für das Jahr ein. Die bisher eingetragenen „U“-Tage werden automatisch abgezogen.</div>
-      </div>
-      <button type="button" id="btn-save-fs" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md">💾 Werte speichern</button>
+<!-- MODAL: Backup & Export -->
+<div id="modal-backup" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-base font-black">💾 Backup & Export</h3>
+      <button type="button" id="btn-close-backup" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
     </div>
-  </div>
-
-  <div id="modal-drive" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-sm font-extrabold">☁️ Google Drive Sync</h3>
-        <button type="button" id="btn-close-drive" class="text-slate-400 text-lg font-bold px-2">✕</button>
-      </div>
-      <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-        <input type="checkbox" id="drive-auto-sync" class="w-4 h-4 accent-blue-600">
-        <span>Automatisch bei jeder Änderung synchronisieren</span>
-      </label>
-      <div class="flex flex-col gap-1 text-xs mt-1">
-        <label class="font-bold">Google Apps Script Web-App URL:</label>
-        <input type="url" id="drive-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[11px] border border-slate-300 dark:border-slate-700">
-      </div>
-      
-      <button type="button" id="btn-drive-help" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 text-left mt-1 underline">📖 Anleitung für Google Drive anzeigen</button>
-      
-      <div id="drive-help-text" class="hidden flex flex-col gap-2">
-        <div class="text-[10px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl leading-relaxed">
-          <strong class="text-slate-800 dark:text-slate-200">1. Einrichten:</strong> Gehe am PC zu <i>script.google.com</i>.<br>
-          <strong class="text-slate-800 dark:text-slate-200">2. Neues Projekt:</strong> Klicke auf "Neues Projekt". Lösche den alten Text dort komplett und füge das generierte Skript (siehe unten) ein.<br>
-          <strong class="text-slate-800 dark:text-slate-200">3. Bereitstellen:</strong> Oben rechts auf "Bereitstellen" &rarr; "Neue Bereitstellung". Wähle "Web-App", Zugriff: "Jeder".<br>
-          <strong class="text-slate-800 dark:text-slate-200">4. Kopieren:</strong> Kopiere die angezeigte URL und füge sie hier oben ein.<br><br>
-          <strong class="text-slate-800 dark:text-slate-200">URL vergessen?</strong> Gehe wieder zu script.google.com, öffne das Projekt, tippe auf "Bereitstellen" &rarr; "Bereitstellungen verwalten" und kopiere die Web-App-URL erneut.
-        </div>
-        
-        <div class="p-2.5 bg-slate-200 dark:bg-slate-700 rounded-xl">
-          <label class="text-[10px] font-bold block mb-1">Speicherpfad in Google Drive:</label>
-          <input type="text" id="drive-folder-input" value="Schicht/PWA_Zeiterfassung" class="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs font-mono">
-          <button type="button" id="btn-copy-script" class="mt-2 w-full py-2.5 bg-slate-800 dark:bg-slate-600 text-white font-bold rounded-lg text-xs active:scale-95 transition">
-            📋 Apps Script Code kopieren
+    
+    <div class="flex flex-col gap-4">
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Daten-Export (CSV)</div>
+        <div class="flex flex-col gap-2">
+          <button type="button" id="btn-month-csv-export" class="w-full py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-300 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition shadow-sm">
+            📥 Ausgewählten Monat (CSV)
+          </button>
+          <button type="button" id="btn-year-csv-export" class="w-full py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-300 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition shadow-sm">
+            📥 Ausgewähltes Jahr (CSV)
           </button>
         </div>
       </div>
 
-      <div id="drive-sync-status" class="text-[11px] font-bold text-center text-slate-500 hidden"></div>
-      <div class="grid grid-cols-2 gap-2 mt-1">
-        <button type="button" id="btn-drive-push" class="py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 transition text-white font-bold rounded-xl text-xs shadow-sm">↑ In Cloud senden</button>
-        <button type="button" id="btn-drive-pull" class="py-2.5 bg-slate-700 hover:bg-slate-800 active:scale-95 transition text-white font-bold rounded-xl text-xs shadow-sm">↓ Aus Cloud laden</button>
+      <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Vollständiges Backup</div>
+        <div class="flex flex-col gap-2">
+          <button type="button" id="btn-full-backup-export" class="w-full py-3 bg-blue-600 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-md active:scale-95 transition">
+            <span>📤</span> Backup Exportieren
+          </button>
+          <label class="w-full py-3 bg-emerald-600 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95 transition">
+            <span>📥</span> Backup Wiederherstellen
+            <input type="file" id="input-full-backup-import" accept=".csv" class="hidden">
+          </label>
+        </div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- MODAL: Löschen Bestätigung -->
+<div id="modal-delete-confirm" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-[2rem] p-6 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col items-center text-center gap-4">
+    <div class="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center text-3xl shadow-inner border border-rose-100 dark:border-rose-900">🗑️</div>
+    <div>
+      <h3 class="text-lg font-black text-slate-900 dark:text-white mb-1">Tag löschen?</h3>
+      <p id="delete-modal-date-text" class="text-xs text-slate-500 font-bold uppercase tracking-wider"></p>
+    </div>
+    <div class="grid grid-cols-2 gap-3 w-full mt-2">
+      <button type="button" id="btn-confirm-delete-yes" class="py-3 bg-rose-500 text-white font-black rounded-xl text-sm shadow-md active:scale-95 transition">Ja, löschen</button>
+      <button type="button" id="btn-confirm-delete-no" class="py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-black rounded-xl text-sm active:scale-95 transition">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Sonderbuchung -->
+<div id="modal-special" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 overflow-y-auto modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4 my-auto max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 id="special-modal-title" class="text-[15px] font-black">⚙️ Sonderbuchung</h3>
+      <button type="button" id="btn-close-special" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <div class="flex flex-col gap-2">
+      <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">1. Zeitblöcke (bis zu 3x):</div>
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div><label class="text-[9px] text-slate-400 font-bold ml-1">Block 1 Kommt</label><input type="time" id="sp-in-1" class="w-full p-2.5 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none"></div>
+        <div><label class="text-[9px] text-slate-400 font-bold ml-1">Block 1 Geht</label><input type="time" id="sp-out-1" class="w-full p-2.5 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none"></div>
+        <div><label class="text-[9px] text-slate-400 font-bold ml-1">Block 2 Kommt</label><input type="time" id="sp-in-2" class="w-full p-2.5 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none"></div>
+        <div><label class="text-[9px] text-slate-400 font-bold ml-1">Block 2 Geht</label><input type="time" id="sp-out-2" class="w-full p-2.5 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none"></div>
+        <div><label class="text-[9px] text-slate-400 font-bold ml-1">Block 3 Kommt</label><input type="time" id="sp-in-3" class="w-full p-2.5 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none"></div>
+        <div><label class="text-[9px] text-slate-400 font-bold ml-1">Block 3 Geht</label><input type="time" id="sp-out-3" class="w-full p-2.5 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none"></div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">2. Arztbesuch (Zusatzstunden z.B. 1,5):</label>
+      <input type="text" id="sp-doctor-hours" placeholder="0,0 (oder 01:30)" class="p-3 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+    </div>
+
+    <div class="flex flex-col gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/50">
+      <div class="font-black text-slate-400 uppercase tracking-widest text-[10px]">3. Tagestyp-Optionen</div>
+      
+      <label class="flex items-center gap-3 cursor-pointer group">
+        <div class="relative flex items-center justify-center">
+          <input type="checkbox" id="sp-paid-holiday" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+          <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+        </div>
+        <span class="font-bold text-xs text-slate-700 dark:text-slate-200 group-active:text-blue-500 transition">Feiertag bezahlt (→ 8,00h VERR)</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer group">
+        <div class="relative flex items-center justify-center">
+          <input type="checkbox" id="sp-fill-fs" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+          <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+        </div>
+        <span class="font-bold text-xs text-slate-700 dark:text-slate-200 group-active:text-blue-500 transition">Mit FS-Konto auf 8,00h auffüllen</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer group">
+        <div class="relative flex items-center justify-center">
+          <input type="checkbox" id="sp-unpaid-child" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-amber-500 checked:border-amber-500 transition-colors">
+          <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+        </div>
+        <span class="font-bold text-xs text-amber-700 dark:text-amber-500 group-active:text-amber-600 transition">Kind krank unbez. (Reduziert 165h)</span>
+      </label>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">4. Notiz:</label>
+      <input type="text" id="sp-note" placeholder="z.B. Arztbesuch, Umbau..." class="p-3 mt-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+    </div>
+    
+    <button type="button" id="btn-save-special" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl text-sm shadow-md active:scale-95 transition mt-2">💾 Übernehmen</button>
+  </div>
+</div>
+
+<!-- MODAL: FS-Konto & Urlaub anpassen -->
+<div id="modal-fs" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 overflow-y-auto modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4 my-auto">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-[15px] font-black">⚙️ FS-Konto & Urlaub</h3>
+      <button type="button" id="btn-close-fs" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <div class="flex flex-col gap-3 bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-[1.5rem] border border-blue-100 dark:border-slate-700/50">
+      <div class="font-black uppercase tracking-widest text-[10px] text-blue-600 dark:text-blue-400">1. FS-Konto (<span id="fs-modal-month-label"></span>)</div>
+      <div>
+        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300 ml-1">Vormonat (Startwert):</label>
+        <input type="number" step="0.01" id="fs-input-prev" class="w-full p-2.5 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="z.B. 143,69">
+        <div class="text-[9px] text-slate-400 font-semibold ml-1 mt-1 leading-tight">Hinweis: Wird ohne Eingabe automatisch fortlaufend berechnet.</div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mt-1">
+        <div><label class="text-[11px] font-bold text-slate-700 dark:text-slate-300 ml-1">Auszahlung:</label><input type="number" step="0.01" id="fs-input-payout" class="w-full p-2.5 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none"></div>
+        <div><label class="text-[11px] font-bold text-slate-700 dark:text-slate-300 ml-1">Korrektur (+/-):</label><input type="number" step="0.01" id="fs-input-corr" class="w-full p-2.5 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none"></div>
+      </div>
+    </div>
+    
+    <div class="flex flex-col gap-3 bg-emerald-50/50 dark:bg-emerald-900/10 p-4 rounded-[1.5rem] border border-emerald-100 dark:border-slate-700/50">
+      <div class="font-black uppercase tracking-widest text-[10px] text-emerald-600 dark:text-emerald-400">2. Urlaub (<span id="vac-modal-year-label">2026</span>)</div>
+      <div>
+        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300 ml-1">Basis-Urlaubsanspruch:</label>
+        <input type="number" step="0.5" id="vac-input-current" class="w-full p-2.5 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 ml-1">Zusätzl. Sonderurlaub:</label>
+        <input type="number" step="0.5" id="vac-input-sonder" class="w-full p-2.5 mt-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-sm text-emerald-600 focus:ring-2 focus:ring-emerald-500 outline-none">
+      </div>
+      <div id="vac-modal-taken-hint" class="text-[9px] text-slate-400 font-semibold ml-1 mt-1 leading-tight">Gilt für das ganze Jahr. Gebuchte "U"-Tage werden abgezogen.</div>
+    </div>
+    
+    <button type="button" id="btn-save-fs" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl text-sm shadow-md active:scale-95 transition mt-2">💾 Werte speichern</button>
+  </div>
+</div>
+
+<!-- MODAL: Google Drive Sync -->
+<div id="modal-drive" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[70] hidden flex items-center justify-center p-4 modal-backdrop">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] p-5 border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-base font-black">☁️ Google Drive Sync</h3>
+      <button type="button" id="btn-close-drive" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold active:scale-90 transition">✕</button>
+    </div>
+    
+    <label class="flex items-center gap-3 cursor-pointer group bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
+      <div class="relative flex items-center justify-center">
+        <input type="checkbox" id="drive-auto-sync" class="w-5 h-5 rounded appearance-none border-2 border-slate-300 dark:border-slate-600 checked:bg-blue-500 checked:border-blue-500 transition-colors">
+        <span class="absolute text-white opacity-0 peer-checked:opacity-100 text-[10px] pointer-events-none">✓</span>
+      </div>
+      <span class="font-bold text-xs">Autom. Cloud-Sync</span>
+    </label>
+    
+    <div class="flex flex-col gap-1">
+      <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Apps Script Web-App URL:</label>
+      <input type="url" id="drive-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-mono text-[10px] border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none">
+    </div>
+    
+    <button type="button" id="btn-drive-help" class="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 text-center py-2 underline active:opacity-70 transition">📖 Anleitung anzeigen</button>
+    
+    <div id="drive-help-text" class="hidden flex flex-col gap-3">
+      <div class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-slate-700/50 leading-relaxed">
+        <strong class="text-slate-800 dark:text-slate-200 font-black">1. Einrichten:</strong> Gehe am PC zu <i>script.google.com</i>.<br>
+        <strong class="text-slate-800 dark:text-slate-200 font-black">2. Neues Projekt:</strong> Klicke auf "Neues Projekt". Code löschen und App-Skript einfügen.<br>
+        <strong class="text-slate-800 dark:text-slate-200 font-black">3. Bereitstellen:</strong> "Neue Bereitstellung" > "Web-App". Zugriff: "Jeder".<br>
+        <strong class="text-slate-800 dark:text-slate-200 font-black">4. Kopieren:</strong> URL hier einfügen.
+      </div>
+      
+      <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+        <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-2">Speicherpfad in Drive:</label>
+        <input type="text" id="drive-folder-input" value="AppDaten/Zeiterfassung" class="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none">
+        <button type="button" id="btn-copy-script" class="mt-3 w-full py-3 bg-slate-800 dark:bg-slate-700 text-white font-black rounded-xl text-xs active:scale-95 transition shadow-sm">
+          📋 Apps Script Code kopieren
+        </button>
+      </div>
+    </div>
+
+    <div id="drive-sync-status" class="text-[11px] font-black uppercase tracking-widest text-center text-slate-500 hidden py-1"></div>
+    <div class="grid grid-cols-2 gap-3 mt-2">
+      <button type="button" id="btn-drive-push" class="py-3.5 bg-blue-600 text-white font-black rounded-xl text-xs shadow-md active:scale-95 transition flex items-center justify-center gap-1">↑ Senden</button>
+      <button type="button" id="btn-drive-pull" class="py-3.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black rounded-xl text-xs active:scale-95 transition flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700">↓ Laden</button>
+    </div>
+  </div>
+</div>
 
   <!-- ========================================================= -->
   <!-- JAVASCRIPT LOGIK                                          -->
@@ -880,7 +1007,7 @@
       ENTRIES: 'pwa_schicht_entries_v3',
       ROSTER:  'pwa_schicht_roster_v3',
       META:    'pwa_schicht_meta_v3',
-      EVENTS:  'pwa_schicht_events_v3', // NEU: Speicherort für Termine
+      EVENTS:  'pwa_schicht_events_v3',
       LAST_SHIFT: 'pwa_schicht_last_shift_v3',
       LAST_DATE:  'pwa_schicht_last_date_on_reload'
     };
@@ -892,7 +1019,7 @@
 
     let entriesDB = loadJSON(STORAGE_KEYS.ENTRIES, {});
     let rosterDB  = loadJSON(STORAGE_KEYS.ROSTER, {});
-    let eventsDB  = loadJSON(STORAGE_KEYS.EVENTS, {}); // NEU: Initialisierung eventsDB
+    let eventsDB  = loadJSON(STORAGE_KEYS.EVENTS, {});
     
     let metaDB    = loadJSON(STORAGE_KEYS.META, {
       theme: 'system', nightShiftSunday: false, capEarlyShift: true, kostenstelle: 'Meine Kostenstelle',
@@ -966,7 +1093,7 @@
     }
 
     /********************************************************************
-     * GOOGLE DRIVE SYNC LOGIK & KOPIEREN (Angepasst mit eventsDB)
+     * GOOGLE DRIVE SYNC LOGIK & KOPIEREN
      ********************************************************************/
     async function syncPushToGoogleDrive(showSuccessAlert = true) {
       const inputEl = document.getElementById('drive-url-input');
@@ -976,8 +1103,8 @@
 
       const statusEl = document.getElementById('drive-sync-status');
       if (statusEl && showSuccessAlert) {
-        statusEl.textContent = '⏳ Sende Backup an Google Drive...';
-        statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400';
+        statusEl.textContent = '⏳ Sende an Drive...';
+        statusEl.className = 'text-[11px] font-black text-center text-blue-600 dark:text-blue-400 py-1 uppercase tracking-widest';
         statusEl.classList.remove('hidden');
       }
 
@@ -989,10 +1116,10 @@
 
       try {
         await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullPayload), keepalive: true });
-        if (statusEl && showSuccessAlert) { statusEl.textContent = '✅ Erfolgreich in Google Drive gespeichert!'; statusEl.className = 'text-[11px] font-bold text-center text-emerald-600 dark:text-emerald-400'; }
+        if (statusEl && showSuccessAlert) { statusEl.textContent = '✅ Erfolgreich!'; statusEl.className = 'text-[11px] font-black text-center text-emerald-600 dark:text-emerald-400 py-1 uppercase tracking-widest'; }
         if (showSuccessAlert) alert('Backup erfolgreich an Google Drive gesendet!'); return true;
       } catch (err) {
-        if (statusEl && showSuccessAlert) { statusEl.textContent = '❌ Fehler beim Senden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
+        if (statusEl && showSuccessAlert) { statusEl.textContent = '❌ Fehler: ' + err.message; statusEl.className = 'text-[11px] font-black text-center text-rose-600 py-1 uppercase tracking-widest'; }
         if (showSuccessAlert) alert('Fehler beim Senden an Google Drive: ' + err.message); return false;
       }
     }
@@ -1004,7 +1131,7 @@
       if (!url) { alert('Bitte zuerst die Google Apps Script URL eintragen!'); return; }
 
       const statusEl = document.getElementById('drive-sync-status');
-      if (statusEl) { statusEl.textContent = '⏳ Lade Backup aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
+      if (statusEl) { statusEl.textContent = '⏳ Lade aus Drive...'; statusEl.className = 'text-[11px] font-black text-center text-blue-600 dark:text-blue-400 py-1 uppercase tracking-widest'; statusEl.classList.remove('hidden'); }
 
       try {
         const res = await fetch(url); const data = await res.json();
@@ -1021,7 +1148,7 @@
         saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.EVENTS, eventsDB); saveJSON(STORAGE_KEYS.META, metaDB);
         alert('Daten erfolgreich aus Google Drive wiederhergestellt!'); window.location.reload();
       } catch (err) {
-        if (statusEl) { statusEl.textContent = '❌ Fehler beim Laden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
+        if (statusEl) { statusEl.textContent = '❌ Fehler: ' + err.message; statusEl.className = 'text-[11px] font-black text-center text-rose-600 py-1 uppercase tracking-widest'; }
         alert('Fehler beim Laden aus Google Drive: ' + err.message);
       }
     }
@@ -1042,10 +1169,31 @@
       return toISODate(now);
     }
 
+    // MODIFIZIERTE SWITCH VIEW FÜR BOTTOM NAV
     window.switchView = function(target) {
       document.getElementById('view-main').classList.toggle('hidden', target !== 'main');
       document.getElementById('view-roster').classList.toggle('hidden', target !== 'roster');
       document.getElementById('view-overview').classList.toggle('hidden', target !== 'overview');
+      
+      const gh = document.getElementById('global-header');
+      if(gh) { gh.classList.toggle('hidden', target !== 'main'); }
+
+      // Update Bottom Nav Styling
+      const tabs = ['main', 'roster', 'overview'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(t === 'main' ? 'nav-tab-main' : (t === 'roster' ? 'btn-nav-roster-bottom' : 'btn-nav-overview-bottom'));
+        if (btn) {
+          if (t === target) {
+            btn.classList.add('text-blue-600', 'dark:text-blue-500');
+            btn.classList.remove('text-slate-400', 'dark:text-slate-500', 'hover:text-slate-600', 'dark:hover:text-slate-300');
+            btn.querySelector('span').classList.remove('opacity-80');
+          } else {
+            btn.classList.remove('text-blue-600', 'dark:text-blue-500');
+            btn.classList.add('text-slate-400', 'dark:text-slate-500', 'hover:text-slate-600', 'dark:hover:text-slate-300');
+            btn.querySelector('span').classList.add('opacity-80');
+          }
+        }
+      });
 
       if (target === 'roster') {
         renderRosterYear(true);
@@ -1186,7 +1334,7 @@
     }
 
     /********************************************************************
-     * DREHRÄDER (Inklusive Endlos-Option & Scroll-Blocker!)
+     * DREHRÄDER
      ********************************************************************/
     let selectedDateISO = getInitialStartDateISO();
     let selectedShiftCode = '0112';
@@ -1249,7 +1397,7 @@
       setupWheel('wheel-date', dateWheelList, (iso) => formatShortDE(iso), (iso) => { if (selectedDateISO !== iso) { selectedDateISO = iso; onDateChanged(); } }, false);
       setupWheel('wheel-shift', SHIFTS, (s) => s.name, (s) => { 
         selectedShiftCode = s.code; 
-        draftEntry.shift = s.code; // NEU: Drehrad-Auswahl zwingt die draftEntry auf die gewählte Schicht
+        draftEntry.shift = s.code;
         localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, s.code); 
         updateLivePreview(); 
       }, false);
@@ -1278,7 +1426,7 @@
       }
 
       const hintEl = document.getElementById('shift-source-hint'); const planBadge = document.getElementById('roster-indicator');
-      if (rosterDB[selectedDateISO]) { planBadge.classList.remove('hidden'); hintEl.textContent = `Schichtplan: ${rosterDB[selectedDateISO]}`; }
+      if (rosterDB[selectedDateISO]) { planBadge.classList.remove('hidden'); hintEl.textContent = `Plan: ${rosterDB[selectedDateISO]}`; }
       else { planBadge.classList.add('hidden'); hintEl.textContent = autoShift.source; }
 
       const holBadge = document.getElementById('holiday-badge'); const hol = isHoliday(selectedDateISO);
@@ -1308,15 +1456,15 @@
       const lbl = document.getElementById('label-wheel-target');
 
       if (target === 'in') {
-        cardIn.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm';
-        cardOut.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm';
+        cardIn.className = 'p-4 rounded-[1.5rem] border-[2.5px] text-left transition-all bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-500 shadow-md ring-4 ring-emerald-500/10 relative overflow-hidden';
+        cardOut.className = 'p-4 rounded-[1.5rem] border-[2.5px] text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden';
         bIn.classList.remove('hidden'); bOut.classList.add('hidden');
-        lbl.textContent = 'Uhrzeit für KOMMEN wählen'; lbl.className = 'text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400';
+        lbl.textContent = 'Zeit für Kommen'; lbl.className = 'text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400';
       } else {
-        cardOut.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-rose-500 ring-2 ring-rose-500/20 shadow-sm';
-        cardIn.className = 'p-3 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm';
+        cardOut.className = 'p-4 rounded-[1.5rem] border-[2.5px] text-left transition-all bg-rose-50/30 dark:bg-rose-950/10 border-rose-500 shadow-md ring-4 ring-rose-500/10 relative overflow-hidden';
+        cardIn.className = 'p-4 rounded-[1.5rem] border-[2.5px] text-left transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden';
         bOut.classList.remove('hidden'); bIn.classList.add('hidden');
-        lbl.textContent = 'Uhrzeit für GEHEN wählen'; lbl.className = 'text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400';
+        lbl.textContent = 'Zeit für Gehen'; lbl.className = 'text-xs font-black uppercase tracking-wider text-rose-600 dark:text-rose-400';
       }
 
       if (syncWheels) {
@@ -1371,16 +1519,16 @@
       document.getElementById('live-card-title').textContent = formatDE(selectedDateISO); document.getElementById('live-card-shift').textContent = sObj.name;
       
       document.getElementById('live-ist').textContent = fmtDec(calc.ist);
-      document.getElementById('live-ist').className = `text-xs ${calc.isPreview ? 'text-slate-400 font-semibold' : 'font-bold text-slate-700 dark:text-slate-200'}`;
+      document.getElementById('live-ist').className = `text-sm mt-0.5 ${calc.isPreview ? 'text-slate-400 font-semibold' : 'font-black text-slate-700 dark:text-slate-200'}`;
       
       document.getElementById('live-verr').textContent = fmtDec(calc.verr); 
-      document.getElementById('live-verr').className = `text-xs ${calc.isPreview ? 'text-slate-400 font-semibold' : 'font-extrabold text-slate-900 dark:text-white'}`;
+      document.getElementById('live-verr').className = `text-sm mt-0.5 ${calc.isPreview ? 'text-slate-400 font-semibold' : 'font-black text-slate-900 dark:text-white'}`;
       
       document.getElementById('live-soll').textContent = fmtDec(calc.soll);
       
       const mehrEl = document.getElementById('live-mehr');
       mehrEl.textContent = calc.mehr > 0 ? '+' + fmtDec(calc.mehr) : (calc.mehr < 0 ? fmtDec(calc.mehr) : '0,00');
-      mehrEl.className = `text-xs font-extrabold ${calc.mehr > 0 ? 'text-emerald-600' : (calc.mehr < 0 ? 'text-rose-600' : 'text-slate-400')}`;
+      mehrEl.className = `text-sm mt-0.5 font-black ${calc.mehr > 0 ? 'text-emerald-600' : (calc.mehr < 0 ? 'text-rose-600' : 'text-slate-400')}`;
       
       document.getElementById('live-info-line').textContent = calc.info;
     }
@@ -1400,19 +1548,19 @@
 
         const timeLines = getBookedTimeLines(e); const timesLabel = timeLines.length > 0 ? timeLines.join(' • ') : '--:--';
         const row = document.createElement('button'); row.type = 'button';
-        row.className = `w-full p-2.5 rounded-xl border flex justify-between items-center text-xs transition ${isCurrentlySelected ? 'bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-500 ring-2 ring-blue-500/20 font-bold' : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/70'}`;
+        row.className = `w-full p-3 rounded-2xl border flex justify-between items-center text-xs transition-all ${isCurrentlySelected ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 shadow-md font-bold' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800'}`;
         
-        const verrColor = calc.isPreview ? 'text-slate-400 font-semibold' : (calc.verr > 0 ? 'text-emerald-600 font-bold' : 'text-slate-400 font-bold');
+        const verrColor = calc.isPreview ? 'text-slate-400 font-semibold' : (calc.verr > 0 ? 'text-emerald-600 font-black' : 'text-slate-400 font-bold');
 
         row.innerHTML = `
-          <div class="flex items-center gap-2 overflow-hidden">
-            <span class="font-bold w-16 shrink-0 text-left ${isCurrentlySelected ? 'text-blue-600 dark:text-blue-400' : ''}">${formatShortDE(iso).replace('Heute • ', '')}</span>
-            <span class="px-1.5 py-0.5 shrink-0 rounded bg-slate-200 dark:bg-slate-700 font-bold text-[10px]">${shiftLabel}</span>
-            <span class="text-slate-500 font-mono text-[11px] truncate">${timesLabel}</span>
+          <div class="flex items-center gap-3 overflow-hidden">
+            <span class="font-black w-14 shrink-0 text-left ${isCurrentlySelected ? 'text-blue-600 dark:text-blue-400' : ''}">${formatShortDE(iso).replace('Heute • ', '')}</span>
+            <span class="px-2 py-1 shrink-0 rounded-lg bg-white dark:bg-slate-900 font-black text-[10px] border border-slate-200 dark:border-slate-700">${shiftLabel}</span>
+            <span class="text-slate-500 font-mono text-[11px] truncate font-semibold">${timesLabel}</span>
           </div>
-          <div class="flex items-center gap-1.5 shrink-0 ml-1">
+          <div class="flex items-center gap-2 shrink-0 ml-1">
             <span class="${verrColor}">${fmtDec(calc.verr)}h</span>
-            <span class="${isCurrentlySelected ? 'text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-extrabold' : ''}">${isCurrentlySelected ? '✕ Schließen' : '✏️'}</span>
+            <span class="${isCurrentlySelected ? 'text-[10px] px-2 py-1 rounded-lg bg-blue-600 text-white font-black shadow-sm' : ''}">${isCurrentlySelected ? '✕' : '✏️'}</span>
           </div>
         `;
         row.addEventListener('click', () => {
@@ -1444,20 +1592,18 @@
       
       const btn = document.getElementById('btn-save-entry'); const btnLabel = document.getElementById('btn-save-label');
       if (btn && btnLabel) {
-        btnLabel.textContent = '✓ Gespeichert'; btn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); btn.classList.add('bg-emerald-600');
-        setTimeout(() => { btnLabel.textContent = 'Tag speichern'; btn.classList.remove('bg-emerald-600'); btn.classList.add('bg-blue-600', 'hover:bg-blue-700'); }, 650);
+        btnLabel.textContent = '✓ Gespeichert'; btn.classList.remove('from-blue-600', 'to-indigo-600', 'hover:from-blue-700', 'hover:to-indigo-700'); btn.classList.add('from-emerald-500', 'to-emerald-600');
+        setTimeout(() => { btnLabel.textContent = 'Tag speichern'; btn.classList.remove('from-emerald-500', 'to-emerald-600'); btn.classList.add('from-blue-600', 'to-indigo-600', 'hover:from-blue-700', 'hover:to-indigo-700'); }, 650);
       }
       triggerBackgroundDriveSync();
     }
 
     /********************************************************************
-     * SCHICHTPLAN LOGIK & NEUE EVENT-LOGIK (Termine)
+     * SCHICHTPLAN LOGIK
      ********************************************************************/
     let rosterYear = new Date().getFullYear();
     let activeSingleBrush = null;
     let activeWeekPattern = null;
-    
-    // NEU: Aktuelles Termin-ISO für das Edit-Modal
     let activeEventIso = null;
 
     function updateToolUI() {
@@ -1466,11 +1612,11 @@
       const hint = document.getElementById('roster-tool-hint');
       if (activeSingleBrush) {
         const letter = SHIFTS.find(s => s.code === activeSingleBrush)?.short || activeSingleBrush;
-        hint.textContent = `✏️ [${letter}] aktiv: Tag tippen = Einzeltag | Auf „KW“ tippen = Ausfüllen`; hint.className = 'text-[10px] font-extrabold text-center py-1 px-2 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200';
+        hint.textContent = `✏️ [${letter}] aktiv: Tag tippen = Einzeltag | Auf „KW“ = Ausfüllen`; hint.className = 'text-[9px] font-black uppercase tracking-wider text-center py-1.5 px-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300';
       } else if (activeWeekPattern) {
-        hint.textContent = `⚡ Kombi [${activeWeekPattern}] aktiv: Auf „KW“ oder Zeile tippen zum Ausfüllen!`; hint.className = 'text-[10px] font-extrabold text-center py-1 px-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200';
+        hint.textContent = `⚡ Kombi [${activeWeekPattern}] aktiv: „KW“ oder Zeile tippen!`; hint.className = 'text-[9px] font-black uppercase tracking-wider text-center py-1.5 px-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300';
       } else {
-        hint.textContent = '👆 Links wählen (Tag tippen = Einzeltag | KW tippen = Mo–Fr) oder rechts Kombi wählen'; hint.className = 'text-[10px] font-bold text-center py-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+        hint.textContent = '👆 Werkzeug wählen'; hint.className = 'text-[9px] font-black uppercase tracking-wider text-center py-1.5 px-2 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 text-slate-500';
       }
     }
 
@@ -1500,7 +1646,6 @@
       window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 8, behavior: 'smooth' });
     }
 
-    // NEU: Update 3-Tage InfoBox für Termine
     function updateUpcomingEventsBox() {
       const box = document.getElementById('upcoming-events-box');
       const today = new Date(); today.setHours(0,0,0,0);
@@ -1539,11 +1684,10 @@
 
       MONTH_SHORT.forEach((mName, mIdx) => {
         const b = document.createElement('button'); b.type = 'button'; 
-        // NEU: Blaues Highlight für den aktuellen Monat
         if (rosterYear === currentYear && mIdx === currentMonthIdx) {
-          b.className = 'py-1 rounded-lg bg-blue-600 text-white font-black text-center active:scale-95 transition shadow-md';
+          b.className = 'py-1.5 rounded-lg bg-blue-600 text-white font-black text-center active:scale-95 transition shadow-md';
         } else {
-          b.className = 'py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950 text-slate-700 dark:text-slate-300 text-center active:scale-95 transition'; 
+          b.className = 'py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-center active:scale-95 transition shadow-sm'; 
         }
         b.textContent = mName;
         b.addEventListener('click', () => scrollToRosterElement(document.getElementById(`roster-month-sec-${mIdx}`))); 
@@ -1558,19 +1702,18 @@
         const displayMonth = w.thursdayYear < rosterYear ? 0 : (w.thursdayYear > rosterYear ? 11 : w.month);
         if (displayMonth !== currentMonthRendered) {
           currentMonthRendered = displayMonth;
-          monthCard = document.createElement('div'); monthCard.id = `roster-month-sec-${displayMonth}`; monthCard.className = 'bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2';
-          monthCard.innerHTML = `<div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-1 px-1"><span class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">${MONTH_NAMES[displayMonth]} ${rosterYear}</span></div>`; listEl.appendChild(monthCard);
+          monthCard = document.createElement('div'); monthCard.id = `roster-month-sec-${displayMonth}`; monthCard.className = 'bg-white dark:bg-slate-900 rounded-[1.5rem] p-3 border border-slate-200/60 dark:border-slate-800/60 shadow-sm flex flex-col gap-2';
+          monthCard.innerHTML = `<div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-1.5 px-2"><span class="text-[11px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500">${MONTH_NAMES[displayMonth]} ${rosterYear}</span></div>`; listEl.appendChild(monthCard);
         }
 
         const isCurrentWeek = w.days.some(dayObj => toISODate(dayObj) === todayIso);
         const kwBlock = document.createElement('div'); if (isCurrentWeek) kwBlock.id = 'roster-current-kw';
-        kwBlock.className = `p-1.5 rounded-xl border transition ${isCurrentWeek ? 'bg-blue-50/50 dark:bg-blue-950/30 border-2 border-blue-500' : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'}`;
+        kwBlock.className = `p-1.5 rounded-2xl transition ${isCurrentWeek ? 'bg-slate-100 dark:bg-slate-800/60 border-2 border-slate-900 dark:border-white' : 'bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800'}`;
 
-        const rowGrid = document.createElement('div'); rowGrid.className = 'grid grid-cols-8 gap-1 items-stretch';
+        const rowGrid = document.createElement('div'); rowGrid.className = 'grid grid-cols-8 gap-1.5 items-stretch';
         const kwBtn = document.createElement('button'); kwBtn.type = 'button';
-        // NEU: Aktuelle KW stark hervorheben (.current-kw-strong)
-        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 ${isCurrentWeek ? 'current-kw-strong' : 'border-slate-300 dark:border-slate-700'}`;
-        kwBtn.innerHTML = `<span>KW</span><span class="text-xs leading-none mt-0.5">${w.kw}</span>`;
+        kwBtn.className = `flex flex-col items-center justify-center rounded-xl font-black text-[11px] border-[1.5px] select-none active:scale-95 transition bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 shadow-sm`;
+        kwBtn.innerHTML = `<span class="tracking-widest opacity-80">KW</span><span class="text-sm leading-none mt-0.5 text-slate-700 dark:text-slate-200">${w.kw}</span>`;
 
         const dayCells = [];
         kwBtn.addEventListener('click', () => {
@@ -1596,33 +1739,30 @@
           const iso = toISODate(dayObj); const isToday = (iso === todayIso); const isWeekend = (idx >= 5); const hol = isHoliday(iso); const code = rosterDB[iso] || '';
           const cell = document.createElement('button'); cell.type = 'button'; cell.dataset.iso = iso; cell.dataset.weekend = isWeekend ? '1' : '0';
           
-          // NEU: Starke Hervorhebung für Heute (.current-day-strong)
-          cell.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-lg border-2 select-none active:scale-95 transition ${getShiftCellClass(code, isWeekend)} ${isToday ? 'current-day-strong' : ''}`;
+          cell.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-xl border-[1.5px] select-none active:scale-95 transition shadow-sm ${getShiftCellClass(code, isWeekend)} ${isToday ? 'current-day-strong' : ''}`;
 
-          const starHtml = hol ? `<div class="absolute -top-0.5 right-0.5 text-[12px] text-amber-400 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.8)] leading-none">★</div>` : '';
+          const starHtml = hol ? `<div class="absolute -top-1 -right-0.5 text-[12px] text-amber-500 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] leading-none">★</div>` : '';
           
-          // NEU: Stecknadel-Logik (Events)
           const evs = eventsDB[iso] || [];
           let pinHtml = '';
           if (evs.length > 0) {
             const realToday = new Date(); realToday.setHours(0,0,0,0);
             const cellD = parseISODate(iso);
             const diffDays = (cellD - realToday) / (1000 * 60 * 60 * 24);
-            const isNear = diffDays >= 0 && diffDays <= 2; // Pulsieren für heute, morgen, übermorgen
+            const isNear = diffDays >= 0 && diffDays <= 2; 
             const pinStr = evs.length > 1 ? '📌📌' : '📌';
-            const pinClass = isNear ? 'pin-blink text-rose-600 dark:text-rose-500 drop-shadow-md' : 'text-rose-600 dark:text-rose-500 drop-shadow-sm';
-            pinHtml = `<div class="absolute bottom-0.5 right-0.5 text-[9px] leading-none ${pinClass}">${pinStr}</div>`;
+            const pinClass = isNear ? 'pin-blink grayscale brightness-0 dark:invert drop-shadow-md' : 'grayscale brightness-0 dark:invert drop-shadow-sm';
+            pinHtml = `<div class="absolute -bottom-1 -right-0.5 text-[10px] leading-none ${pinClass}">${pinStr}</div>`;
           }
 
           cell.innerHTML = `
             ${starHtml}
-            <div class="text-[10px] font-extrabold leading-none mt-1">${WD_NAMES[dayObj.getDay()]}</div>
-            <div class="text-[9px] font-semibold leading-tight my-0.5 ${hol ? 'text-rose-600 dark:text-rose-400' : 'opacity-80'}">${String(dayObj.getDate()).padStart(2, '0')}.${String(dayObj.getMonth() + 1).padStart(2, '0')}</div>
-            <div class="cell-letter h-4 flex items-center justify-center text-xs font-black leading-none mb-0.5">${getShiftShortLetter(code) || (hol ? 'Ft' : '')}</div>
+            <div class="text-[9px] font-black uppercase tracking-widest leading-none mt-1 opacity-90">${WD_NAMES[dayObj.getDay()]}</div>
+            <div class="text-[10px] font-bold leading-tight my-1 ${hol ? 'text-rose-600 dark:text-rose-400' : 'opacity-80'}">${String(dayObj.getDate()).padStart(2, '0')}.${String(dayObj.getMonth() + 1).padStart(2, '0')}</div>
+            <div class="cell-letter h-5 flex items-center justify-center text-[13px] font-black leading-none mb-0.5">${getShiftShortLetter(code) || (hol ? 'Ft' : '')}</div>
             ${pinHtml}
           `;
 
-          // NEU: Long Press Logik für Termine
           let longPressTimer;
           let isLongPress = false;
           
@@ -1632,7 +1772,7 @@
               isLongPress = true;
               if (navigator.vibrate) navigator.vibrate(50);
               openDayEventsModal(iso);
-            }, 800); // 0.8 Sekunden
+            }, 800);
           };
           const cancelPress = () => { clearTimeout(longPressTimer); };
 
@@ -1643,7 +1783,6 @@
           cell.addEventListener('mouseup', cancelPress);
           cell.addEventListener('mouseleave', cancelPress);
 
-          // Normaler Klick (Schicht stempeln)
           cell.addEventListener('click', (e) => {
             if (isLongPress) { e.preventDefault(); e.stopPropagation(); return; }
             if (activeWeekPattern && WEEK_PATTERNS[activeWeekPattern]) { applyWeekPatternToRow(dayCells, WEEK_PATTERNS[activeWeekPattern]); return; }
@@ -1658,7 +1797,7 @@
         kwBlock.appendChild(rowGrid); monthCard.appendChild(kwBlock);
       });
 
-      updateUpcomingEventsBox(); // Aufruf der InfoBox beim Zeichnen
+      updateUpcomingEventsBox();
 
       setTimeout(() => {
         const h = document.getElementById('roster-fixed-header')?.offsetHeight; if (h) document.getElementById('roster-header-spacer').style.height = (h + 6) + 'px';
@@ -1684,31 +1823,29 @@
         const diffDays = (cellD - realToday) / (1000 * 60 * 60 * 24);
         const isNear = diffDays >= 0 && diffDays <= 2; 
         const pinStr = evs.length > 1 ? '📌📌' : '📌';
-        const pinClass = isNear ? 'pin-blink text-rose-600 dark:text-rose-500 drop-shadow-md' : 'text-rose-600 dark:text-rose-500 drop-shadow-sm';
-        pinHtml = `<div class="absolute bottom-0.5 right-0.5 text-[9px] leading-none ${pinClass}">${pinStr}</div>`;
+        const pinClass = isNear ? 'pin-blink grayscale brightness-0 dark:invert drop-shadow-md' : 'grayscale brightness-0 dark:invert drop-shadow-sm';
+        pinHtml = `<div class="absolute -bottom-1 -right-0.5 text-[10px] leading-none ${pinClass}">${pinStr}</div>`;
       }
       
       const hol = isHoliday(iso);
-      const starHtml = hol ? `<div class="absolute -top-0.5 right-0.5 text-[12px] text-amber-400 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.8)] leading-none">★</div>` : '';
+      const starHtml = hol ? `<div class="absolute -top-1 -right-0.5 text-[12px] text-amber-500 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] leading-none">★</div>` : '';
 
       const dayObj = parseISODate(iso);
-      cellEl.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-lg border-2 select-none active:scale-95 transition ${getShiftCellClass(code, isWeekend)} ${isToday ? 'current-day-strong' : ''}`;
+      cellEl.className = `roster-day-cell relative flex flex-col items-center justify-between py-1.5 px-0.5 rounded-xl border-[1.5px] select-none active:scale-95 transition shadow-sm ${getShiftCellClass(code, isWeekend)} ${isToday ? 'current-day-strong' : ''}`;
       cellEl.innerHTML = `
         ${starHtml}
-        <div class="text-[10px] font-extrabold leading-none mt-1">${WD_NAMES[dayObj.getDay()]}</div>
-        <div class="text-[9px] font-semibold leading-tight my-0.5 ${hol ? 'text-rose-600 dark:text-rose-400' : 'opacity-80'}">${String(dayObj.getDate()).padStart(2, '0')}.${String(dayObj.getMonth() + 1).padStart(2, '0')}</div>
-        <div class="cell-letter h-4 flex items-center justify-center text-xs font-black leading-none mb-0.5">${getShiftShortLetter(code) || (hol ? 'Ft' : '')}</div>
+        <div class="text-[9px] font-black uppercase tracking-widest leading-none mt-1 opacity-90">${WD_NAMES[dayObj.getDay()]}</div>
+        <div class="text-[10px] font-bold leading-tight my-1 ${hol ? 'text-rose-600 dark:text-rose-400' : 'opacity-80'}">${String(dayObj.getDate()).padStart(2, '0')}.${String(dayObj.getMonth() + 1).padStart(2, '0')}</div>
+        <div class="cell-letter h-5 flex items-center justify-center text-[13px] font-black leading-none mb-0.5">${getShiftShortLetter(code) || (hol ? 'Ft' : '')}</div>
         ${pinHtml}
       `;
     }
 
-    // NEU: Day Events Modal Öffnen & Rendern
     function openDayEventsModal(iso) {
       activeEventIso = iso;
       document.getElementById('day-events-title').textContent = `📌 Termine am ${formatDE(iso)}`;
       renderDayEventsList();
       
-      // Felder zurücksetzen
       document.getElementById('ev-in').value = '';
       document.getElementById('ev-out').value = '';
       document.getElementById('ev-text').value = '';
@@ -1722,19 +1859,19 @@
       const evs = eventsDB[activeEventIso] || [];
       
       if (evs.length === 0) {
-        container.innerHTML = '<div class="text-xs text-slate-500 italic px-1">Noch keine Termine eingetragen.</div>';
+        container.innerHTML = '<div class="text-xs text-slate-500 font-bold px-1 text-center py-4 bg-slate-50 dark:bg-slate-800 rounded-xl">Keine Termine eingetragen.</div>';
         return;
       }
       
       evs.forEach((e, idx) => {
         const row = document.createElement('div');
-        row.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs';
+        row.className = 'flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm shadow-sm';
         row.innerHTML = `
-          <div class="flex-1 overflow-hidden pr-2">
-            <div class="font-bold text-blue-600 dark:text-blue-400">${e.start} - ${e.end} Uhr</div>
-            <div class="truncate text-slate-700 dark:text-slate-200 font-medium">${e.text}</div>
+          <div class="flex-1 overflow-hidden pr-3">
+            <div class="font-black text-blue-600 dark:text-blue-400 text-xs">${e.start} - ${e.end} Uhr</div>
+            <div class="truncate text-slate-800 dark:text-slate-200 font-bold mt-0.5">${e.text}</div>
           </div>
-          <button type="button" class="w-8 h-8 shrink-0 flex items-center justify-center bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400 rounded-lg font-bold active:scale-95 transition" data-idx="${idx}">🗑️</button>
+          <button type="button" class="w-10 h-10 shrink-0 flex items-center justify-center bg-rose-50 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400 rounded-xl font-bold active:scale-95 transition" data-idx="${idx}">🗑️</button>
         `;
         row.querySelector('button').addEventListener('click', (btnEvent) => {
           const index = parseInt(btnEvent.currentTarget.dataset.idx, 10);
@@ -1748,7 +1885,6 @@
       });
     }
 
-    // NEU: Neuen Termin zu Tag hinzufügen
     document.getElementById('btn-add-day-event').addEventListener('click', () => {
       const start = document.getElementById('ev-in').value;
       const end = document.getElementById('ev-out').value;
@@ -1762,7 +1898,6 @@
       if (!eventsDB[activeEventIso]) eventsDB[activeEventIso] = [];
       eventsDB[activeEventIso].push({ start, end, text });
       
-      // Nach Zeit sortieren
       eventsDB[activeEventIso].sort((a,b) => a.start.localeCompare(b.start));
       
       saveJSON(STORAGE_KEYS.EVENTS, eventsDB);
@@ -1778,44 +1913,62 @@
     document.getElementById('btn-close-day-events').addEventListener('click', () => { document.getElementById('modal-day-events').classList.add('hidden'); renderRosterYear(false); });
     document.getElementById('btn-save-day-events').addEventListener('click', () => { document.getElementById('modal-day-events').classList.add('hidden'); renderRosterYear(false); });
 
-    // NEU: Globale Terminliste rendern
     function renderGlobalEventsList() {
       const container = document.getElementById('events-global-container');
       container.innerHTML = '';
       
-      const allIsos = Object.keys(eventsDB).sort();
+      const realToday = new Date();
+      const realTodayIso = toISODate(realToday);
+      
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(realToday.getDate() - 14);
+      const twoWeeksAgoIso = toISODate(twoWeeksAgo);
+
+      const allIsos = Object.keys(eventsDB)
+        .filter(iso => iso >= twoWeeksAgoIso)
+        .sort();
+
       if (allIsos.length === 0) {
-        container.innerHTML = '<div class="text-sm text-slate-500 italic text-center p-4">Keine Termine vorhanden.</div>';
+        container.innerHTML = '<div class="text-sm text-slate-500 font-bold text-center p-6 bg-slate-50 dark:bg-slate-800 rounded-xl">Keine aktuellen Termine vorhanden.</div>';
         return;
       }
       
-      const realTodayIso = toISODate(new Date());
+      let currentKW = -1;
 
       allIsos.forEach(iso => {
+        const d = parseISODate(iso);
+        const kw = getISOWeek(d);
+        
+        if (kw !== currentKW) {
+          const kwHeader = document.createElement('div');
+          kwHeader.className = 'text-[10px] font-black text-slate-400 dark:text-slate-500 mt-4 mb-2 uppercase tracking-widest text-center';
+          kwHeader.textContent = `KW ${kw} (${d.getFullYear()})`;
+          container.appendChild(kwHeader);
+          currentKW = kw;
+        }
+
         const evs = eventsDB[iso];
         const isPast = iso < realTodayIso;
         
         const wrapper = document.createElement('div');
-        wrapper.className = `flex flex-col gap-1 p-2.5 rounded-xl border ${isPast ? 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 opacity-60' : 'bg-white dark:bg-slate-800 border-rose-200 dark:border-rose-800/50 shadow-sm'}`;
+        wrapper.className = `flex flex-col p-3 rounded-2xl border ${isPast ? 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 opacity-60' : 'bg-white dark:bg-slate-800 border-rose-200 dark:border-rose-800/50 shadow-sm'}`;
         
         let evHtml = '';
         evs.forEach(e => {
-          evHtml += `<div class="text-xs ml-1 py-0.5"><span class="font-mono text-rose-600 dark:text-rose-400 font-bold">${e.start}-${e.end}</span> <span class="${isPast ? 'text-slate-500' : 'text-slate-800 dark:text-slate-200 font-semibold'}">${e.text}</span></div>`;
+          evHtml += `<div class="text-sm py-1 border-t border-slate-100 dark:border-slate-700 mt-1 first:border-t-0 first:mt-0"><span class="font-mono text-rose-600 dark:text-rose-400 font-black">${e.start}-${e.end}</span> <span class="${isPast ? 'text-slate-500' : 'text-slate-800 dark:text-slate-200 font-bold ml-1'}">${e.text}</span></div>`;
         });
 
         wrapper.innerHTML = `
-          <div class="text-xs font-black uppercase tracking-wide ${isPast ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'} border-b border-slate-100 dark:border-slate-700/50 pb-1 mb-1">
+          <div class="text-[11px] font-black uppercase tracking-wider ${isPast ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'} mb-2">
             ${formatDE(iso)}
           </div>
           ${evHtml}
         `;
         
-        // Klick auf den Termin bringt einen (wenn möglich) zum entsprechenden Monat
         if (!isPast) {
-          wrapper.classList.add('cursor-pointer', 'active:scale-95', 'transition');
+          wrapper.classList.add('cursor-pointer', 'active:scale-95', 'transition-transform');
           wrapper.addEventListener('click', () => {
              document.getElementById('modal-events-list').classList.add('hidden');
-             const d = parseISODate(iso);
              if (d.getFullYear() === rosterYear) {
                scrollToRosterElement(document.getElementById(`roster-month-sec-${d.getMonth()}`));
              }
@@ -1837,7 +1990,7 @@
     document.getElementById('btn-close-events-list').addEventListener('click', () => document.getElementById('modal-events-list').classList.add('hidden'));
 
     /********************************************************************
-     * KOMPAKTE MONATSÜBERSICHT & STATISTIK & FS-KONTO LOGIK
+     * KOMPAKTE MONATSÜBERSICHT
      ********************************************************************/
     let overviewYear = new Date().getFullYear();
     let overviewMonth = new Date().getMonth();
@@ -1929,7 +2082,7 @@
         if (badgeText === 'LEHRGANG') { badgeText = 'LG'; styleCode = 'LEHRGANG'; }
 
         const badgeCls = getShiftCellClass(styleCode, false);
-        const starIcon = hol ? `<span class="text-amber-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ml-1">★</span>` : '';
+        const starIcon = hol ? `<span class="text-amber-500 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ml-1">★</span>` : '';
 
         const timeLines = getBookedTimeLines(entry); let compactTime = '--';
         if (timeLines.length > 0) {
@@ -1944,20 +2097,20 @@
         }
 
         const tr = document.createElement('tr');
-        tr.className = `cursor-pointer active:bg-blue-100 dark:active:bg-slate-800 transition ${isToday ? 'bg-blue-50/90 dark:bg-blue-950/50 font-bold' : (isWe ? 'bg-slate-50/80 dark:bg-slate-900/40' : '')}`;
+        tr.className = `cursor-pointer active:bg-blue-100 dark:active:bg-slate-800 transition ${isToday ? 'bg-blue-50 dark:bg-blue-900/30' : (isWe ? 'bg-slate-50/50 dark:bg-slate-900/20' : '')}`;
 
         let mehrHtml = calc.mehr > 0 ? '+' + fmtDec(calc.mehr) : (calc.mehr < 0 ? fmtDec(calc.mehr) : '');
 
         const istColor = calc.isPreview ? 'text-slate-400 dark:text-slate-500 font-normal' : 'text-slate-900 dark:text-slate-100 font-bold';
-        const verrColor = calc.isPreview ? 'text-slate-400 dark:text-slate-500 font-normal' : 'text-slate-900 dark:text-slate-100 font-extrabold';
+        const verrColor = calc.isPreview ? 'text-slate-400 dark:text-slate-500 font-normal' : 'text-blue-600 dark:text-blue-400 font-black';
 
         tr.innerHTML = `
-          <td class="py-2 px-1.5 font-bold whitespace-nowrap align-middle">${WD_NAMES[dateObj.getDay()]} ${String(d).padStart(2, '0')}${starIcon}</td>
-          <td class="py-1.5 px-1 text-center align-middle"><span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black border ${badgeCls}">${badgeText}</span></td>
-          <td class="py-1.5 px-1 font-mono text-[11px] leading-tight align-middle">${compactTime}</td>
-          <td class="py-2 px-1 text-right font-mono align-middle ${istColor}">${calc.ist > 0 ? fmtDec(calc.ist) : ''}</td>
-          <td class="py-2 px-1 text-right font-mono align-middle ${verrColor}">${calc.verr > 0 ? fmtDec(calc.verr) : ''}</td>
-          <td class="py-2 px-1.5 text-right font-mono font-bold align-middle ${calc.mehr > 0 ? 'text-emerald-600' : (calc.mehr < 0 ? 'text-rose-600' : '')}">${mehrHtml}</td>
+          <td class="py-2.5 px-2 font-black whitespace-nowrap align-middle ${isToday ? 'text-blue-600 dark:text-blue-400' : ''}">${WD_NAMES[dateObj.getDay()]} ${String(d).padStart(2, '0')}${starIcon}</td>
+          <td class="py-2.5 px-1 text-center align-middle"><span class="inline-block px-1.5 py-1 rounded-md text-[9px] font-black border ${badgeCls} uppercase tracking-wider">${badgeText}</span></td>
+          <td class="py-2.5 px-1 font-mono text-[10px] leading-tight align-middle text-slate-500 font-semibold">${compactTime}</td>
+          <td class="py-2.5 px-1 text-right font-mono align-middle ${istColor}">${calc.ist > 0 ? fmtDec(calc.ist) : ''}</td>
+          <td class="py-2.5 px-1 text-right font-mono align-middle ${verrColor}">${calc.verr > 0 ? fmtDec(calc.verr) : ''}</td>
+          <td class="py-2.5 px-2 text-right font-mono font-black align-middle ${calc.mehr > 0 ? 'text-emerald-600' : (calc.mehr < 0 ? 'text-rose-600' : '')}">${mehrHtml}</td>
         `;
         tr.addEventListener('click', () => {
           selectedDateISO = iso; window.switchView('main');
@@ -1981,8 +2134,8 @@
       const remainingBaseVac = baseVac - vacationTakenInYear; const totalRemainingVac = remainingBaseVac + sonderU;
 
       document.getElementById('sum-verr-total').textContent = `${fmtDec(sumVerr)} h`;
-      document.getElementById('sum-fs-aufbau').textContent = `FS-Aufbau: ${fmtDec(fsAufbau, true)} h`;
-      document.getElementById('sum-fs-aufbau').className = `text-[11px] font-bold ${fsAufbau >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+      document.getElementById('sum-fs-aufbau').textContent = `Aufbau: ${fmtDec(fsAufbau, true)} h`;
+      document.getElementById('sum-fs-aufbau').className = `text-[10px] font-bold mt-1.5 inline-block px-2 py-0.5 rounded-md ${fsAufbau >= 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-rose-50 text-rose-600 dark:bg-rose-900/20'}`;
 
       document.getElementById('sum-fs-current').textContent = `${fmtDec(fsCurrent)} h`;
       document.getElementById('sum-fs-sub').textContent = `Vorm.: ${fmtDec(calculatedPrevFS)}h | Ausz.: ${fmtDec(mMeta.payout || 0)}h`;
@@ -1993,25 +2146,25 @@
       const badgeSonder = document.getElementById('badge-sonderurlaub-overview');
       if (sonderU > 0) {
         badgeSonder.classList.remove('hidden'); badgeSonder.textContent = `+${String(sonderU).replace('.',',')}`;
-        document.getElementById('sum-vacation-sub').textContent = `Gesamt: ${String(totalRemainingVac).replace('.', ',')} Tg. (inkl. Sonderurl.)`;
+        document.getElementById('sum-vacation-sub').textContent = `Gesamt: ${String(totalRemainingVac).replace('.', ',')} Tg. (inkl. Sonder)`;
       } else {
         badgeSonder.classList.add('hidden');
-        document.getElementById('sum-vacation-sub').textContent = `${vacationTakenInYear} Tg. in App als U gebucht`;
+        document.getElementById('sum-vacation-sub').textContent = `${vacationTakenInYear} Tg. in App gebucht`;
       }
 
       let sumMehrHtml = sumMehr > 0 ? '+' + fmtDec(sumMehr) : (sumMehr < 0 ? fmtDec(sumMehr) : '0,00');
       tfoot.innerHTML = `
         <tr>
-          <td colspan="3" class="py-2 px-1.5">Summe (165h Basis)</td>
-          <td class="py-2 px-1 text-right font-mono">${fmtDec(sumIst)}</td>
-          <td class="py-2 px-1 text-right font-mono text-blue-600 dark:text-blue-400">${fmtDec(sumVerr)}</td>
-          <td class="py-2 px-1.5 text-right font-mono ${sumMehr > 0 ? 'text-emerald-600' : (sumMehr < 0 ? 'text-rose-600' : 'text-slate-400')}">${sumMehrHtml}</td>
+          <td colspan="3" class="py-3 px-2 uppercase tracking-wider text-[9px] text-slate-500">Summe (165h Basis)</td>
+          <td class="py-3 px-1 text-right font-mono">${fmtDec(sumIst)}</td>
+          <td class="py-3 px-1 text-right font-mono text-blue-600 dark:text-blue-400">${fmtDec(sumVerr)}</td>
+          <td class="py-3 px-2 text-right font-mono ${sumMehr > 0 ? 'text-emerald-600' : (sumMehr < 0 ? 'text-rose-600' : 'text-slate-400')}">${sumMehrHtml}</td>
         </tr>
-        <tr class="text-slate-400 dark:text-slate-500 text-[10px] border-t border-slate-200 dark:border-slate-700">
-          <td colspan="3" class="py-1.5 px-1.5 font-semibold text-right">Reine Arbeitszeit (F/S/N/Z/LG):</td>
-          <td class="py-1.5 px-1 text-right font-mono">${fmtDec(sumWorkedIst)}</td>
-          <td class="py-1.5 px-1 text-right font-mono">${fmtDec(sumWorkedVerr)}</td>
-          <td class="py-1.5 px-1.5"></td>
+        <tr class="text-slate-400 dark:text-slate-500 text-[9px] uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">
+          <td colspan="3" class="py-2.5 px-2 font-bold text-right">Reine Arbeitszeit (F/S/N/Z/LG):</td>
+          <td class="py-2.5 px-1 text-right font-mono">${fmtDec(sumWorkedIst)}</td>
+          <td class="py-2.5 px-1 text-right font-mono">${fmtDec(sumWorkedVerr)}</td>
+          <td class="py-2.5 px-2"></td>
         </tr>
       `;
     }
@@ -2049,32 +2202,32 @@
 
         const isCurrentMonth = (m === overviewMonth);
         const tr = document.createElement('tr');
-        tr.className = isCurrentMonth ? 'bg-blue-100/50 dark:bg-blue-900/30 font-extrabold ring-1 ring-blue-500 rounded-lg' : '';
+        tr.className = isCurrentMonth ? 'bg-blue-50 dark:bg-blue-900/30 font-black' : '';
         tr.innerHTML = `
-          <td class="py-2 px-1 text-left ${isCurrentMonth ? 'text-blue-700 dark:text-blue-300' : ''}">${MONTH_SHORT[m]}</td>
-          <td class="py-2 px-1 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
-          <td class="py-2 px-1 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
-          <td class="py-2 px-1 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
-          <td class="py-2 px-1 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
-          <td class="py-2 px-1 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
-          <td class="py-2 px-1 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
-          <td class="py-2 px-1 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
-          <td class="py-2 px-1 ${counts.FS ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.FS}</td>
+          <td class="py-2.5 px-1 text-left ${isCurrentMonth ? 'text-blue-600 dark:text-blue-400' : ''}">${MONTH_SHORT[m]}</td>
+          <td class="py-2.5 px-1 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
+          <td class="py-2.5 px-1 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
+          <td class="py-2.5 px-1 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
+          <td class="py-2.5 px-1 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
+          <td class="py-2.5 px-1 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
+          <td class="py-2.5 px-1 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
+          <td class="py-2.5 px-1 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
+          <td class="py-2.5 px-1 ${counts.FS ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.FS}</td>
         `;
         tbody.appendChild(tr);
       }
       
       tfoot.innerHTML = `
         <tr>
-          <td class="py-2 px-1 text-left">JAHR</td>
-          <td class="py-2 px-1 text-yellow-600 dark:text-yellow-400">${total.F}</td>
-          <td class="py-2 px-1 text-green-600 dark:text-green-400">${total.S}</td>
-          <td class="py-2 px-1 text-cyan-600 dark:text-cyan-400">${total.N}</td>
-          <td class="py-2 px-1 text-pink-600 dark:text-pink-400">${total.Z}</td>
-          <td class="py-2 px-1 text-slate-600 dark:text-slate-400">${total.LG}</td>
-          <td class="py-2 px-1 text-purple-600 dark:text-purple-400">${total.U}</td>
-          <td class="py-2 px-1 text-red-600 dark:text-red-400">${total.K}</td>
-          <td class="py-2 px-1 text-teal-600 dark:text-teal-400">${total.FS}</td>
+          <td class="py-3 px-1 text-left uppercase">Jahr</td>
+          <td class="py-3 px-1 text-yellow-600 dark:text-yellow-400">${total.F}</td>
+          <td class="py-3 px-1 text-green-600 dark:text-green-400">${total.S}</td>
+          <td class="py-3 px-1 text-cyan-600 dark:text-cyan-400">${total.N}</td>
+          <td class="py-3 px-1 text-pink-600 dark:text-pink-400">${total.Z}</td>
+          <td class="py-3 px-1 text-slate-600 dark:text-slate-400">${total.LG}</td>
+          <td class="py-3 px-1 text-purple-600 dark:text-purple-400">${total.U}</td>
+          <td class="py-3 px-1 text-red-600 dark:text-red-400">${total.K}</td>
+          <td class="py-3 px-1 text-teal-600 dark:text-teal-400">${total.FS}</td>
         </tr>
       `;
     }
@@ -2110,30 +2263,30 @@
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="py-2 px-1 text-left">${MONTH_SHORT[m]}</td>
-          <td class="py-2 px-1 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
-          <td class="py-2 px-1 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
-          <td class="py-2 px-1 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
-          <td class="py-2 px-1 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
-          <td class="py-2 px-1 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
-          <td class="py-2 px-1 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
-          <td class="py-2 px-1 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
-          <td class="py-2 px-1 ${counts.FS ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.FS}</td>
+          <td class="py-2.5 px-1 text-left">${MONTH_SHORT[m]}</td>
+          <td class="py-2.5 px-1 ${counts.F ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.F}</td>
+          <td class="py-2.5 px-1 ${counts.S ? 'text-green-600 dark:text-green-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.S}</td>
+          <td class="py-2.5 px-1 ${counts.N ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.N}</td>
+          <td class="py-2.5 px-1 ${counts.Z ? 'text-pink-600 dark:text-pink-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.Z}</td>
+          <td class="py-2.5 px-1 ${counts.LG ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.LG}</td>
+          <td class="py-2.5 px-1 ${counts.U ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.U}</td>
+          <td class="py-2.5 px-1 ${counts.K ? 'text-red-600 dark:text-red-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.K}</td>
+          <td class="py-2.5 px-1 ${counts.FS ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-slate-700 font-normal'}">${counts.FS}</td>
         `;
         tbody.appendChild(tr);
       }
       
       tfoot.innerHTML = `
         <tr>
-          <td class="py-2 px-1 text-left">JAHR</td>
-          <td class="py-2 px-1 text-yellow-600 dark:text-yellow-400">${total.F}</td>
-          <td class="py-2 px-1 text-green-600 dark:text-green-400">${total.S}</td>
-          <td class="py-2 px-1 text-cyan-600 dark:text-cyan-400">${total.N}</td>
-          <td class="py-2 px-1 text-pink-600 dark:text-pink-400">${total.Z}</td>
-          <td class="py-2 px-1 text-slate-600 dark:text-slate-400">${total.LG}</td>
-          <td class="py-2 px-1 text-purple-600 dark:text-purple-400">${total.U}</td>
-          <td class="py-2 px-1 text-red-600 dark:text-red-400">${total.K}</td>
-          <td class="py-2 px-1 text-teal-600 dark:text-teal-400">${total.FS}</td>
+          <td class="py-3 px-1 text-left uppercase">Jahr</td>
+          <td class="py-3 px-1 text-yellow-600 dark:text-yellow-400">${total.F}</td>
+          <td class="py-3 px-1 text-green-600 dark:text-green-400">${total.S}</td>
+          <td class="py-3 px-1 text-cyan-600 dark:text-cyan-400">${total.N}</td>
+          <td class="py-3 px-1 text-pink-600 dark:text-pink-400">${total.Z}</td>
+          <td class="py-3 px-1 text-slate-600 dark:text-slate-400">${total.LG}</td>
+          <td class="py-3 px-1 text-purple-600 dark:text-purple-400">${total.U}</td>
+          <td class="py-3 px-1 text-red-600 dark:text-red-400">${total.K}</td>
+          <td class="py-3 px-1 text-teal-600 dark:text-teal-400">${total.FS}</td>
         </tr>
       `;
     }
@@ -2176,7 +2329,6 @@
       });
       Object.keys(rosterDB).sort().forEach(iso => { rows.push(['ROSTER', iso, rosterDB[iso], '', '', '', '', '', '', '', '', '', '']); });
       
-      // NEU: Events sichern
       Object.keys(eventsDB).sort().forEach(iso => { 
         rows.push(['EVENT', iso, '', '', '', '', '', '', '', '', '', JSON.stringify(eventsDB[iso]), '']); 
       });
@@ -2195,7 +2347,7 @@
       reader.onload = (e) => {
         try {
           const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
-          const newEntries = {}; const newRoster = {}; const newEvents = {}; // NEU: newEvents
+          const newEntries = {}; const newRoster = {}; const newEvents = {};
           for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
             if (cols[0] === 'ENTRY' && cols[1]) {
@@ -2203,7 +2355,7 @@
               newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidHoliday: !!flags.paidHoliday, fillFS: !!flags.fillFS, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
             } else if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { 
               newRoster[cols[1]] = cols[2]; 
-            } else if (cols[0] === 'EVENT' && cols[1]) { // NEU: Importiere EVENT Reihen
+            } else if (cols[0] === 'EVENT' && cols[1]) {
               newEvents[cols[1]] = JSON.parse(cols[11] || '[]');
             }
             else if (cols[0] === 'META' && cols[11]) { 
@@ -2243,9 +2395,11 @@
       metaDB.theme = mode; saveJSON(STORAGE_KEYS.META, metaDB);
       const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
       document.documentElement.classList.toggle('dark', isDark);
+      document.getElementById('meta-theme-color').setAttribute('content', isDark ? '#0f172a' : '#f8fafc');
+      
       ['light', 'dark', 'system'].forEach(m => {
         const btn = document.getElementById(`theme-${m}`);
-        if (btn) btn.className = (m === mode) ? 'flex-1 py-1.5 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md' : 'flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900';
+        if (btn) btn.className = (m === mode) ? 'flex-1 py-2 rounded-xl text-xs font-black bg-blue-600 text-white shadow-md transition-all' : 'flex-1 py-2 rounded-xl text-xs font-black border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 transition-all';
       });
     }
 
@@ -2262,14 +2416,16 @@
     function applyRosterOnlyState() {
       const isRosterOnly = !!metaDB.rosterOnly;
       const elsToHide = [
-        document.getElementById('btn-nav-roster'),
-        document.getElementById('btn-nav-overview'),
-        document.getElementById('btn-roster-back'),
-        document.getElementById('btn-overview-back')
+        document.getElementById('nav-tab-main'),
+        document.getElementById('btn-nav-roster-bottom'),
+        document.getElementById('btn-nav-overview-bottom')
       ];
       elsToHide.forEach(el => {
-        if (el) el.style.display = isRosterOnly ? 'none' : '';
+        if (el) el.parentElement.style.display = isRosterOnly ? 'none' : 'flex';
       });
+      // Verstecke die gesamte Nav bar, wenn Roster Only
+      const navBar = document.querySelector('nav.fixed.bottom-0');
+      if (navBar) navBar.style.display = isRosterOnly ? 'none' : 'block';
 
       if (isRosterOnly && document.getElementById('view-roster').classList.contains('hidden')) {
         window.switchView('roster');
@@ -2295,15 +2451,14 @@
       document.getElementById('btn-roster-year-next').addEventListener('click', () => { rosterYear++; renderRosterYear(false); });
       document.getElementById('btn-roster-scroll-today').addEventListener('click', () => { rosterYear = new Date().getFullYear(); renderRosterYear(true); });
 
-      // NEU: Toolbar Toggle Logik
       let toolsExpanded = false;
       document.getElementById('btn-toggle-tools').addEventListener('click', (e) => {
         toolsExpanded = !toolsExpanded;
         const box = document.getElementById('roster-tools-collapse');
         if (toolsExpanded) {
-          box.classList.remove('hidden'); box.classList.add('flex'); e.currentTarget.textContent = '🔼 Schließen';
+          box.classList.remove('hidden'); box.classList.add('flex'); e.currentTarget.innerHTML = '🔼 Schließen';
         } else {
-          box.classList.add('hidden'); box.classList.remove('flex'); e.currentTarget.textContent = '🔽 Werkzeuge';
+          box.classList.add('hidden'); box.classList.remove('flex'); e.currentTarget.innerHTML = '⚙️ Werkzeuge';
         }
         setTimeout(() => {
           const h = document.getElementById('roster-fixed-header')?.offsetHeight; 
@@ -2408,7 +2563,7 @@
         saveJSON(STORAGE_KEYS.META, metaDB); triggerBackgroundDriveSync(); document.getElementById('modal-fs').classList.add('hidden'); renderOverview();
       });
 
-      // EINSTELLUNGEN & ZAHNRAD (Global)
+      // EINSTELLUNGEN
       document.querySelectorAll('.btn-open-settings-modal').forEach(btn => {
         btn.addEventListener('click', () => {
           document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday;
@@ -2427,7 +2582,9 @@
         applyHidePatternsState();
         applyRosterOnlyState();
       });
-      document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
+      document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); 
+      document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); 
+      document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
 
       // BACKUP
       document.getElementById('btn-open-backup-modal').addEventListener('click', () => {
@@ -2447,7 +2604,7 @@
         document.getElementById('modal-settings').classList.add('hidden');
         document.getElementById('drive-auto-sync').checked = !!metaDB.driveAuto; document.getElementById('drive-url-input').value = metaDB.driveUrl || '';
         document.getElementById('drive-sync-status').classList.add('hidden'); document.getElementById('drive-help-text').classList.add('hidden');
-        document.getElementById('btn-drive-help').textContent = '📖 Anleitung für Google Drive anzeigen';
+        document.getElementById('btn-drive-help').textContent = '📖 Anleitung anzeigen';
         document.getElementById('modal-drive').classList.remove('hidden');
       });
       
@@ -2460,7 +2617,7 @@
       
       document.getElementById('btn-drive-help').addEventListener('click', function() {
         const t = document.getElementById('drive-help-text'); t.classList.toggle('hidden');
-        this.textContent = t.classList.contains('hidden') ? '📖 Anleitung für Google Drive anzeigen' : '📖 Anleitung für Google Drive ausblenden';
+        this.textContent = t.classList.contains('hidden') ? '📖 Anleitung anzeigen' : '📖 Anleitung ausblenden';
       });
 
       document.getElementById('btn-copy-script').addEventListener('click', function() {
@@ -2510,15 +2667,12 @@ function doGet(e) {
   }
 }`;
         navigator.clipboard.writeText(scriptCode).then(() => {
-          const origText = this.textContent; this.textContent = '✅ Code kopiert!';
-          this.classList.replace('bg-slate-800', 'bg-emerald-600'); this.classList.replace('dark:bg-slate-600', 'dark:bg-emerald-600');
-          setTimeout(() => { this.textContent = origText; this.classList.replace('bg-emerald-600', 'bg-slate-800'); this.classList.replace('dark:bg-emerald-600', 'dark:bg-slate-600'); }, 2000);
+          const origText = this.innerHTML; this.innerHTML = '✅ Code kopiert!';
+          this.classList.replace('bg-slate-800', 'bg-emerald-600'); this.classList.replace('dark:bg-slate-700', 'dark:bg-emerald-600');
+          setTimeout(() => { this.innerHTML = origText; this.classList.replace('bg-emerald-600', 'bg-slate-800'); this.classList.replace('dark:bg-emerald-600', 'dark:bg-slate-700'); }, 2000);
         }).catch(err => { alert('Kopieren fehlgeschlagen: ' + err); });
       });
 
-      // ==========================================
-      // AUTOMATISCHER OFFLINE-RECOVERY SYNC
-      // ==========================================
       if (navigator.onLine && metaDB.driveAuto && metaDB.driveUrl) {
         setTimeout(() => { syncPushToGoogleDrive(false); }, 2000);
       }
@@ -2526,21 +2680,19 @@ function doGet(e) {
         if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false);
       });
       
-      // Start-Logik für Ausblendungen ausführen
       applyHidePatternsState();
       applyRosterOnlyState();
 
     });
   </script>
 
-  <!-- NEU: Service Worker Registrierung mit Update-Logik -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       let newWorker;
       const updateBanner = document.getElementById('update-banner');
       const btnUpdate = document.getElementById('btn-apply-update');
 
-      // Klick auf den Update-Button sendet den Befehl an die sw.js
       if (btnUpdate) {
         btnUpdate.addEventListener('click', () => {
           if (newWorker) {
@@ -2549,11 +2701,10 @@ function doGet(e) {
         });
       }
 
-      navigator.serviceWorker.register('/schicht/zeiterfassung-test/sw.js', { scope: '/schicht/zeiterfassung-test/' }).then(reg => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
         reg.addEventListener('updatefound', () => {
           newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
-            // Wenn der neue Worker installiert ist und schon ein alter Worker existiert (Update)
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               updateBanner.classList.remove('hidden');
               updateBanner.classList.add('flex');
@@ -2562,7 +2713,6 @@ function doGet(e) {
         });
       });
 
-      // Sobald der neue Worker das Kommando übernommen hat, lade die Seite neu
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
