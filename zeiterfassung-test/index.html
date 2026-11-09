@@ -1237,7 +1237,8 @@
       el.dataset.ignoreScroll = 'true';
       el.scrollTo({ top: targetIdx * 36, behavior: smooth ? 'smooth' : 'auto' });
       updateWheelActiveStyle(el, targetIdx);
-      setTimeout(() => { el.dataset.ignoreScroll = 'false'; }, 100);
+      // Timeout auf 400ms erhöhen, damit die Räder beim Wechseln der Karte keine falschen Zeiten auslösen
+      setTimeout(() => { el.dataset.ignoreScroll = 'false'; }, 400);
     }
 
     const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -1255,8 +1256,8 @@
         updateLivePreview(); 
       }, false);
       
-      setupWheel('wheel-hour', HOURS, (h) => h, (h) => { currentWheelHour = h; }, true);
-      setupWheel('wheel-minute', MINUTES, (m) => m, (m) => { currentWheelMinute = m; }, true);
+      setupWheel('wheel-hour', HOURS, (h) => h, (h) => { currentWheelHour = h; applyWheelTimeToActiveCard(); }, true);
+      setupWheel('wheel-minute', MINUTES, (m) => m, (m) => { currentWheelMinute = m; applyWheelTimeToActiveCard(); }, true);
     }
 
     function setTimeWheels(timeStr, smooth = false) {
@@ -1432,8 +1433,8 @@
         draftEntry.out = '';
         draftEntry.blocks = [];
       } else {
-        if (activeTimeTarget === 'in' && !draftEntry.in) draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
-        if (activeTimeTarget === 'out' && !draftEntry.out) draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
+        if (activeTimeTarget === 'in') draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
+        if (activeTimeTarget === 'out') draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
       }
       
       draftEntry.shift = selectedShiftCode; 
