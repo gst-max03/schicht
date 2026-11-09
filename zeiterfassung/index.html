@@ -1559,8 +1559,8 @@
 
         const rowGrid = document.createElement('div'); rowGrid.className = 'grid grid-cols-8 gap-1 items-stretch';
         const kwBtn = document.createElement('button'); kwBtn.type = 'button';
-        // Normale KW Ansicht (keine blaue Einfärbung)
-        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 ${isCurrentWeek ? 'border-slate-800 dark:border-slate-200' : 'border-slate-300 dark:border-slate-700'}`;
+        // Normale KW Ansicht (immer grauer Rahmen, keine Hervorhebung)
+        kwBtn.className = `flex flex-col items-center justify-center rounded-lg font-black text-[11px] border-2 select-none active:scale-95 transition bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700`;
         kwBtn.innerHTML = `<span>KW</span><span class="text-xs leading-none mt-0.5">${w.kw}</span>`;
 
         const dayCells = [];
