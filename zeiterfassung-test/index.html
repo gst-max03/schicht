@@ -1458,6 +1458,11 @@ const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = awa
       
       updateCardsAndPreview(); renderRecentFiveDays();
       
+      // NEU: Nach dem Speichern von Kommen direkt auf Gehen wechseln
+      if (draftEntry.in && !draftEntry.out && activeTimeTarget === 'in') {
+        setActiveTimeCard('out', true);
+      }
+      
       const btn = document.getElementById('btn-save-entry'); const btnLabel = document.getElementById('btn-save-label');
       if (btn && btnLabel) {
         btnLabel.textContent = '✓ Gespeichert'; btn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); btn.classList.add('bg-emerald-600');
@@ -2645,26 +2650,47 @@ function doGet(e) {
         if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false);
       });
       
-      // Start-Logik für Ausblendungen ausführen
-      applyHidePatternsState();
       applyRosterOnlyState();
 
       // ==========================================
-      // AUFWACH-LOGIK (Drehrad immer auf aktuelle Zeit)
+      // AUFWACH-LOGIK (Smartes Drehrad & Tab-Wechsel)
       // ==========================================
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
+          const todayISO = toISODate(new Date());
           
-          // Prüfen, ob auch wirklich der heutige Tag ausgewählt ist
-          if (selectedDateISO === toISODate(new Date())) {
-            const now = new Date();
-            // Drehrad auf die exakte aktuelle Uhrzeit stellen
-            setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true);
-            // Die Zeit direkt in die Ansichtkarte übernehmen
-            applyWheelTimeToActiveCard();
+          // 1. Tageswechsel abfangen (z.B. nach der Nachtschicht aus dem Standby geholt)
+          if (selectedDateISO !== todayISO) {
+            const idx = dateWheelList.indexOf(todayISO);
+            if (idx >= 0) {
+              selectedDateISO = todayISO;
+              scrollToWheelIndex('wheel-date', idx, true);
+              onDateChanged();
+            }
           }
           
-          // Falls Auto-Sync aktiv ist, Änderungen leise im Hintergrund abgleichen
+          // 2. Intelligente Uhrzeit-Logik
+          if (selectedDateISO === todayISO) {
+            
+            // Falls Kommen gebucht ist, aber Gehen noch nicht -> auf Gehen wechseln
+            if (draftEntry.in && !draftEntry.out && activeTimeTarget === 'in') {
+              setActiveTimeCard('out', false);
+            }
+            
+            // Prüfen, ob das aktuell gewählte Fenster (Kommen oder Gehen) bereits eine Buchung hat
+            const targetVal = activeTimeTarget === 'in' ? draftEntry.in : draftEntry.out;
+            
+            if (!targetVal || targetVal === 'CLEARED') {
+              // Fenster ist komplett leer: NUR das Drehrad auf aktuelle Uhrzeit stellen.
+              const now = new Date();
+              setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true);
+            } else {
+              // Fenster hat schon eine feste Zeit gebucht: Drehrad auf die gebuchte Zeit stellen.
+              setTimeWheels(targetVal, true);
+            }
+          }
+          
+          // 3. Auto-Sync im Hintergrund anstoßen
           if (metaDB.driveAuto && metaDB.driveUrl && navigator.onLine) {
             syncPushToGoogleDrive(false);
           }
