@@ -282,7 +282,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v063
+      v064
     </div>
   </main>
 
@@ -978,14 +978,17 @@
         statusEl.classList.remove('hidden');
       }
 
+      // NEU: Erstellt einen Zeitstempel, um später vergleichen zu können, wer aktueller ist
+      const exportTime = new Date().toISOString();
       const fullPayload = {
         entries: entriesDB, roster: rosterDB, events: eventsDB, meta: metaDB,
         lastShift: localStorage.getItem(STORAGE_KEYS.LAST_SHIFT) || '0112',
-        exportedAt: new Date().toISOString()
+        exportedAt: exportTime
       };
 
       try {
         await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullPayload), keepalive: true });
+        localStorage.setItem('pwa_last_sync', exportTime); // Zeitstempel lokal merken
         if (statusEl && showSuccessAlert) { statusEl.textContent = '✅ Erfolgreich in Google Drive gespeichert!'; statusEl.className = 'text-[11px] font-bold text-center text-emerald-600 dark:text-emerald-400'; }
         if (showSuccessAlert) alert('Backup erfolgreich an Google Drive gesendet!'); return true;
       } catch (err) {
@@ -1004,9 +1007,10 @@
       if (statusEl) { statusEl.textContent = '⏳ Lade Backup aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
 
       try {
-        // Hängt die aktuelle Millisekunde an die URL an, um den Cache auszutricksen
-const cacheBusterUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = await res.json();
+        const cacheBusterUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+        const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); 
+        const data = await res.json();
+        
         if (!data || Object.keys(data).length === 0 || (!data.entries && !data.roster)) {
           if (statusEl) statusEl.classList.add('hidden');
           alert('Noch keine Backup-Datei in Google Drive gefunden (Bitte zuerst einmal senden).'); return;
@@ -1018,10 +1022,49 @@ const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = awa
         if (data.lastShift) localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, data.lastShift);
         
         saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.EVENTS, eventsDB); saveJSON(STORAGE_KEYS.META, metaDB);
+        if (data.exportedAt) localStorage.setItem('pwa_last_sync', data.exportedAt);
+        
         alert('Daten erfolgreich aus Google Drive wiederhergestellt!'); window.location.reload();
       } catch (err) {
         if (statusEl) { statusEl.textContent = '❌ Fehler beim Laden: ' + err.message; statusEl.className = 'text-[11px] font-bold text-center text-rose-600'; }
         alert('Fehler beim Laden aus Google Drive: ' + err.message);
+      }
+    }
+
+    // NEU: Die unsichtbare Abgleich-Funktion für das Aufwachen aus dem Standby
+    async function syncSilentPull() {
+      const url = (metaDB.driveUrl || '').trim();
+      if (!url || !navigator.onLine) return;
+      try {
+        const cacheBusterUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+        const res = await fetch(cacheBusterUrl, { cache: 'no-store' });
+        const data = await res.json();
+        
+        if (data && data.exportedAt) {
+          const localSync = localStorage.getItem('pwa_last_sync') || '';
+          
+          // Nur überschreiben, wenn Google Drive einen NEUEREN Zeitstempel hat als die lokale App
+          if (data.exportedAt > localSync) {
+            if (data.entries) entriesDB = data.entries;
+            if (data.roster) rosterDB = data.roster;
+            if (data.events) eventsDB = data.events;
+            if (data.meta) { const keepUrl = metaDB.driveUrl; metaDB = data.meta; if (!metaDB.driveUrl) metaDB.driveUrl = keepUrl; }
+            if (data.lastShift) localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, data.lastShift);
+            
+            saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); 
+            saveJSON(STORAGE_KEYS.ROSTER, rosterDB); 
+            saveJSON(STORAGE_KEYS.EVENTS, eventsDB); 
+            saveJSON(STORAGE_KEYS.META, metaDB);
+            localStorage.setItem('pwa_last_sync', data.exportedAt);
+            
+            // Ansicht direkt aktualisieren (ohne nervigen Reload der ganzen Seite)
+            onDateChanged();
+            if (document.getElementById('view-roster').classList.contains('hidden') === false) renderRosterYear(false);
+            if (document.getElementById('view-overview').classList.contains('hidden') === false) renderOverview();
+          }
+        }
+      } catch(e) {
+        // Fehler beim Hintergrund-Abgleich ignorieren, um nicht zu stören
       }
     }
 
@@ -1457,6 +1500,11 @@ const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = awa
       localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, selectedShiftCode);
       
       updateCardsAndPreview(); renderRecentFiveDays();
+      
+      // NEU: Nach dem Speichern von Kommen direkt auf Gehen wechseln
+      if (draftEntry.in && !draftEntry.out && activeTimeTarget === 'in') {
+        setActiveTimeCard('out', true);
+      }
       
       const btn = document.getElementById('btn-save-entry'); const btnLabel = document.getElementById('btn-save-label');
       if (btn && btnLabel) {
@@ -2407,7 +2455,21 @@ const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = awa
 
       document.getElementById('card-in').addEventListener('click', () => setActiveTimeCard('in', true));
       document.getElementById('card-out').addEventListener('click', () => setActiveTimeCard('out', true));
-      document.getElementById('btn-jump-today').addEventListener('click', () => { const tIso = toISODate(new Date()); const idx = dateWheelList.indexOf(tIso); if (idx >= 0) { selectedDateISO = tIso; scrollToWheelIndex('wheel-date', idx, true); onDateChanged(); } });
+      document.getElementById('btn-jump-today').addEventListener('click', () => { 
+        const tIso = toISODate(new Date()); 
+        let idx = dateWheelList.indexOf(tIso); 
+  
+        if (idx < 0) { 
+          initWheels(); // Baut die Zeitachse neu auf, falls die App ewig im Hintergrund lag
+          idx = dateWheelList.indexOf(tIso);
+        }
+  
+        if (idx >= 0) { 
+          selectedDateISO = tIso; 
+          scrollToWheelIndex('wheel-date', idx, true); 
+          onDateChanged(); 
+        } 
+      });
       
       document.getElementById('btn-set-now').addEventListener('click', () => { const now = new Date(); setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true); applyWheelTimeToActiveCard(); });
       document.getElementById('btn-set-default').addEventListener('click', () => { const sObj = SHIFTS.find(s => s.code === selectedShiftCode); if (sObj) { setTimeWheels(activeTimeTarget === 'in' ? sObj.start : sObj.end, true); applyWheelTimeToActiveCard(); } });
@@ -2631,9 +2693,52 @@ function doGet(e) {
         if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false);
       });
       
-      // Start-Logik für Ausblendungen ausführen
-      applyHidePatternsState();
       applyRosterOnlyState();
+
+      // ==========================================
+      // AUFWACH-LOGIK (Smartes Drehrad & Tab-Wechsel)
+      // ==========================================
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          const todayISO = toISODate(new Date());
+          
+          // 1. Tageswechsel abfangen (z.B. nach der Nachtschicht aus dem Standby geholt)
+          if (selectedDateISO !== todayISO) {
+            const idx = dateWheelList.indexOf(todayISO);
+            if (idx >= 0) {
+              selectedDateISO = todayISO;
+              scrollToWheelIndex('wheel-date', idx, true);
+              onDateChanged();
+            }
+          }
+          
+          // 2. Intelligente Uhrzeit-Logik
+          if (selectedDateISO === todayISO) {
+            
+            // Falls Kommen gebucht ist, aber Gehen noch nicht -> auf Gehen wechseln
+            if (draftEntry.in && !draftEntry.out && activeTimeTarget === 'in') {
+              setActiveTimeCard('out', false);
+            }
+            
+            // Prüfen, ob das aktuell gewählte Fenster (Kommen oder Gehen) bereits eine Buchung hat
+            const targetVal = activeTimeTarget === 'in' ? draftEntry.in : draftEntry.out;
+            
+            if (!targetVal || targetVal === 'CLEARED') {
+              // Fenster ist komplett leer: NUR das Drehrad auf aktuelle Uhrzeit stellen.
+              const now = new Date();
+              setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true);
+            } else {
+              // Fenster hat schon eine feste Zeit gebucht: Drehrad auf die gebuchte Zeit stellen.
+              setTimeWheels(targetVal, true);
+            }
+          }
+          
+          // 3. Auto-Sync im Hintergrund anstoßen (NUR CHECKEN & LADEN, NICHT ÜBERSCHREIBEN!)
+          if (metaDB.driveAuto && metaDB.driveUrl && navigator.onLine) {
+            syncSilentPull();
+          }
+        }
+      });
 
     });
   </script>
