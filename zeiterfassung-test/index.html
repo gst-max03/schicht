@@ -2649,6 +2649,28 @@ function doGet(e) {
       applyHidePatternsState();
       applyRosterOnlyState();
 
+      // ==========================================
+      // AUFWACH-LOGIK (Drehrad immer auf aktuelle Zeit)
+      // ==========================================
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          
+          // Prüfen, ob auch wirklich der heutige Tag ausgewählt ist
+          if (selectedDateISO === toISODate(new Date())) {
+            const now = new Date();
+            // Drehrad auf die exakte aktuelle Uhrzeit stellen
+            setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true);
+            // Die Zeit direkt in die Ansichtkarte übernehmen
+            applyWheelTimeToActiveCard();
+          }
+          
+          // Falls Auto-Sync aktiv ist, Änderungen leise im Hintergrund abgleichen
+          if (metaDB.driveAuto && metaDB.driveUrl && navigator.onLine) {
+            syncPushToGoogleDrive(false);
+          }
+        }
+      });
+
     });
   </script>
 
