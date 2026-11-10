@@ -98,6 +98,8 @@
     .shift-cell-KRANK { background-color: #ef4444 !important; color: #ffffff !important; font-weight: 900; border-color: #dc2626 !important; }
     .shift-cell-FS { background-color: #14b8a6 !important; color: #ffffff !important; font-weight: 900; border-color: #0d9488 !important; }
     .shift-cell-LEHRGANG { background-color: #cbd5e1 !important; color: #000000 !important; font-weight: 900; border-color: #94a3b8 !important; }
+    .shift-cell-FEIERTAG { background-color: #ffffff !important; color: #000000 !important; font-weight: 900; border-color: #000000 !important; }
+    .dark .shift-cell-FEIERTAG { background-color: #0f172a !important; color: #ffffff !important; border-color: #ffffff !important; }
     
     .shift-cell-FREI-we { background-color: #f8fafc; color: #c2410c; border-color: #fb923c; }
     .dark .shift-cell-FREI-we { background-color: #1e293b; color: #fdba74; border-color: #ea580c; }
@@ -280,7 +282,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v061
+      v063
     </div>
   </main>
 
@@ -714,8 +716,7 @@
       </div>
       <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
         <div class="font-bold text-slate-500 uppercase text-[10px]">3. Tagestyp-Optionen</div>
-        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-paid-holiday" class="w-4 h-4 accent-blue-600"><span>Feiertag bezahlt (Nicht gearbeitet → 8,00h VERR)</span></label>
-        <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-fill-fs" class="w-4 h-4 accent-blue-600"><span>Fehlzeit bis 8,00h aus FS-Konto auffüllen (Freizeit FS)</span></label>
+        <label class="flex items-center gap-2.5 cursor-pointer font-semibold" title="Nur 1x im Monat bezahlt!"><input type="checkbox" id="sp-paid-doctor" class="w-4 h-4 accent-blue-600"><span>Arztbesuch (pauschal 8,00h bezahlt, max. 1x/Monat)</span></label>
         <label class="flex items-center gap-2.5 cursor-pointer font-semibold"><input type="checkbox" id="sp-unpaid-child" class="w-4 h-4 accent-amber-600"><span>Kind krank unbezahlt (Reduziert 165h-Basis)</span></label>
       </div>
       <div class="flex flex-col gap-1">
@@ -1073,7 +1074,7 @@
       if (activeShiftCode === 'URLAUB') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Urlaub', tazp: '0109', isPreview: false, isWorked: false };
       if (activeShiftCode === 'KRANK') return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Krank m. Attest', tazp: '0109', isPreview: false, isWorked: false };
       if (activeShiftCode === 'FS') return { ist: 0, verr: 0, soll: 0, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Freischicht', tazp: 'FS', isPreview: false, isWorked: false };
-      if (activeShiftCode === 'FEIERTAG' || (entry && entry.paidHoliday)) {
+      if (activeShiftCode === 'FEIERTAG') {
          return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Feiertag bezahlt', tazp: 'Ft.bzh', isPreview: false, isWorked: false };
       }
 
@@ -1105,6 +1106,7 @@
       }
 
       if (blocks.length === 0 && docHours === 0) {
+        if (entry.paidDoctor) return { ist: 8, verr: 8, soll: 8, mehr: 0, nacht: 0, sonntag: 0, feiertag: 0, fsUsed: 0, info: 'Arzt (pauschal 8h)', tazp: activeShiftCode, isPreview: false, isWorked: false };
         const infoText = entry.in ? `Kommt ${entry.in} (Geht offen)` : 'Offen';
         
         if (hol && (isShift(activeShiftCode) || ['URLAUB', 'KRANK', '0109', 'FS'].includes(activeShiftCode))) {
@@ -1165,14 +1167,23 @@
       }
 
       let fsUsed = 0;
-      if (entry.fillFS && verrHours < 8.0) {
-        fsUsed = Math.round((8.0 - verrHours) * 100) / 100; verrHours = 8.0; istHours = Math.max(istHours, 8.0);
-        capNote = (capNote ? capNote + ' • ' : '') + `FS -${fmtDec(fsUsed)}h`;
+      // Legacy-Support: Alte Einträge (vor v063) mit fillFS weiterhin im FS-Konto abziehen
+      if (entry && entry.fillFS && verrHours < 8.0) {
+        fsUsed = Math.round((8.0 - verrHours) * 100) / 100;
+        verrHours = 8.0;
+        istHours = Math.max(istHours, 8.0);
       }
 
       const sollHours = 8.0;
-      const mehrHours = Math.round((verrHours - sollHours) * 100) / 100;
+      let mehrHours = Math.round((verrHours - sollHours) * 100) / 100;
       const nachtHours = Math.round((totalNachtMin / 60) * 100) / 100;
+
+      if (entry.paidDoctor) {
+        istHours = 8.0;
+        verrHours = 8.0;
+        mehrHours = 0.0;
+        capNote = (capNote ? capNote + ' • ' : '') + 'Arzt (pauschal 8h)';
+      }
 
       return {
         ist: istHours, verr: verrHours, soll: sollHours, mehr: mehrHours, nacht: nachtHours,
@@ -1232,7 +1243,8 @@
       el.dataset.ignoreScroll = 'true';
       el.scrollTo({ top: targetIdx * 36, behavior: smooth ? 'smooth' : 'auto' });
       updateWheelActiveStyle(el, targetIdx);
-      setTimeout(() => { el.dataset.ignoreScroll = 'false'; }, 100);
+      // Timeout auf 400ms erhöhen, damit die Räder beim Wechseln der Karte keine falschen Zeiten auslösen
+      setTimeout(() => { el.dataset.ignoreScroll = 'false'; }, 400);
     }
 
     const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -1250,8 +1262,8 @@
         updateLivePreview(); 
       }, false);
       
-      setupWheel('wheel-hour', HOURS, (h) => h, (h) => { currentWheelHour = h; }, true);
-      setupWheel('wheel-minute', MINUTES, (m) => m, (m) => { currentWheelMinute = m; }, true);
+      setupWheel('wheel-hour', HOURS, (h) => h, (h) => { currentWheelHour = h; applyWheelTimeToActiveCard(); }, true);
+      setupWheel('wheel-minute', MINUTES, (m) => m, (m) => { currentWheelMinute = m; applyWheelTimeToActiveCard(); }, true);
     }
 
     function setTimeWheels(timeStr, smooth = false) {
@@ -1328,7 +1340,7 @@
 
     function applyWheelTimeToActiveCard() {
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
-      if (noTimeShifts.includes(selectedShiftCode)) {
+      if (noTimeShifts.includes(selectedShiftCode) || draftEntry.unpaidChild) {
         draftEntry.in = '';
         draftEntry.out = '';
       } else {
@@ -1343,19 +1355,19 @@
       draftEntry.shift = selectedShiftCode;
       
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
-      if (noTimeShifts.includes(selectedShiftCode)) {
+      if (noTimeShifts.includes(selectedShiftCode) || draftEntry.unpaidChild) {
          document.getElementById('val-time-in').textContent = '--:--';
          document.getElementById('sub-time-in').textContent = 'Keine Zeit benötigt';
          document.getElementById('val-time-out').textContent = '--:--';
          document.getElementById('sub-time-out').textContent = 'Keine Zeit benötigt';
       } else {
-         document.getElementById('val-time-in').textContent = draftEntry.in || '--:--'; 
-         document.getElementById('sub-time-in').textContent = draftEntry.in ? 'Gebucht / Bereit' : 'Nicht gebucht';
-         document.getElementById('val-time-out').textContent = draftEntry.out || '--:--'; 
-         document.getElementById('sub-time-out').textContent = draftEntry.out ? 'Gebucht / Bereit' : 'Nicht gebucht';
+         document.getElementById('val-time-in').textContent = (draftEntry.in && draftEntry.in !== 'CLEARED') ? draftEntry.in : '--:--'; 
+         document.getElementById('sub-time-in').textContent = (draftEntry.in && draftEntry.in !== 'CLEARED') ? 'Gebucht / Bereit' : 'Nicht gebucht';
+         document.getElementById('val-time-out').textContent = (draftEntry.out && draftEntry.out !== 'CLEARED') ? draftEntry.out : '--:--'; 
+         document.getElementById('sub-time-out').textContent = (draftEntry.out && draftEntry.out !== 'CLEARED') ? 'Gebucht / Bereit' : 'Nicht gebucht';
       }
 
-      const hasSpecial = (draftEntry.docHours && parseDoctorInput(draftEntry.docHours) > 0) || draftEntry.paidHoliday || draftEntry.fillFS || draftEntry.unpaidChild || (draftEntry.blocks && draftEntry.blocks.some((b, i) => i > 0 && (b.in || b.out)));
+      const hasSpecial = (draftEntry.docHours && parseDoctorInput(draftEntry.docHours) > 0) || draftEntry.paidDoctor || draftEntry.unpaidChild || (draftEntry.blocks && draftEntry.blocks.some((b, i) => i > 0 && (b.in || b.out)));
       document.getElementById('dot-special-active').classList.toggle('hidden', !hasSpecial);
       updateLivePreview();
     }
@@ -1422,13 +1434,19 @@
     function saveCurrentDayInstant() {
       const noTimeShifts = ['FREI', 'URLAUB', 'KRANK', 'FS', 'FEIERTAG'];
       
-      if (noTimeShifts.includes(selectedShiftCode)) {
+      if (noTimeShifts.includes(selectedShiftCode) || draftEntry.unpaidChild) {
         draftEntry.in = '';
         draftEntry.out = '';
         draftEntry.blocks = [];
       } else {
-        if (activeTimeTarget === 'in' && !draftEntry.in) draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
-        if (activeTimeTarget === 'out' && !draftEntry.out) draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
+        if (activeTimeTarget === 'in') {
+          if (!draftEntry.in) draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
+          else if (draftEntry.in === 'CLEARED') draftEntry.in = '';
+        }
+        if (activeTimeTarget === 'out') {
+          if (!draftEntry.out) draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
+          else if (draftEntry.out === 'CLEARED') draftEntry.out = '';
+        }
       }
       
       draftEntry.shift = selectedShiftCode; 
@@ -1475,6 +1493,7 @@
       if (code === '0113') return 'shift-cell-0113'; if (code === '0135') return 'shift-cell-0135';
       if (code === 'URLAUB') return 'shift-cell-URLAUB'; if (code === 'KRANK') return 'shift-cell-KRANK'; if (code === 'FS') return 'shift-cell-FS';
       if (code === 'LEHRGANG') return 'shift-cell-LEHRGANG';
+      if (code === 'FEIERTAG') return 'shift-cell-FEIERTAG';
       return isWeekend ? 'shift-cell-FREI-we' : 'shift-cell-FREI-wd';
     }
 
@@ -1834,9 +1853,13 @@
           wrapper.classList.add('cursor-pointer', 'active:scale-95', 'transition');
           wrapper.addEventListener('click', () => {
              document.getElementById('modal-events-list').classList.add('hidden');
-             if (d.getFullYear() === rosterYear) {
-               scrollToRosterElement(document.getElementById(`roster-month-sec-${d.getMonth()}`));
+             if (d.getFullYear() !== rosterYear) {
+               rosterYear = d.getFullYear();
+               renderRosterYear(false);
              }
+             setTimeout(() => {
+               scrollToRosterElement(document.getElementById(`roster-month-sec-${d.getMonth()}`));
+             }, 100);
           });
         }
 
@@ -1935,30 +1958,67 @@
         }
 
         const isWe = (dateObj.getDay() === 0 || dateObj.getDay() === 6); const isToday = (iso === toISODate(new Date()));
-        const planned = rosterDB[iso]; const displayShiftCode = entry ? calc.tazp : (planned || 'FREI');
+        const planned = rosterDB[iso]; 
+        const displayShiftCode = entry ? (entry.shift || calc.tazp) : (planned || 'FREI');
         
         let badgeText = displayShiftCode;
         let styleCode = displayShiftCode;
 
-        if (badgeText === 'URLAUB' || badgeText === '0109') { badgeText = 'Url.'; styleCode = 'URLAUB'; }
-        if (badgeText === 'KRANK') { badgeText = 'Krank'; styleCode = 'KRANK'; }
-        if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') { badgeText = 'Ft.bzh'; styleCode = 'FEIERTAG'; }
-        if (badgeText === 'FS') { badgeText = 'FS'; styleCode = 'FS'; }
-        if (badgeText === 'LEHRGANG') { badgeText = 'LG'; styleCode = 'LEHRGANG'; }
+        // 1. Abzeichen & Klassen Logik
+        if (entry && entry.unpaidChild) { badgeText = 'Ki.kr'; styleCode = 'KRANK'; }
+        // Arztbesuch greift nicht mehr in das Badge ein - die normale Schicht (z.B. Früh) bleibt optisch!
+        else if (badgeText === 'KRANK') { badgeText = 'Krank'; styleCode = 'KRANK'; }
+        else if (badgeText === 'URLAUB' || badgeText === '0109') { badgeText = 'Urlaub'; styleCode = 'URLAUB'; }
+        else if (badgeText === 'FEIERTAG' || badgeText === 'Ft.bzh') { badgeText = 'Ft.bzh'; styleCode = 'FEIERTAG'; }
+        else if (badgeText === 'FS') { badgeText = 'FS'; styleCode = 'FS'; }
+        else if (badgeText === 'LEHRGANG') { badgeText = 'LG'; styleCode = 'LEHRGANG'; }
 
         const badgeCls = getShiftCellClass(styleCode, false);
         const starIcon = hol ? `<span class="text-amber-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ml-1">★</span>` : '';
 
-        const timeLines = getBookedTimeLines(entry); let compactTime = '--';
-        if (timeLines.length > 0) {
-          compactTime = timeLines.join('<br>');
-        } else if (entry && entry.shift && entry.shift !== 'FREI') {
-          compactTime = calc.info;
-        } else if (planned && planned !== 'FREI') {
-          let planText = planned; if (planText === 'URLAUB') planText = 'Urlaub'; if (planText === 'KRANK') planText = 'Krank';
+        // 2. Text-Logik (Kommt-Geht Spalte)
+        const timeLines = getBookedTimeLines(entry); 
+        let compactTime = '--';
+        
+        if (entry && entry.unpaidChild) {
+          let planText = planned || entry.shift;
+          if (planText === 'URLAUB' || planText === '0109') planText = 'Urlaub';
           compactTime = `Plan: ${planText}`;
-        } else if (calc.info && calc.info.includes('Feiertag')) {
-          compactTime = calc.info;
+        } 
+        else if (timeLines.length > 0) {
+          compactTime = timeLines.join('<br>');
+          // Arzt-Label in der passenden Farbe unter die Zeit hängen
+          if (entry && entry.paidDoctor) {
+            let c = 'text-slate-600 dark:text-slate-400';
+            if (styleCode === '0112') c = 'text-yellow-600 dark:text-yellow-500';
+            else if (styleCode === '0111') c = 'text-green-600 dark:text-green-500';
+            else if (styleCode === '0113') c = 'text-cyan-600 dark:text-cyan-500';
+            else if (styleCode === '0135') c = 'text-pink-500 dark:text-pink-400';
+            compactTime += `<br><span class="text-[10px] font-black ${c}">Arzt (8,00h)</span>`;
+          }
+        } 
+        else if (entry && entry.paidDoctor) {
+          // Fallback: Arzt gewählt, aber vergessen Zeiten zu stempeln
+          let c = 'text-slate-600 dark:text-slate-400';
+          if (styleCode === '0112') c = 'text-yellow-600 dark:text-yellow-500';
+          else if (styleCode === '0111') c = 'text-green-600 dark:text-green-500';
+          else if (styleCode === '0113') c = 'text-cyan-600 dark:text-cyan-500';
+          else if (styleCode === '0135') c = 'text-pink-500 dark:text-pink-400';
+          compactTime = `<span class="text-[10px] font-black ${c}">Arzt (8,00h)</span>`;
+        }
+        else if (planned && planned !== 'FREI') {
+          let planText = planned; 
+          if (planText === 'URLAUB' || planText === '0109') planText = 'Urlaub';
+          if (planText === 'KRANK') planText = 'Krank';
+          if (planText === 'FS') planText = 'FS';
+          if (planText === 'FEIERTAG' || planText === 'Ft.bzh') planText = 'Ft.bzh';
+          compactTime = `Plan: ${planText}`;
+        } 
+        else if (entry && entry.shift && entry.shift !== 'FREI') {
+          let planText = entry.shift;
+          if (planText === 'URLAUB' || planText === '0109') planText = 'Urlaub';
+          if (planText === 'KRANK') planText = 'Krank';
+          compactTime = `Plan: ${planText}`;
         }
 
         const tr = document.createElement('tr');
@@ -2189,7 +2249,7 @@
       const rows = [['RECORD_TYPE', 'KEY_OR_DATE', 'SHIFT', 'IN', 'OUT', 'IST', 'VERR', 'SOLL', 'MEHR', 'NACHT', 'DOC_HOURS', 'FLAGS_JSON', 'NOTE']];
       Object.keys(entriesDB).sort().forEach(iso => {
         const e = entriesDB[iso]; const c = calculateDay(iso, e);
-        const flags = JSON.stringify({ blocks: e.blocks || [], paidHoliday: !!e.paidHoliday, fillFS: !!e.fillFS, unpaidChild: !!e.unpaidChild, rawImport: !!(e.rawKnauf || e.rawImport), fsUsed: c.fsUsed || 0, tazp: c.tazp || e.shift });
+        const flags = JSON.stringify({ blocks: e.blocks || [], paidDoctor: !!e.paidDoctor, unpaidChild: !!e.unpaidChild, rawImport: !!(e.rawKnauf || e.rawImport), fsUsed: c.fsUsed || 0, tazp: c.tazp || e.shift });
         rows.push(['ENTRY', iso, e.shift || '', e.in || '', e.out || '', c.ist, c.verr, c.soll, c.mehr, c.nacht, e.docHours || '', flags, (e.note || '').replace(/;/g, ',')]);
       });
       Object.keys(rosterDB).sort().forEach(iso => { rows.push(['ROSTER', iso, rosterDB[iso], '', '', '', '', '', '', '', '', '', '']); });
@@ -2218,7 +2278,7 @@
             const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
             if (cols[0] === 'ENTRY' && cols[1]) {
               const flags = cols[11] ? JSON.parse(cols[11]) : {};
-              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidHoliday: !!flags.paidHoliday, fillFS: !!flags.fillFS, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
+              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidDoctor: !!flags.paidDoctor, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
             } else if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { 
               newRoster[cols[1]] = cols[2]; 
             } else if (cols[0] === 'EVENT' && cols[1]) { // NEU: Importiere EVENT Reihen
@@ -2335,7 +2395,7 @@
       
       document.getElementById('btn-set-now').addEventListener('click', () => { const now = new Date(); setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true); applyWheelTimeToActiveCard(); });
       document.getElementById('btn-set-default').addEventListener('click', () => { const sObj = SHIFTS.find(s => s.code === selectedShiftCode); if (sObj) { setTimeWheels(activeTimeTarget === 'in' ? sObj.start : sObj.end, true); applyWheelTimeToActiveCard(); } });
-      document.getElementById('btn-clear-time').addEventListener('click', () => { if (activeTimeTarget === 'in') draftEntry.in = ''; else draftEntry.out = ''; updateCardsAndPreview(); });
+      document.getElementById('btn-clear-time').addEventListener('click', () => { if (activeTimeTarget === 'in') draftEntry.in = 'CLEARED'; else draftEntry.out = 'CLEARED'; updateCardsAndPreview(); });
       
       document.getElementById('btn-save-entry').addEventListener('click', saveCurrentDayInstant);
 
@@ -2350,17 +2410,23 @@
         const b2 = (draftEntry.blocks && draftEntry.blocks[1]) || { in: '', out: '' }; const b3 = (draftEntry.blocks && draftEntry.blocks[2]) || { in: '', out: '' };
         document.getElementById('sp-in-2').value = b2.in || ''; document.getElementById('sp-out-2').value = b2.out || '';
         document.getElementById('sp-in-3').value = b3.in || ''; document.getElementById('sp-out-3').value = b3.out || '';
-        document.getElementById('sp-doctor-hours').value = draftEntry.docHours || ''; document.getElementById('sp-paid-holiday').checked = !!draftEntry.paidHoliday;
-        document.getElementById('sp-fill-fs').checked = !!draftEntry.fillFS; document.getElementById('sp-unpaid-child').checked = !!draftEntry.unpaidChild;
+        document.getElementById('sp-doctor-hours').value = draftEntry.docHours || ''; 
+        document.getElementById('sp-paid-doctor').checked = !!draftEntry.paidDoctor;
+        document.getElementById('sp-unpaid-child').checked = !!draftEntry.unpaidChild;
         document.getElementById('sp-note').value = draftEntry.note || ''; document.getElementById('modal-special').classList.remove('hidden');
       });
       document.getElementById('btn-close-special').addEventListener('click', () => document.getElementById('modal-special').classList.add('hidden'));
       document.getElementById('btn-save-special').addEventListener('click', () => {
         draftEntry.in = document.getElementById('sp-in-1').value; draftEntry.out = document.getElementById('sp-out-1').value;
         draftEntry.blocks = [{ in: draftEntry.in, out: draftEntry.out }, { in: document.getElementById('sp-in-2').value, out: document.getElementById('sp-out-2').value }, { in: document.getElementById('sp-in-3').value, out: document.getElementById('sp-out-3').value }];
-        draftEntry.docHours = document.getElementById('sp-doctor-hours').value.trim(); draftEntry.paidHoliday = document.getElementById('sp-paid-holiday').checked;
-        draftEntry.fillFS = document.getElementById('sp-fill-fs').checked; draftEntry.unpaidChild = document.getElementById('sp-unpaid-child').checked;
+        draftEntry.docHours = document.getElementById('sp-doctor-hours').value.trim(); 
+        draftEntry.paidDoctor = document.getElementById('sp-paid-doctor').checked;
+        draftEntry.unpaidChild = document.getElementById('sp-unpaid-child').checked;
         draftEntry.note = document.getElementById('sp-note').value.trim(); delete draftEntry.rawKnauf; delete draftEntry.rawImport;
+        
+        // Wenn "Kind krank" aktiv ist, löschen wir sicherheitshalber alle Zeiten aus dem Modal
+        if (draftEntry.unpaidChild) { draftEntry.in = ''; draftEntry.out = ''; draftEntry.blocks = []; draftEntry.docHours = ''; draftEntry.paidDoctor = false; }
+        
         document.getElementById('modal-special').classList.add('hidden'); saveCurrentDayInstant();
       });
 
