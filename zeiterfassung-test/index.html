@@ -282,7 +282,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v061
+      v063
     </div>
   </main>
 
@@ -1167,6 +1167,12 @@
       }
 
       let fsUsed = 0;
+      // Legacy-Support: Alte Einträge (vor v063) mit fillFS weiterhin im FS-Konto abziehen
+      if (entry && entry.fillFS && verrHours < 8.0) {
+        fsUsed = Math.round((8.0 - verrHours) * 100) / 100;
+        verrHours = 8.0;
+        istHours = Math.max(istHours, 8.0);
+      }
 
       const sollHours = 8.0;
       let mehrHours = Math.round((verrHours - sollHours) * 100) / 100;
@@ -1355,10 +1361,10 @@
          document.getElementById('val-time-out').textContent = '--:--';
          document.getElementById('sub-time-out').textContent = 'Keine Zeit benötigt';
       } else {
-         document.getElementById('val-time-in').textContent = draftEntry.in || '--:--'; 
-         document.getElementById('sub-time-in').textContent = draftEntry.in ? 'Gebucht / Bereit' : 'Nicht gebucht';
-         document.getElementById('val-time-out').textContent = draftEntry.out || '--:--'; 
-         document.getElementById('sub-time-out').textContent = draftEntry.out ? 'Gebucht / Bereit' : 'Nicht gebucht';
+         document.getElementById('val-time-in').textContent = (draftEntry.in && draftEntry.in !== 'CLEARED') ? draftEntry.in : '--:--'; 
+         document.getElementById('sub-time-in').textContent = (draftEntry.in && draftEntry.in !== 'CLEARED') ? 'Gebucht / Bereit' : 'Nicht gebucht';
+         document.getElementById('val-time-out').textContent = (draftEntry.out && draftEntry.out !== 'CLEARED') ? draftEntry.out : '--:--'; 
+         document.getElementById('sub-time-out').textContent = (draftEntry.out && draftEntry.out !== 'CLEARED') ? 'Gebucht / Bereit' : 'Nicht gebucht';
       }
 
       const hasSpecial = (draftEntry.docHours && parseDoctorInput(draftEntry.docHours) > 0) || draftEntry.paidDoctor || draftEntry.unpaidChild || (draftEntry.blocks && draftEntry.blocks.some((b, i) => i > 0 && (b.in || b.out)));
@@ -1433,8 +1439,14 @@
         draftEntry.out = '';
         draftEntry.blocks = [];
       } else {
-        if (activeTimeTarget === 'in') draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
-        if (activeTimeTarget === 'out') draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
+        if (activeTimeTarget === 'in') {
+          if (!draftEntry.in) draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
+          else if (draftEntry.in === 'CLEARED') draftEntry.in = '';
+        }
+        if (activeTimeTarget === 'out') {
+          if (!draftEntry.out) draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
+          else if (draftEntry.out === 'CLEARED') draftEntry.out = '';
+        }
       }
       
       draftEntry.shift = selectedShiftCode; 
@@ -1841,9 +1853,13 @@
           wrapper.classList.add('cursor-pointer', 'active:scale-95', 'transition');
           wrapper.addEventListener('click', () => {
              document.getElementById('modal-events-list').classList.add('hidden');
-             if (d.getFullYear() === rosterYear) {
-               scrollToRosterElement(document.getElementById(`roster-month-sec-${d.getMonth()}`));
+             if (d.getFullYear() !== rosterYear) {
+               rosterYear = d.getFullYear();
+               renderRosterYear(false);
              }
+             setTimeout(() => {
+               scrollToRosterElement(document.getElementById(`roster-month-sec-${d.getMonth()}`));
+             }, 100);
           });
         }
 
@@ -2262,7 +2278,7 @@
             const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
             if (cols[0] === 'ENTRY' && cols[1]) {
               const flags = cols[11] ? JSON.parse(cols[11]) : {};
-              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidHoliday: !!flags.paidHoliday, fillFS: !!flags.fillFS, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
+              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidDoctor: !!flags.paidDoctor, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
             } else if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { 
               newRoster[cols[1]] = cols[2]; 
             } else if (cols[0] === 'EVENT' && cols[1]) { // NEU: Importiere EVENT Reihen
@@ -2379,7 +2395,7 @@
       
       document.getElementById('btn-set-now').addEventListener('click', () => { const now = new Date(); setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true); applyWheelTimeToActiveCard(); });
       document.getElementById('btn-set-default').addEventListener('click', () => { const sObj = SHIFTS.find(s => s.code === selectedShiftCode); if (sObj) { setTimeWheels(activeTimeTarget === 'in' ? sObj.start : sObj.end, true); applyWheelTimeToActiveCard(); } });
-      document.getElementById('btn-clear-time').addEventListener('click', () => { if (activeTimeTarget === 'in') draftEntry.in = ''; else draftEntry.out = ''; updateCardsAndPreview(); });
+      document.getElementById('btn-clear-time').addEventListener('click', () => { if (activeTimeTarget === 'in') draftEntry.in = 'CLEARED'; else draftEntry.out = 'CLEARED'; updateCardsAndPreview(); });
       
       document.getElementById('btn-save-entry').addEventListener('click', saveCurrentDayInstant);
 
@@ -2409,7 +2425,7 @@
         draftEntry.note = document.getElementById('sp-note').value.trim(); delete draftEntry.rawKnauf; delete draftEntry.rawImport;
         
         // Wenn "Kind krank" aktiv ist, löschen wir sicherheitshalber alle Zeiten aus dem Modal
-        if (draftEntry.unpaidChild) { draftEntry.in = ''; draftEntry.out = ''; draftEntry.blocks = []; draftEntry.docHours = ''; }
+        if (draftEntry.unpaidChild) { draftEntry.in = ''; draftEntry.out = ''; draftEntry.blocks = []; draftEntry.docHours = ''; draftEntry.paidDoctor = false; }
         
         document.getElementById('modal-special').classList.add('hidden'); saveCurrentDayInstant();
       });
