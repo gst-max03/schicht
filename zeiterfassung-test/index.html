@@ -673,7 +673,7 @@
             </button>
             <label class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition">
               <span>📥</span> Backup Wiederherstellen
-              <input type="file" id="input-full-backup-import" accept=".csv" class="hidden">
+              <input type="file" id="input-full-backup-import" accept=".csv, text/csv, application/csv, text/plain, application/vnd.ms-excel" class="hidden">
             </label>
           </div>
         </div>
@@ -1004,7 +1004,9 @@
       if (statusEl) { statusEl.textContent = '⏳ Lade Backup aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
 
       try {
-        const res = await fetch(url); const data = await res.json();
+        // Hängt die aktuelle Millisekunde an die URL an, um den Cache auszutricksen
+const cacheBusterUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = await res.json();
         if (!data || Object.keys(data).length === 0 || (!data.entries && !data.roster)) {
           if (statusEl) statusEl.classList.add('hidden');
           alert('Noch keine Backup-Datei in Google Drive gefunden (Bitte zuerst einmal senden).'); return;
@@ -2273,15 +2275,29 @@
       reader.onload = (e) => {
         try {
           const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
-          const newEntries = {}; const newRoster = {}; const newEvents = {}; // NEU: newEvents
+          const newEntries = {}; const newRoster = {}; const newEvents = {};
           for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
+            // SICHERS PARSEN (Ignoriert Semikolons in Notizen)
+            const cols = []; let current = ''; let inQuotes = false;
+            for (let j = 0; j < lines[i].length; j++) {
+              const char = lines[i][j];
+              if (char === '"') {
+                if (inQuotes && lines[i][j + 1] === '"') { current += '"'; j++; } 
+                else { inQuotes = !inQuotes; }
+              } else if (char === ';' && !inQuotes) {
+                cols.push(current); current = '';
+              } else {
+                current += char;
+              }
+            }
+            cols.push(current);
+
             if (cols[0] === 'ENTRY' && cols[1]) {
               const flags = cols[11] ? JSON.parse(cols[11]) : {};
               newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidDoctor: !!flags.paidDoctor, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
             } else if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { 
               newRoster[cols[1]] = cols[2]; 
-            } else if (cols[0] === 'EVENT' && cols[1]) { // NEU: Importiere EVENT Reihen
+            } else if (cols[0] === 'EVENT' && cols[1]) { 
               newEvents[cols[1]] = JSON.parse(cols[11] || '[]');
             }
             else if (cols[0] === 'META' && cols[11]) { 
@@ -2521,7 +2537,12 @@
       document.getElementById('btn-close-backup').addEventListener('click', () => document.getElementById('modal-backup').classList.add('hidden'));
       
       document.getElementById('btn-full-backup-export').addEventListener('click', exportFullBackupCSV);
-      document.getElementById('input-full-backup-import').addEventListener('change', (e) => { if (e.target.files[0]) importFullBackupCSV(e.target.files[0]); });
+      document.getElementById('input-full-backup-import').addEventListener('change', (e) => { 
+        if (e.target.files[0]) {
+          importFullBackupCSV(e.target.files[0]);
+          e.target.value = ''; // Setzt den Button für den nächsten Klick zurück
+        }
+      });
       
       document.getElementById('btn-month-csv-export').addEventListener('click', () => generateMonthOrYearCSV(false));
       document.getElementById('btn-year-csv-export').addEventListener('click', () => generateMonthOrYearCSV(true));
