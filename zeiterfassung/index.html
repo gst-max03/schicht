@@ -1004,7 +1004,9 @@
       if (statusEl) { statusEl.textContent = '⏳ Lade Backup aus Google Drive...'; statusEl.className = 'text-[11px] font-bold text-center text-blue-600 dark:text-blue-400'; statusEl.classList.remove('hidden'); }
 
       try {
-        const res = await fetch(url); const data = await res.json();
+        // Hängt die aktuelle Millisekunde an die URL an, um den Cache auszutricksen
+const cacheBusterUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = await res.json();
         if (!data || Object.keys(data).length === 0 || (!data.entries && !data.roster)) {
           if (statusEl) statusEl.classList.add('hidden');
           alert('Noch keine Backup-Datei in Google Drive gefunden (Bitte zuerst einmal senden).'); return;
