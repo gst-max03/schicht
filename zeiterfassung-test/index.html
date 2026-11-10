@@ -2407,7 +2407,21 @@ const res = await fetch(cacheBusterUrl, { cache: 'no-store' }); const data = awa
 
       document.getElementById('card-in').addEventListener('click', () => setActiveTimeCard('in', true));
       document.getElementById('card-out').addEventListener('click', () => setActiveTimeCard('out', true));
-      document.getElementById('btn-jump-today').addEventListener('click', () => { const tIso = toISODate(new Date()); const idx = dateWheelList.indexOf(tIso); if (idx >= 0) { selectedDateISO = tIso; scrollToWheelIndex('wheel-date', idx, true); onDateChanged(); } });
+      document.getElementById('btn-jump-today').addEventListener('click', () => { 
+        const tIso = toISODate(new Date()); 
+        let idx = dateWheelList.indexOf(tIso); 
+  
+        if (idx < 0) { 
+          initWheels(); // Baut die Zeitachse neu auf, falls die App ewig im Hintergrund lag
+          idx = dateWheelList.indexOf(tIso);
+        }
+  
+        if (idx >= 0) { 
+          selectedDateISO = tIso; 
+          scrollToWheelIndex('wheel-date', idx, true); 
+          onDateChanged(); 
+        } 
+      });
       
       document.getElementById('btn-set-now').addEventListener('click', () => { const now = new Date(); setTimeWheels(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, true); applyWheelTimeToActiveCard(); });
       document.getElementById('btn-set-default').addEventListener('click', () => { const sObj = SHIFTS.find(s => s.code === selectedShiftCode); if (sObj) { setTimeWheels(activeTimeTarget === 'in' ? sObj.start : sObj.end, true); applyWheelTimeToActiveCard(); } });
