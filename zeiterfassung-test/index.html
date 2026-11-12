@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- NEU: Verhindert die Indexierung durch Suchmaschinen -->
   <meta name="robots" content="noindex, nofollow">
+  
   <title>Schicht- & Zeiterfassung</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -283,7 +286,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v063
+      v065
     </div>
   </main>
 
@@ -1075,10 +1078,15 @@
       const reloadDate = localStorage.getItem(STORAGE_KEYS.LAST_DATE);
       if (reloadDate) { localStorage.removeItem(STORAGE_KEYS.LAST_DATE); return reloadDate; }
       const now = new Date();
+      const yest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      const yestIso = toISODate(yest);
+      const yEntry = entriesDB[yestIso];
+
+      if (yEntry && yEntry.in && (!yEntry.out || yEntry.out === 'CLEARED')) {
+        return yestIso;
+      }
+
       if (now.getHours() < 8) {
-        const yest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-        const yestIso = toISODate(yest);
-        const yEntry = entriesDB[yestIso];
         if (yEntry && yEntry.shift === '0113' && !yEntry.out) return yestIso;
         if (!yEntry && rosterDB[yestIso] === '0113') return yestIso;
       }
@@ -2705,11 +2713,16 @@ function doGet(e) {
           
           // 1. Tageswechsel abfangen (z.B. nach der Nachtschicht aus dem Standby geholt)
           if (selectedDateISO !== todayISO) {
-            const idx = dateWheelList.indexOf(todayISO);
-            if (idx >= 0) {
-              selectedDateISO = todayISO;
-              scrollToWheelIndex('wheel-date', idx, true);
-              onDateChanged();
+            const currentEntry = entriesDB[selectedDateISO];
+            const isOpenShift = currentEntry && currentEntry.in && (!currentEntry.out || currentEntry.out === 'CLEARED');
+            
+            if (!isOpenShift) {
+              const idx = dateWheelList.indexOf(todayISO);
+              if (idx >= 0) {
+                selectedDateISO = todayISO;
+                scrollToWheelIndex('wheel-date', idx, true);
+                onDateChanged();
+              }
             }
           }
           
