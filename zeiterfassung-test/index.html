@@ -286,7 +286,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v065
+      v066
     </div>
   </main>
 
@@ -820,6 +820,9 @@
       if (installBtn) installBtn.classList.remove('hidden');
     });
 
+    // Verhindert das Ausführen von Schadcode aus CSV-Importen/Notizen
+    function escapeHTML(str) { return str ? String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : ''; }
+    
     const PAYOUT_BASELINE_HOURS = 165.00;
     const DEFAULT_VACATION_DAYS = 30;
 
@@ -991,7 +994,8 @@
       };
 
       try {
-        await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullPayload), keepalive: true });
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullPayload), keepalive: true });
+        if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
         localStorage.setItem('pwa_last_sync', exportTime); // Zeitstempel lokal merken
         if (statusEl && showSuccessAlert) { statusEl.textContent = '✅ Erfolgreich in Google Drive gespeichert!'; statusEl.className = 'text-[11px] font-bold text-center text-emerald-600 dark:text-emerald-400'; }
         if (showSuccessAlert) alert('Backup erfolgreich an Google Drive gesendet!'); return true;
@@ -1495,12 +1499,14 @@
       } else {
         if (activeTimeTarget === 'in') {
           if (!draftEntry.in) draftEntry.in = `${currentWheelHour}:${currentWheelMinute}`;
-          else if (draftEntry.in === 'CLEARED') draftEntry.in = '';
         }
         if (activeTimeTarget === 'out') {
           if (!draftEntry.out) draftEntry.out = `${currentWheelHour}:${currentWheelMinute}`;
-          else if (draftEntry.out === 'CLEARED') draftEntry.out = '';
         }
+        
+        // Immer prüfen und bereinigen, egal welches Rad gerade aktiv war
+        if (draftEntry.in === 'CLEARED') draftEntry.in = '';
+        if (draftEntry.out === 'CLEARED') draftEntry.out = '';
       }
       
       draftEntry.shift = selectedShiftCode; 
@@ -1587,7 +1593,7 @@
         const evs = eventsDB[iso] || [];
         if (evs.length > 0) {
           let dayLabel = i === 0 ? 'Heute' : (i === 1 ? 'Morgen' : 'Übermorgen');
-          evs.forEach(e => upcoming.push(`<span class="opacity-80">${dayLabel}, ${e.start} Uhr:</span> ${e.text}`));
+          evs.forEach(e => upcoming.push(`<span class="opacity-80">${dayLabel}, ${e.start} Uhr:</span> ${escapeHTML(e.text)}`));
         }
       }
       
@@ -1806,7 +1812,7 @@
         row.innerHTML = `
           <div class="flex-1 overflow-hidden pr-2">
             <div class="font-bold text-blue-600 dark:text-blue-400">${e.start} - ${e.end} Uhr</div>
-            <div class="truncate text-slate-700 dark:text-slate-200 font-medium">${e.text}</div>
+            <div class="truncate text-slate-700 dark:text-slate-200 font-medium">${escapeHTML(e.text)}</div>
           </div>
           <button type="button" class="w-8 h-8 shrink-0 flex items-center justify-center bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400 rounded-lg font-bold active:scale-95 transition" data-idx="${idx}">🗑️</button>
         `;
@@ -1898,7 +1904,7 @@
         
         let evHtml = '';
         evs.forEach(e => {
-          evHtml += `<div class="text-xs ml-1 py-0.5"><span class="font-mono text-rose-600 dark:text-rose-400 font-bold">${e.start}-${e.end}</span> <span class="${isPast ? 'text-slate-500' : 'text-slate-800 dark:text-slate-200 font-semibold'}">${e.text}</span></div>`;
+          evHtml += `<div class="text-xs ml-1 py-0.5"><span class="font-mono text-rose-600 dark:text-rose-400 font-bold">${e.start}-${e.end}</span> <span class="${isPast ? 'text-slate-500' : 'text-slate-800 dark:text-slate-200 font-semibold'}">${escapeHTML(e.text)}</span></div>`;
         });
 
         wrapper.innerHTML = `
@@ -2351,7 +2357,8 @@
 
             if (cols[0] === 'ENTRY' && cols[1]) {
               const flags = cols[11] ? JSON.parse(cols[11]) : {};
-              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(cols[5]) || 0, verr: parseFloat(cols[6]) || 0, soll: parseFloat(cols[7]) || 0, mehr: parseFloat(cols[8]) || 0, nacht: parseFloat(cols[9]) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidDoctor: !!flags.paidDoctor, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
+              // Kommas zu Punkten machen, bevor parseFloat zuschlägt
+              newEntries[cols[1]] = { shift: cols[2] || '0112', in: cols[3] || '', out: cols[4] || '', ist: parseFloat(String(cols[5]).replace(',', '.')) || 0, verr: parseFloat(String(cols[6]).replace(',', '.')) || 0, soll: parseFloat(String(cols[7]).replace(',', '.')) || 0, mehr: parseFloat(String(cols[8]).replace(',', '.')) || 0, nacht: parseFloat(String(cols[9]).replace(',', '.')) || 0, docHours: cols[10] || '', blocks: flags.blocks || [], paidDoctor: !!flags.paidDoctor, unpaidChild: !!flags.unpaidChild, rawImport: !!(flags.rawKnauf || flags.rawImport), fsUsed: flags.fsUsed || 0, tazp: flags.tazp || cols[2], note: cols[12] || '' };
             } else if (cols[0] === 'ROSTER' && cols[1] && cols[2]) { 
               newRoster[cols[1]] = cols[2]; 
             } else if (cols[0] === 'EVENT' && cols[1]) { 
@@ -2461,6 +2468,13 @@
           if (h) document.getElementById('roster-header-spacer').style.height = (h + 6) + 'px';
         }, 50);
       });
+
+      // Löst das Höhenproblem beim Scrollen für alle Situationen (Laden, Info-Box, Werkzeuge)
+      new ResizeObserver(entries => {
+        for (let entry of entries) {
+          document.getElementById('roster-header-spacer').style.height = (entry.target.offsetHeight + 12) + 'px';
+        }
+      }).observe(document.getElementById('roster-fixed-header'));
 
       document.getElementById('card-in').addEventListener('click', () => setActiveTimeCard('in', true));
       document.getElementById('card-out').addEventListener('click', () => setActiveTimeCard('out', true));
@@ -2696,12 +2710,13 @@ function doGet(e) {
       // AUTOMATISCHER OFFLINE-RECOVERY SYNC
       // ==========================================
       if (navigator.onLine && metaDB.driveAuto && metaDB.driveUrl) {
-        setTimeout(() => { syncPushToGoogleDrive(false); }, 2000);
+        setTimeout(() => { syncSilentPull(); }, 1500);
       }
       window.addEventListener('online', () => {
-        if (metaDB.driveAuto && metaDB.driveUrl) syncPushToGoogleDrive(false);
+        if (metaDB.driveAuto && metaDB.driveUrl) setTimeout(() => { syncSilentPull(); }, 500);
       });
       
+      applyHidePatternsState(); // Hält Schicht-Kombis aus, wenn eingestellt
       applyRosterOnlyState();
 
       // ==========================================
