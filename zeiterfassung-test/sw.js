@@ -1,12 +1,13 @@
-const APP_PREFIX = 'zeiterfassung-test-offline-';
-const CACHE_NAME = `${APP_PREFIX}v090_b1`; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
+const APP_PREFIX = 'zeiterfassung-offline-';
+const CACHE_NAME = `${APP_PREFIX}v066`; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
 
-// 1. INSTALL-EVENT: Wichtige Start-Dateien sofort beim Installieren cachen
+// 1. INSTALL-EVENT (NEU): Wichtige Start-Dateien sofort beim Installieren cachen
 const CACHE_URLS = [
-  '/schicht/zeiterfassung-test/',
-  '/schicht/zeiterfassung-test/index.html',
-  '/schicht/zeiterfassung-test/manifest.json',
-  '/schicht/zeiterfassung-test/icon.png'
+  '/schicht/zeiterfassung/',
+  '/schicht/zeiterfassung/index.html',
+  '/schicht/zeiterfassung/manifest.json',
+  '/schicht/zeiterfassung/icon.png',
+  'https://cdn.tailwindcss.com'
 ];
 
 self.addEventListener('install', (event) => {
@@ -15,6 +16,8 @@ self.addEventListener('install', (event) => {
       return cache.addAll(CACHE_URLS);
     })
   );
+  // self.skipWaiting() lassen wir absichtlich weg, 
+  // damit dein Update-Button in der App die Kontrolle behält.
 });
 
 // 2. ACTIVATE-EVENT: Alte Caches NUR dieser spezifischen App aufräumen
@@ -23,7 +26,6 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Löscht nur Caches, die zu zeiterfassung-test gehören
           if (cacheName.startsWith(APP_PREFIX) && cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
@@ -38,15 +40,21 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== location.origin) return;
-
-  // SICHERHEIT: Nur Dateien aus dem eigenen Ordner abfangen und cachen!
-  if (!url.pathname.startsWith('/schicht/zeiterfassung-test/')) return;
+  
+  // Externe Freigabe für Tailwind CDN
+  const isTailwind = url.hostname === 'cdn.tailwindcss.com';
+  
+  if (!isTailwind) {
+    if (url.origin !== location.origin) return;
+    // SICHERHEIT (NEU): Nur Dateien aus dem eigenen Ordner cachen!
+    if (!url.pathname.startsWith('/schicht/zeiterfassung/')) return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        // Tailwind liefert response.type === 'cors', daher müssen wir 'cors' oder 'basic' erlauben
+        if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
           return response;
         }
 
@@ -64,7 +72,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// 4. MESSAGE-EVENT: Empfängt das Signal vom Update-Button aus der App
+// 4. MESSAGE-EVENT: Überspringt die Warteschlange nach Klick auf Update-Button
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
