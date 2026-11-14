@@ -1,12 +1,13 @@
 const APP_PREFIX = 'zeiterfassung-offline-';
-const CACHE_NAME = `${APP_PREFIX}v064`; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
+const CACHE_NAME = `${APP_PREFIX}v066`; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
 
 // 1. INSTALL-EVENT (NEU): Wichtige Start-Dateien sofort beim Installieren cachen
 const CACHE_URLS = [
   '/schicht/zeiterfassung/',
   '/schicht/zeiterfassung/index.html',
   '/schicht/zeiterfassung/manifest.json',
-  '/schicht/zeiterfassung/icon.png'
+  '/schicht/zeiterfassung/icon.png',
+  'https://cdn.tailwindcss.com'
 ];
 
 self.addEventListener('install', (event) => {
@@ -39,16 +40,21 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== location.origin) return;
-
-  // SICHERHEIT (NEU): Nur Dateien aus dem eigenen Ordner cachen!
-  // Ignoriert alles, was z. B. zu /schicht/schichtplan/ gehört.
-  if (!url.pathname.startsWith('/schicht/zeiterfassung/')) return;
+  
+  // Externe Freigabe für Tailwind CDN
+  const isTailwind = url.hostname === 'cdn.tailwindcss.com';
+  
+  if (!isTailwind) {
+    if (url.origin !== location.origin) return;
+    // SICHERHEIT (NEU): Nur Dateien aus dem eigenen Ordner cachen!
+    if (!url.pathname.startsWith('/schicht/zeiterfassung/')) return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        // Tailwind liefert response.type === 'cors', daher müssen wir 'cors' oder 'basic' erlauben
+        if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
           return response;
         }
 
