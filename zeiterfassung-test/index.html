@@ -166,7 +166,11 @@
         <span>📅</span>
         <span>Übersicht</span>
       </button>
-      <button type="button" class="btn-open-settings-modal flex items-center justify-center px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-base shadow-sm active:scale-95 transition" title="Einstellungen & Design">⚙️</button>
+      <button type="button" id="btn-nav-minijob" onclick="window.switchView('minijob')" class="hidden items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition">
+        <span>💼</span>
+        <span>Minijob</span>
+      </button>
+      <button type="button" class="btn-open-settings-modal flex items-center justify-center px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-full text-base shadow-sm active:scale-95 transition" title="Einstellungen & Statistiken">⚙️</button>
     </header>
 
     <section class="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
@@ -286,7 +290,7 @@
     </section>
     
     <div class="text-center mt-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold tracking-widest">
-      v066
+      v067
     </div>
   </main>
 
@@ -297,12 +301,9 @@
     <div id="roster-fixed-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 px-2 border-b border-slate-300 dark:border-slate-800 shadow-md">
       <div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 flex flex-col gap-2 relative">
         <div class="flex justify-between items-center gap-1">
-          <button type="button" id="btn-roster-back" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95">
-            ⬅ Zurück
-          </button>
           <div class="flex items-center gap-1">
             <button type="button" id="btn-roster-year-prev" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">◀</button>
-            <span id="roster-year-title" class="text-sm font-black px-2">2026</span>
+            <span id="roster-year-title" class="text-sm font-black px-1.5">2026</span>
             <button type="button" id="btn-roster-year-next" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">▶</button>
           </div>
           <div class="flex items-center gap-1">
@@ -310,9 +311,12 @@
               📍 Heute
             </button>
             <!-- NEU: Termin-Liste Button (Global) -->
-            <button type="button" id="btn-open-events-list" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Alle Termine">📅</button>
-            <button type="button" id="btn-open-roster-stats" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Plan-Jahresstatistik">📊</button>
-            <button type="button" class="btn-open-settings-modal px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm active:scale-95 transition" title="Einstellungen">⚙️</button>
+            <button type="button" id="btn-open-events-list" class="px-2 py-1.5 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Alle Termine">📅</button>
+            <button type="button" id="btn-open-roster-stats" class="px-2 py-1.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-xl text-sm active:scale-95 transition shadow-sm" title="Plan-Jahresstatistik">📊</button>
+            <button type="button" class="btn-open-settings-modal px-2 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm active:scale-95 transition" title="Einstellungen">⚙️</button>
+            <button type="button" id="btn-roster-back" onclick="window.switchView('main')" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95">
+              ⬅ Zurück
+            </button>
           </div>
         </div>
 
@@ -488,63 +492,318 @@
     </div>
   </div>
 
-  <!-- MODAL: Einstellungen -->
-  <div id="modal-settings" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-4">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-base font-extrabold">⚙️ Einstellungen</h3>
-        <button type="button" id="btn-close-settings" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">✕</button>
-      </div>
-      
-      <div class="flex flex-col gap-3">
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Erscheinungsbild</div>
-          <div class="flex gap-2">
-            <button type="button" id="theme-light" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">☀️ Hell</button>
-            <button type="button" id="theme-dark" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">🌙 Dunkel</button>
-            <button type="button" id="theme-system" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">💻 Sys</button>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Daten & Backup</div>
-          <div class="flex gap-2">
-            <button type="button" id="btn-open-drive-modal" class="flex-1 py-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-slate-700 rounded-lg text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">☁️ Drive Sync</button>
-            <button type="button" id="btn-open-backup-modal" class="flex-1 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">💾 Lokales Backup</button>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">Verhalten</div>
-          <div class="flex flex-col gap-3">
-            <label class="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
-              <div>
-                <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
-                <span class="text-xs text-slate-500 block leading-snug">Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche.</span>
-              </div>
-            </label>
-            <label class="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" id="setting-hide-patterns" class="w-5 h-5 mt-0.5 accent-blue-600">
-              <div>
-                <span class="font-bold text-sm block">Schicht-Kombis ausblenden</span>
-                <span class="text-xs text-slate-500 block leading-snug">Versteckt die Kombi-Buttons (z.B. FF-SSS) im Schichtplan.</span>
-              </div>
-            </label>
-            <label class="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" id="setting-roster-only" class="w-5 h-5 mt-0.5 accent-blue-600">
-              <div>
-                <span class="font-bold text-sm block">Nur Schichtplan anzeigen</span>
-                <span class="text-xs text-slate-500 block leading-snug">Blendet alles andere (Stempeluhr, Übersicht) aus.</span>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <button type="button" id="btn-save-settings" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md active:scale-95 transition mt-2">
-        Speichern & Schließen
+  <!-- ========================================================= -->
+  <!-- ANSICHT 4: NEBENERWERB / MINIJOB                          -->
+  <!-- ========================================================= -->
+  <section id="view-minijob" class="hidden max-w-md mx-auto px-2 pt-2.5 pb-14 flex flex-col gap-2.5">
+    <div class="flex justify-between items-center gap-1 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <button type="button" id="btn-open-mj-mail" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold active:scale-95 transition shadow-sm flex items-center gap-1.5">
+        <span>📤</span>
+        <span>Abrechnung / Senden</span>
       </button>
+      <div class="flex items-center gap-1.5">
+        <button type="button" class="btn-open-settings-modal px-2.5 py-1.5 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-base active:scale-95 transition shadow-sm" title="Einstellungen & Statistiken">⚙️</button>
+        <button type="button" id="btn-minijob-back" onclick="window.switchView('main')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition">
+          ⬅ Zurück
+        </button>
+      </div>
+    </div>
+
+    <!-- Monats-Wechsler -->
+    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
+      <button type="button" id="btn-mj-prev-month" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm active:scale-95">◀</button>
+      <div class="text-center">
+        <div id="mj-month-title" class="text-sm font-extrabold text-slate-900 dark:text-white">November 2026</div>
+        <div class="text-[10px] text-slate-400">Nebenerwerb / Minijob • 10h/Tag & 60h/Woche im Blick</div>
+      </div>
+      <button type="button" id="btn-mj-next-month" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm active:scale-95">▶</button>
+    </div>
+
+    <!-- 2 Summen-Kacheln -->
+    <div class="grid grid-cols-2 gap-2">
+      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <span class="text-[10px] font-bold uppercase text-slate-400">Minijob (Monat)</span>
+        <div id="mj-sum-month" class="text-base font-extrabold text-blue-600 dark:text-blue-400 mt-0.5">0,00 h</div>
+        <div id="mj-sub-month" class="text-[10px] text-slate-400">0 Einsätze</div>
+      </div>
+      <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <span class="text-[10px] font-bold uppercase text-slate-400">Minijob (Jahr <span id="mj-sum-year-lbl">2026</span>)</span>
+        <div id="mj-sum-year" class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">0,00 h</div>
+        <div id="mj-sub-year" class="text-[10px] text-slate-400">Gesamtjahr</div>
+      </div>
+    </div>
+
+    <!-- Eingabe-Karte -->
+    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2.5">
+      <div class="flex justify-between items-center">
+        <span id="mj-form-title" class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">💼 Einsatz eintragen</span>
+        <span id="mj-kw-main-info" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">KW -- • Hauptberuf: 0,00 h</span>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Datum</label>
+          <input type="date" id="mj-date" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-xs border border-slate-200 dark:border-slate-700">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Von</label>
+          <input type="time" id="mj-in" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-xs border border-slate-200 dark:border-slate-700">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Bis</label>
+          <input type="time" id="mj-out" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-xs border border-slate-200 dark:border-slate-700">
+        </div>
+      </div>
+
+      <!-- Live-Ampel (Tag 10h & Woche 60h) -->
+      <div id="mj-live-ampel" class="p-2 rounded-xl border text-[11px] font-bold flex flex-col gap-0.5 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+        <div id="mj-live-day-line">Tages-Gesamtzeit (Haupt + Minijob): 0,00 h</div>
+        <div id="mj-live-week-line" class="text-[10px] opacity-85">Wochen-Gesamtzeit (KW): 0,00 h / 60,00 h</div>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Tätigkeit / Beschreibung</label>
+        <input type="text" id="mj-text" placeholder="z.B. Montage, Wartung, Büro..." class="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-semibold text-xs border border-slate-200 dark:border-slate-700">
+      </div>
+
+      <div class="flex gap-2">
+        <button type="button" id="btn-mj-save" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition">
+          💾 Eintrag speichern
+        </button>
+        <button type="button" id="btn-mj-cancel-edit" class="hidden px-3 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition">
+          Abbrechen
+        </button>
+      </div>
+    </div>
+
+    <!-- Monatsliste (nach KW gruppiert) -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+        Einsätze im Monat (Antippen = Bearbeiten ✏️)
+      </div>
+      <div id="mj-list-container" class="flex flex-col gap-2.5"></div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- ANSICHT 5: EINSTELLUNGEN & AUSWERTUNGEN (VOLLBILD)        -->
+  <!-- ========================================================= -->
+  <section id="view-settings" class="hidden max-w-md mx-auto px-2 pt-2.5 pb-14 flex flex-col gap-3">
+    <div class="flex justify-between items-center bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <h2 class="text-sm font-extrabold">⚙️ Einstellungen & Statistiken</h2>
+      <button type="button" id="btn-settings-back" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition">
+        ⬅ Zurück
+      </button>
+    </div>
+
+    <!-- KARTE 1: STATISTIKEN & AUSWERTUNGEN -->
+    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">📊 Auswertungen & ArbZG-Check</span>
+        <div class="flex items-center gap-1">
+          <button type="button" id="btn-st-year-prev" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">◀</button>
+          <span id="st-year-label" class="text-xs font-black px-1.5">2026</span>
+          <button type="button" id="btn-st-year-next" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold">▶</button>
+        </div>
+      </div>
+
+      <!-- ArbZG Check Box (10h/Tag, 60h/Woche, 48h/24-Wochen-Schnitt) -->
+      <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-2 text-xs">
+        <div class="text-[10px] font-extrabold uppercase text-slate-500">⚖️ Arbeitszeitgesetz-Kontrolle (Hauptberuf + Minijob)</div>
+        <div class="grid grid-cols-3 gap-1.5 text-center">
+          <div id="arbzg-card-10h" class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="text-[9px] text-slate-400 font-bold">> 10h / Tag</div>
+            <div id="arbzg-val-10h" class="text-xs font-extrabold mt-0.5">0 Tage</div>
+          </div>
+          <div id="arbzg-card-60h" class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="text-[9px] text-slate-400 font-bold">> 60h / Woche</div>
+            <div id="arbzg-val-60h" class="text-xs font-extrabold mt-0.5">0 KWs</div>
+          </div>
+          <div id="arbzg-card-48h" class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="text-[9px] text-slate-400 font-bold">Ø 24-Wo. (max 48h)</div>
+            <div id="arbzg-val-48h" class="text-xs font-extrabold mt-0.5">0,00 h</div>
+          </div>
+        </div>
+        <div id="arbzg-warnings-detail" class="hidden text-[10px] text-rose-600 dark:text-rose-400 font-semibold leading-snug pt-1 border-t border-slate-200 dark:border-slate-700"></div>
+      </div>
+
+      <!-- Kennzahlen-Grid -->
+      <div class="grid grid-cols-3 gap-1.5 text-center text-xs">
+        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+          <div class="text-[9px] text-slate-400 font-bold">Ø Tag / Ø Woche</div>
+          <div id="st-kpi-avg" class="text-[11px] font-extrabold mt-0.5">0,0h / 0,0h</div>
+        </div>
+        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+          <div class="text-[9px] text-slate-400 font-bold">Urlaub / Krank</div>
+          <div id="st-kpi-uk" class="text-[11px] font-extrabold mt-0.5">0 U • 0 K</div>
+        </div>
+        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+          <div class="text-[9px] text-slate-400 font-bold">F / S / N Anteil</div>
+          <div id="st-kpi-dist" class="text-[10px] font-extrabold mt-0.5">--% / --% / --%</div>
+        </div>
+      </div>
+
+      <!-- Schalter für Minijob-Einrechnung in die Jahrestabelle -->
+      <label id="st-toggle-mj-wrap" class="hidden items-center gap-2 text-xs font-bold cursor-pointer bg-blue-50/70 dark:bg-blue-950/40 p-2 rounded-xl border border-blue-200 dark:border-blue-900">
+        <input type="checkbox" id="st-include-minijob" class="w-4 h-4 accent-blue-600">
+        <span>Inkl. Minijob-Stunden in IST-Spalte & Summe anzeigen</span>
+      </label>
+
+      <!-- Monats- & Jahres-Arbeitszeit-Tabelle -->
+      <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-right border-collapse table-fixed text-[10px]">
+          <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold uppercase">
+            <tr>
+              <th class="py-1.5 px-1.5 text-left w-[16%]">Mon.</th>
+              <th class="py-1.5 px-1 w-[21%]">IST</th>
+              <th class="py-1.5 px-1 w-[21%]">VERR</th>
+              <th class="py-1.5 px-1 w-[18%]">Mehr</th>
+              <th class="py-1.5 px-1 w-[12%]">Nacht</th>
+              <th id="st-th-mj" class="py-1.5 px-1.5 w-[12%]">FS-Kto</th>
+            </tr>
+          </thead>
+          <tbody id="st-hours-tbody" class="divide-y divide-slate-200 dark:divide-slate-800 font-mono"></tbody>
+          <tfoot id="st-hours-tfoot" class="bg-slate-50 dark:bg-slate-800/90 font-extrabold font-mono border-t-2 border-slate-300 dark:border-slate-700"></tfoot>
+        </table>
+      </div>
+
+      <!-- Minijob Extra-Auswertung (nur sichtbar, wenn Minijob aktiviert) -->
+      <div id="st-minijob-card" class="hidden bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex-col gap-1.5 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-extrabold uppercase text-blue-600 dark:text-blue-400">💼 Minijob Jahres-Statistik</span>
+          <span id="st-mj-year-total" class="font-extrabold text-blue-600 dark:text-blue-400">0,00 h (0 Einsätze)</span>
+        </div>
+        <div id="st-mj-averages" class="text-[10px] text-slate-500">Ø pro Monat: 0,00 h • Ø pro Woche: 0,00 h</div>
+      </div>
+
+      <!-- Direktzugriff auf die Schicht-Tabellen -->
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button type="button" id="btn-st-open-booked-shifts" class="py-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-slate-700 rounded-xl text-xs font-bold active:scale-95 transition">
+          📊 Gebuchte Schichten
+        </button>
+        <button type="button" id="btn-st-open-roster-shifts" class="py-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-slate-700 rounded-xl text-xs font-bold active:scale-95 transition">
+          🗓️ Plan-Schichten
+        </button>
+      </div>
+    </div>
+
+    <!-- KARTE 2: NEBENERWERB / MINIJOB EINSTELLUNGEN -->
+    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+      <div class="text-[11px] font-extrabold uppercase text-slate-500">💼 Nebenerwerb / Minijob</div>
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" id="setting-enable-minijob" class="w-5 h-5 mt-0.5 accent-blue-600">
+        <div>
+          <span class="font-bold text-sm block">Nebenerwerb / Minijob aktivieren</span>
+          <span class="text-xs text-slate-500 block leading-snug">Blendet den Button „💼 Minijob“ auf der Startseite sowie die Zusatz-Auswertungen ein.</span>
+        </div>
+      </label>
+      <div id="setting-minijob-details" class="hidden flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Empfänger E-Mail (Chef / Abrechnung)</label>
+          <input type="email" id="setting-mj-email" placeholder="chef@beispiel.de" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-semibold">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Dein Name (für E-Mail-Betreff & Grußformel)</label>
+          <input type="text" id="setting-mj-name" placeholder="Vorname Nachname" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-semibold">
+        </div>
+      </div>
+    </div>
+
+    <!-- KARTE 3: ERSCHEINUNGSBILD -->
+    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">🎨 Erscheinungsbild</div>
+      <div class="flex gap-2">
+        <button type="button" id="theme-light" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">☀️ Hell</button>
+        <button type="button" id="theme-dark" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">🌙 Dunkel</button>
+        <button type="button" id="theme-system" class="flex-1 py-1.5 rounded-lg text-sm font-bold border border-slate-300 dark:border-slate-600">💻 Sys</button>
+      </div>
+    </div>
+
+    <!-- KARTE 4: VERHALTEN -->
+    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">⚙️ Verhalten</div>
+      <div class="flex flex-col gap-3">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="setting-night-sunday" class="w-5 h-5 mt-0.5 accent-blue-600">
+          <div>
+            <span class="font-bold text-sm block">Nachtschicht beginnt am Sonntag</span>
+            <span class="text-xs text-slate-500 block leading-snug">Ein Klick auf "KW" füllt bei Nachtschicht (N) den Sonntag der Vorwoche sowie Mo. bis Do. der aktuellen Woche.</span>
+          </div>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="setting-hide-patterns" class="w-5 h-5 mt-0.5 accent-blue-600">
+          <div>
+            <span class="font-bold text-sm block">Schicht-Kombis ausblenden</span>
+            <span class="text-xs text-slate-500 block leading-snug">Versteckt die Kombi-Buttons (z.B. FF-SSS) im Schichtplan.</span>
+          </div>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="setting-roster-only" class="w-5 h-5 mt-0.5 accent-blue-600">
+          <div>
+            <span class="font-bold text-sm block">Nur Schichtplan anzeigen</span>
+            <span class="text-xs text-slate-500 block leading-snug">Blendet alles andere (Stempeluhr, Übersicht) aus.</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- KARTE 5: DATEN & BACKUP -->
+    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-2">☁️ Daten & Backup</div>
+      <div class="flex gap-2">
+        <button type="button" id="btn-open-drive-modal" class="flex-1 py-2.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-slate-700 rounded-xl text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">☁️ Drive Sync</button>
+        <button type="button" id="btn-open-backup-modal" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold active:scale-95 transition shadow-sm flex items-center justify-center gap-1">💾 Lokales Backup</button>
+      </div>
+    </div>
+
+    <button type="button" id="btn-save-settings" class="py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm shadow-md active:scale-95 transition">
+      💾 Einstellungen speichern & Zurück
+    </button>
+  </section>
+
+  <!-- MODAL: Minijob Abrechnung / E-Mail Versand -->
+  <div id="modal-minijob-mail" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-3 my-auto">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-sm font-extrabold">📤 Minijob-Abrechnung senden</h3>
+        <button type="button" id="btn-close-mj-mail" class="text-slate-400 text-lg font-bold px-2">✕</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" id="btn-mj-scope-month" class="py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm">Aktueller Monat</button>
+        <button type="button" id="btn-mj-scope-year" class="py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Komplettes Jahr</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Empfänger E-Mail</label>
+          <input type="email" id="mj-mail-to" placeholder="chef@firma.de" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-semibold text-xs">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Dein Name</label>
+          <input type="text" id="mj-mail-name" placeholder="Dein Name" class="w-full p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-semibold text-xs">
+        </div>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 block mb-0.5">Vorschau (Betreff & Text):</label>
+        <textarea id="mj-mail-preview" rows="8" readonly class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-slate-700 dark:text-slate-200 leading-relaxed"></textarea>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <button type="button" id="btn-mj-send-mailto" class="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition flex items-center justify-center gap-1.5">
+          <span>✉️</span>
+          <span>In E-Mail-App öffnen</span>
+        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="btn-mj-copy-text" class="py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs active:scale-95 transition">
+            📋 Text kopieren
+          </button>
+          <button type="button" id="btn-mj-export-csv" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs active:scale-95 transition">
+            📥 Als CSV speichern
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -885,6 +1144,7 @@
       ROSTER:  'pwa_schicht_roster_v3',
       META:    'pwa_schicht_meta_v3',
       EVENTS:  'pwa_schicht_events_v3', // NEU: Speicherort für Termine
+      MINIJOB: 'pwa_schicht_minijob_v3', // NEU: Speicherort für Nebenerwerb
       LAST_SHIFT: 'pwa_schicht_last_shift_v3',
       LAST_DATE:  'pwa_schicht_last_date_on_reload'
     };
@@ -894,14 +1154,15 @@
     }
     function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-    let entriesDB = loadJSON(STORAGE_KEYS.ENTRIES, {});
-    let rosterDB  = loadJSON(STORAGE_KEYS.ROSTER, {});
-    let eventsDB  = loadJSON(STORAGE_KEYS.EVENTS, {}); // NEU: Initialisierung eventsDB
+    let entriesDB  = loadJSON(STORAGE_KEYS.ENTRIES, {});
+    let rosterDB   = loadJSON(STORAGE_KEYS.ROSTER, {});
+    let eventsDB   = loadJSON(STORAGE_KEYS.EVENTS, {}); // NEU: Initialisierung eventsDB
+    let minijobDB  = loadJSON(STORAGE_KEYS.MINIJOB, {}); // NEU: Initialisierung minijobDB
     
-    let metaDB    = loadJSON(STORAGE_KEYS.META, {
+    let metaDB     = loadJSON(STORAGE_KEYS.META, {
       theme: 'system', nightShiftSunday: false, capEarlyShift: true, kostenstelle: 'Meine Kostenstelle',
       driveAuto: false, driveUrl: '', vacationBase: { '2026': 30, '2027': 30 }, vacationSonder: { '2026': 0, '2027': 0 }, months: {},
-      rosterOnly: false, hidePatterns: false
+      rosterOnly: false, hidePatterns: false, minijobEnabled: false, minijobEmail: '', minijobName: ''
     });
 
     if (metaDB.sonderurlaub && !metaDB.vacationSonder) {
@@ -988,7 +1249,7 @@
       // NEU: Erstellt einen Zeitstempel, um später vergleichen zu können, wer aktueller ist
       const exportTime = new Date().toISOString();
       const fullPayload = {
-        entries: entriesDB, roster: rosterDB, events: eventsDB, meta: metaDB,
+        entries: entriesDB, roster: rosterDB, events: eventsDB, minijob: minijobDB, meta: metaDB,
         lastShift: localStorage.getItem(STORAGE_KEYS.LAST_SHIFT) || '0112',
         exportedAt: exportTime
       };
@@ -1026,10 +1287,11 @@
         if (data.entries) entriesDB = data.entries;
         if (data.roster) rosterDB = data.roster;
         if (data.events) eventsDB = data.events;
+        if (data.minijob) minijobDB = data.minijob;
         if (data.meta) { const keepUrl = metaDB.driveUrl; metaDB = data.meta; if (!metaDB.driveUrl) metaDB.driveUrl = keepUrl; }
         if (data.lastShift) localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, data.lastShift);
         
-        saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.EVENTS, eventsDB); saveJSON(STORAGE_KEYS.META, metaDB);
+        saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.EVENTS, eventsDB); saveJSON(STORAGE_KEYS.MINIJOB, minijobDB); saveJSON(STORAGE_KEYS.META, metaDB);
         if (data.exportedAt) localStorage.setItem('pwa_last_sync', data.exportedAt);
         
         alert('Daten erfolgreich aus Google Drive wiederhergestellt!'); window.location.reload();
@@ -1056,19 +1318,24 @@
             if (data.entries) entriesDB = data.entries;
             if (data.roster) rosterDB = data.roster;
             if (data.events) eventsDB = data.events;
+            if (data.minijob) minijobDB = data.minijob;
             if (data.meta) { const keepUrl = metaDB.driveUrl; metaDB = data.meta; if (!metaDB.driveUrl) metaDB.driveUrl = keepUrl; }
             if (data.lastShift) localStorage.setItem(STORAGE_KEYS.LAST_SHIFT, data.lastShift);
             
             saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); 
             saveJSON(STORAGE_KEYS.ROSTER, rosterDB); 
             saveJSON(STORAGE_KEYS.EVENTS, eventsDB); 
+            saveJSON(STORAGE_KEYS.MINIJOB, minijobDB);
             saveJSON(STORAGE_KEYS.META, metaDB);
             localStorage.setItem('pwa_last_sync', data.exportedAt);
             
+            applyMinijobVisibilityState();
             // Ansicht direkt aktualisieren (ohne nervigen Reload der ganzen Seite)
             onDateChanged();
             if (document.getElementById('view-roster').classList.contains('hidden') === false) renderRosterYear(false);
             if (document.getElementById('view-overview').classList.contains('hidden') === false) renderOverview();
+            if (document.getElementById('view-minijob').classList.contains('hidden') === false) renderMinijobView();
+            if (document.getElementById('view-settings').classList.contains('hidden') === false) renderAdvancedSettingsStats();
           }
         }
       } catch(e) {
@@ -1097,16 +1364,30 @@
       return toISODate(now);
     }
 
+    let previousActiveView = 'main';
     window.switchView = function(target) {
+      if (target === 'settings') {
+        if (!document.getElementById('view-roster').classList.contains('hidden')) previousActiveView = 'roster';
+        else if (!document.getElementById('view-overview').classList.contains('hidden')) previousActiveView = 'overview';
+        else if (!document.getElementById('view-minijob').classList.contains('hidden')) previousActiveView = 'minijob';
+        else if (!document.getElementById('view-main').classList.contains('hidden')) previousActiveView = 'main';
+      }
+
       document.getElementById('view-main').classList.toggle('hidden', target !== 'main');
       document.getElementById('view-roster').classList.toggle('hidden', target !== 'roster');
       document.getElementById('view-overview').classList.toggle('hidden', target !== 'overview');
+      document.getElementById('view-minijob').classList.toggle('hidden', target !== 'minijob');
+      document.getElementById('view-settings').classList.toggle('hidden', target !== 'settings');
 
       if (target === 'roster') {
         renderRosterYear(true);
       } else if (target === 'overview') {
         const selDate = parseISODate(selectedDateISO);
         overviewYear = selDate.getFullYear(); overviewMonth = selDate.getMonth(); renderOverview();
+      } else if (target === 'minijob') {
+        renderMinijobView();
+      } else if (target === 'settings') {
+        openFullSettingsView();
       } else if (target === 'main') {
         onDateChanged();
       }
@@ -2324,6 +2605,11 @@
         rows.push(['EVENT', iso, '', '', '', '', '', '', '', '', '', JSON.stringify(eventsDB[iso]), '']); 
       });
 
+      // NEU: Minijob sichern
+      Object.keys(minijobDB).sort().forEach(iso => {
+        rows.push(['MINIJOB', iso, '', '', '', '', '', '', '', '', '', JSON.stringify(minijobDB[iso]), '']);
+      });
+
       const fullMetaBackup = { ...metaDB, lastShift: localStorage.getItem(STORAGE_KEYS.LAST_SHIFT) || '0112' };
       rows.push(['META', 'FULL_META_JSON', '', '', '', '', '', '', '', '', '', JSON.stringify(fullMetaBackup), '']);
 
@@ -2338,7 +2624,7 @@
       reader.onload = (e) => {
         try {
           const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
-          const newEntries = {}; const newRoster = {}; const newEvents = {};
+          const newEntries = {}; const newRoster = {}; const newEvents = {}; const newMinijob = {};
           for (let i = 1; i < lines.length; i++) {
             // SICHERS PARSEN (Ignoriert Semikolons in Notizen)
             const cols = []; let current = ''; let inQuotes = false;
@@ -2363,6 +2649,8 @@
               newRoster[cols[1]] = cols[2]; 
             } else if (cols[0] === 'EVENT' && cols[1]) { 
               newEvents[cols[1]] = JSON.parse(cols[11] || '[]');
+            } else if (cols[0] === 'MINIJOB' && cols[1]) {
+              newMinijob[cols[1]] = JSON.parse(cols[11] || '[]');
             }
             else if (cols[0] === 'META' && cols[11]) { 
               const parsedMeta = JSON.parse(cols[11]); 
@@ -2370,11 +2658,479 @@
               metaDB = parsedMeta; 
             }
           }
-          entriesDB = newEntries; rosterDB = newRoster; eventsDB = newEvents;
-          saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.EVENTS, eventsDB); saveJSON(STORAGE_KEYS.META, metaDB);
+          entriesDB = newEntries; rosterDB = newRoster; eventsDB = newEvents; minijobDB = newMinijob;
+          saveJSON(STORAGE_KEYS.ENTRIES, entriesDB); saveJSON(STORAGE_KEYS.ROSTER, rosterDB); saveJSON(STORAGE_KEYS.EVENTS, eventsDB); saveJSON(STORAGE_KEYS.MINIJOB, minijobDB); saveJSON(STORAGE_KEYS.META, metaDB);
           triggerBackgroundDriveSync(); alert('Backup erfolgreich wiederhergestellt!'); window.location.reload();
         } catch (err) { alert('Fehler beim Import: ' + err.message); }
       }; reader.readAsText(file, 'UTF-8');
+    }
+
+    /********************************************************************
+     * NEBENERWERB / MINIJOB & ARBEITSZEITGESETZ-LOGIK (10h / 60h / 48h)
+     ********************************************************************/
+    let mjYear = new Date().getFullYear();
+    let mjMonth = new Date().getMonth();
+    let mjEditState = null; // { iso, idx }
+    let mjMailScope = 'month';
+    let stYear = new Date().getFullYear();
+
+    function calcMinijobDurationHours(startStr, endStr) {
+      const mIn = timeToMin(startStr); const mOut = timeToMin(endStr);
+      if (mIn === null || mOut === null) return 0;
+      let diff = mOut - mIn;
+      if (diff <= 0) diff += 1440;
+      return Math.round((diff / 60) * 100) / 100;
+    }
+
+    function getMinijobHoursForDate(iso) {
+      const list = minijobDB[iso] || [];
+      let sum = 0;
+      list.forEach(item => { sum += (item.hours !== undefined ? item.hours : calcMinijobDurationHours(item.start, item.end)); });
+      return Math.round(sum * 100) / 100;
+    }
+
+    // Echte Arbeitszeit im Hauptberuf für ArbZG (ohne Urlaub/Krank/Feiertag-Frei)
+    function getMainWorkedHoursForDate(iso) {
+      const e = entriesDB[iso];
+      const calc = calculateDay(iso, e);
+      return calc.isWorked ? calc.ist : (calc.isPreview ? calc.ist : 0);
+    }
+
+    function getMondayOfISO(iso) {
+      const d = parseISODate(iso);
+      const day = d.getDay() || 7;
+      d.setDate(d.getDate() - (day - 1));
+      return d;
+    }
+
+    function getCombinedWeekHoursForISO(iso, extraHoursOnTargetDate = 0, ignoreEditIdx = null) {
+      const mon = getMondayOfISO(iso);
+      let weekTotal = 0;
+      for (let i = 0; i < 7; i++) {
+        const cur = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i);
+        const curIso = toISODate(cur);
+        const mainH = getMainWorkedHoursForDate(curIso);
+        let mjH = 0;
+        const list = minijobDB[curIso] || [];
+        list.forEach((it, idx) => {
+          if (curIso === iso && ignoreEditIdx === idx) return;
+          mjH += (it.hours !== undefined ? it.hours : calcMinijobDurationHours(it.start, it.end));
+        });
+        if (curIso === iso) mjH += extraHoursOnTargetDate;
+        weekTotal += (mainH + mjH);
+      }
+      return Math.round(weekTotal * 100) / 100;
+    }
+
+    function applyMinijobVisibilityState() {
+      const enabled = !!metaDB.minijobEnabled && !metaDB.rosterOnly;
+      const btn = document.getElementById('btn-nav-minijob');
+      if (btn) {
+        btn.classList.toggle('hidden', !enabled);
+        btn.classList.toggle('flex', enabled);
+      }
+    }
+
+    function updateMinijobLiveCheck() {
+      const dateVal = document.getElementById('mj-date').value || toISODate(new Date());
+      const tIn = document.getElementById('mj-in').value;
+      const tOut = document.getElementById('mj-out').value;
+      const dur = (tIn && tOut) ? calcMinijobDurationHours(tIn, tOut) : 0;
+
+      const kw = getISOWeek(parseISODate(dateVal));
+      const mainH = getMainWorkedHoursForDate(dateVal);
+      document.getElementById('mj-kw-main-info').textContent = `KW ${kw} • Hauptberuf: ${fmtDec(mainH)} h`;
+
+      let existingMjOther = 0;
+      const list = minijobDB[dateVal] || [];
+      list.forEach((it, idx) => {
+        if (mjEditState && mjEditState.iso === dateVal && mjEditState.idx === idx) return;
+        existingMjOther += (it.hours !== undefined ? it.hours : calcMinijobDurationHours(it.start, it.end));
+      });
+
+      const dayTotal = Math.round((mainH + existingMjOther + dur) * 100) / 100;
+      const ignoreIdx = (mjEditState && mjEditState.iso === dateVal) ? mjEditState.idx : null;
+      const weekTotal = getCombinedWeekHoursForISO(dateVal, dur, ignoreIdx);
+
+      const box = document.getElementById('mj-live-ampel');
+      const dayLine = document.getElementById('mj-live-day-line');
+      const weekLine = document.getElementById('mj-live-week-line');
+
+      dayLine.textContent = `${dayTotal > 10 ? '⚠️ ' : ''}Tages-Gesamtzeit: ${fmtDec(dayTotal)} h (Minijob: ${fmtDec(existingMjOther + dur)} h)`;
+      weekLine.textContent = `${weekTotal > 60 ? '⚠️ ' : ''}Wochen-Gesamtzeit (KW ${kw}): ${fmtDec(weekTotal)} h / 60,00 h`;
+
+      if (dayTotal > 10 || weekTotal > 60) {
+        box.className = 'p-2 rounded-xl border text-[11px] font-extrabold flex flex-col gap-0.5 bg-rose-50 dark:bg-rose-950/60 border-rose-400 text-rose-700 dark:text-rose-300';
+      } else if (dayTotal > 8 || weekTotal > 48) {
+        box.className = 'p-2 rounded-xl border text-[11px] font-bold flex flex-col gap-0.5 bg-amber-50 dark:bg-amber-950/50 border-amber-300 text-amber-800 dark:text-amber-300';
+      } else {
+        box.className = 'p-2 rounded-xl border text-[11px] font-bold flex flex-col gap-0.5 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 text-emerald-800 dark:text-emerald-300';
+      }
+    }
+
+    function renderMinijobView() {
+      document.getElementById('mj-month-title').textContent = `${MONTH_NAMES[mjMonth]} ${mjYear}`;
+      document.getElementById('mj-sum-year-lbl').textContent = mjYear;
+
+      const dateInput = document.getElementById('mj-date');
+      if (!dateInput.value) dateInput.value = toISODate(new Date());
+
+      const ymPrefix = `${mjYear}-${String(mjMonth + 1).padStart(2, '0')}`;
+      const yPrefix = `${mjYear}-`;
+
+      let monthHours = 0, monthCount = 0, yearHours = 0, yearCount = 0;
+      Object.keys(minijobDB).forEach(iso => {
+        const arr = minijobDB[iso] || [];
+        arr.forEach(item => {
+          const h = item.hours !== undefined ? item.hours : calcMinijobDurationHours(item.start, item.end);
+          if (iso.startsWith(yPrefix)) { yearHours += h; yearCount++; }
+          if (iso.startsWith(ymPrefix)) { monthHours += h; monthCount++; }
+        });
+      });
+
+      document.getElementById('mj-sum-month').textContent = `${fmtDec(monthHours)} h`;
+      document.getElementById('mj-sub-month').textContent = `${monthCount} ${monthCount === 1 ? 'Einsatz' : 'Einsätze'}`;
+      document.getElementById('mj-sum-year').textContent = `${fmtDec(yearHours)} h`;
+      document.getElementById('mj-sub-year').textContent = `${yearCount} Einsätze in ${mjYear}`;
+
+      updateMinijobLiveCheck();
+
+      const container = document.getElementById('mj-list-container');
+      container.innerHTML = '';
+
+      const monthIsos = Object.keys(minijobDB).filter(iso => iso.startsWith(ymPrefix) && (minijobDB[iso] || []).length > 0).sort();
+      if (monthIsos.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-400 italic text-center py-4">Noch keine Minijob-Einträge in diesem Monat.</div>';
+        return;
+      }
+
+      let currentKW = null;
+      let kwGroupEl = null;
+
+      monthIsos.forEach(iso => {
+        const dObj = parseISODate(iso);
+        const kw = getISOWeek(dObj);
+
+        if (kw !== currentKW) {
+          currentKW = kw;
+          const kwTotalCombined = getCombinedWeekHoursForISO(iso, 0, null);
+          let mjKwSum = 0;
+          const mon = getMondayOfISO(iso);
+          for (let i = 0; i < 7; i++) {
+            const cIso = toISODate(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i));
+            mjKwSum += getMinijobHoursForDate(cIso);
+          }
+
+          kwGroupEl = document.createElement('div');
+          kwGroupEl.className = 'flex flex-col gap-1.5 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-xl border border-slate-200 dark:border-slate-800';
+          const warn60 = kwTotalCombined > 60 ? `<span class="text-rose-600 dark:text-rose-400 font-extrabold">⚠️ Ges: ${fmtDec(kwTotalCombined)}h (>60h!)</span>` : `<span class="text-slate-500">Woche ges.: ${fmtDec(kwTotalCombined)}h</span>`;
+          kwGroupEl.innerHTML = `
+            <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider px-1 border-b border-slate-200 dark:border-slate-700 pb-1">
+              <span class="text-blue-600 dark:text-blue-400">KW ${kw} (Minijob: ${fmtDec(mjKwSum)}h)</span>
+              ${warn60}
+            </div>
+          `;
+          container.appendChild(kwGroupEl);
+        }
+
+        const mainH = getMainWorkedHoursForDate(iso);
+        const dayTotal = Math.round((mainH + getMinijobHoursForDate(iso)) * 100) / 100;
+        const dayBadgeCls = dayTotal > 10 ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-400' : (dayTotal > 8 ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-300');
+
+        (minijobDB[iso] || []).forEach((item, idx) => {
+          const h = item.hours !== undefined ? item.hours : calcMinijobDurationHours(item.start, item.end);
+          const row = document.createElement('div');
+          row.className = 'bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center gap-2 text-xs cursor-pointer active:scale-[0.99] transition';
+          row.innerHTML = `
+            <div class="flex-1 overflow-hidden">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-extrabold">${WD_NAMES[dObj.getDay()]} ${String(dObj.getDate()).padStart(2, '0')}.${String(dObj.getMonth() + 1).padStart(2, '0')}.</span>
+                <span class="font-mono text-[11px] text-blue-600 dark:text-blue-400 font-bold">${escapeHTML(item.start)}–${escapeHTML(item.end)} (${fmtDec(h)}h)</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded border font-bold ${dayBadgeCls}">${dayTotal > 10 ? '⚠️ ' : ''}Tag: ${fmtDec(dayTotal)}h</span>
+              </div>
+              <div class="text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${escapeHTML(item.text)}</div>
+            </div>
+            <button type="button" class="btn-mj-del w-8 h-8 shrink-0 flex items-center justify-center bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-lg font-bold" title="Löschen">🗑️</button>
+          `;
+
+          row.addEventListener('click', (ev) => {
+            if (ev.target.closest('.btn-mj-del')) return;
+            mjEditState = { iso, idx };
+            document.getElementById('mj-date').value = iso;
+            document.getElementById('mj-in').value = item.start;
+            document.getElementById('mj-out').value = item.end;
+            document.getElementById('mj-text').value = item.text;
+            document.getElementById('mj-form-title').textContent = `✏️ Einsatz bearbeiten (${formatShortDE(iso)})`;
+            document.getElementById('btn-mj-save').textContent = '💾 Änderung speichern';
+            document.getElementById('btn-mj-cancel-edit').classList.remove('hidden');
+            updateMinijobLiveCheck();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+
+          row.querySelector('.btn-mj-del').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            minijobDB[iso].splice(idx, 1);
+            if (minijobDB[iso].length === 0) delete minijobDB[iso];
+            saveJSON(STORAGE_KEYS.MINIJOB, minijobDB);
+            triggerBackgroundDriveSync();
+            resetMinijobForm();
+            renderMinijobView();
+          });
+
+          kwGroupEl.appendChild(row);
+        });
+      });
+    }
+
+    function resetMinijobForm() {
+      mjEditState = null;
+      document.getElementById('mj-in').value = '';
+      document.getElementById('mj-out').value = '';
+      document.getElementById('mj-text').value = '';
+      document.getElementById('mj-form-title').textContent = '💼 Einsatz eintragen';
+      document.getElementById('btn-mj-save').textContent = '💾 Eintrag speichern';
+      document.getElementById('btn-mj-cancel-edit').classList.add('hidden');
+      updateMinijobLiveCheck();
+    }
+
+    function buildMinijobMailContent() {
+      const toEmail = document.getElementById('mj-mail-to').value.trim();
+      const senderName = document.getElementById('mj-mail-name').value.trim();
+      metaDB.minijobEmail = toEmail;
+      metaDB.minijobName = senderName;
+      saveJSON(STORAGE_KEYS.META, metaDB);
+
+      const isYear = (mjMailScope === 'year');
+      const periodLabel = isYear ? `Jahr ${mjYear}` : `${MONTH_NAMES[mjMonth]} ${mjYear}`;
+      const prefix = isYear ? `${mjYear}-` : `${mjYear}-${String(mjMonth + 1).padStart(2, '0')}`;
+
+      const isos = Object.keys(minijobDB).filter(k => k.startsWith(prefix) && (minijobDB[k] || []).length > 0).sort();
+      let lines = [];
+      let totalH = 0;
+
+      isos.forEach(iso => {
+        const d = parseISODate(iso);
+        const dateStr = `${WD_NAMES[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+        (minijobDB[iso] || []).forEach(it => {
+          const h = it.hours !== undefined ? it.hours : calcMinijobDurationHours(it.start, it.end);
+          totalH += h;
+          lines.push(`• ${dateStr} | ${it.start} – ${it.end} Uhr (${fmtDec(h)} Std.) | ${it.text}`);
+        });
+      });
+
+      const subject = `Arbeitszeiten Nebenerwerb – ${periodLabel}${senderName ? ' (' + senderName + ')' : ''}`;
+      const bodyLines = [
+        'Hallo,',
+        '',
+        `anbei meine Arbeitszeiten für ${periodLabel}:`,
+        '',
+        ...(lines.length > 0 ? lines : ['(Keine Einträge im gewählten Zeitraum)']),
+        '',
+        `Gesamtarbeitszeit ${periodLabel}: ${fmtDec(totalH)} Stunden`,
+        '',
+        'Viele Grüße',
+        senderName || ''
+      ];
+
+      const body = bodyLines.join('\n').trim();
+      document.getElementById('mj-mail-preview').value = `Betreff: ${subject}\n----------------------------------------\n${body}`;
+      return { toEmail, subject, body, isos, periodLabel };
+    }
+
+    function exportMinijobCSV() {
+      const { isos, periodLabel } = buildMinijobMailContent();
+      const rows = [['Datum', 'KW', 'Von', 'Bis', 'Stunden', 'Tätigkeit']];
+      let sum = 0;
+      isos.forEach(iso => {
+        const kw = getISOWeek(parseISODate(iso));
+        (minijobDB[iso] || []).forEach(it => {
+          const h = it.hours !== undefined ? it.hours : calcMinijobDurationHours(it.start, it.end);
+          sum += h;
+          rows.push([iso, kw, it.start, it.end, fmtDec(h), (it.text || '').replace(/;/g, ',')]);
+        });
+      });
+      rows.push(['GESAMT', '', '', '', fmtDec(sum), '']);
+      const blob = new Blob(['\uFEFF' + rows.map(r => r.join(';')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `Minijob_${periodLabel.replace(/\s+/g, '_')}.csv`; a.click();
+    }
+
+    /********************************************************************
+     * VOLLBILD-EINSTELLUNGEN & ERWEITERTE STATISTIKEN (INKL. 48h/24-WO.)
+     ********************************************************************/
+    function openFullSettingsView() {
+      document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday;
+      document.getElementById('setting-hide-patterns').checked = !!metaDB.hidePatterns;
+      document.getElementById('setting-roster-only').checked = !!metaDB.rosterOnly;
+      document.getElementById('setting-enable-minijob').checked = !!metaDB.minijobEnabled;
+      document.getElementById('setting-mj-email').value = metaDB.minijobEmail || '';
+      document.getElementById('setting-mj-name').value = metaDB.minijobName || '';
+      document.getElementById('setting-minijob-details').classList.toggle('hidden', !metaDB.minijobEnabled);
+      document.getElementById('setting-minijob-details').classList.toggle('flex', !!metaDB.minijobEnabled);
+
+      renderAdvancedSettingsStats();
+    }
+
+    function renderAdvancedSettingsStats() {
+      document.getElementById('st-year-label').textContent = stYear;
+      const mjEnabled = !!metaDB.minijobEnabled;
+      const includeMjWrap = document.getElementById('st-toggle-mj-wrap');
+      const mjCard = document.getElementById('st-minijob-card');
+      includeMjWrap.classList.toggle('hidden', !mjEnabled);
+      includeMjWrap.classList.toggle('flex', mjEnabled);
+      mjCard.classList.toggle('hidden', !mjEnabled);
+      mjCard.classList.toggle('flex', mjEnabled);
+
+      const includeMj = mjEnabled && document.getElementById('st-include-minijob').checked;
+
+      // 1. Monats- & Jahreswerte berechnen
+      const tbody = document.getElementById('st-hours-tbody');
+      const tfoot = document.getElementById('st-hours-tfoot');
+      tbody.innerHTML = '';
+
+      let yIst = 0, yVerr = 0, yMehr = 0, yNacht = 0, yMjHours = 0, yMjCount = 0;
+      let workedDaysCount = 0, totalWorkedHours = 0;
+      let countU = 0, countK = 0, countF = 0, countS = 0, countN = 0, countZ = 0;
+      let over10hDays = [];
+
+      for (let m = 0; m < 12; m++) {
+        const daysInM = new Date(stYear, m + 1, 0).getDate();
+        let mIst = 0, mVerr = 0, mMehr = 0, mNacht = 0, mFsUsed = 0, mUnpaidChild = 0, mMj = 0;
+
+        for (let d = 1; d <= daysInM; d++) {
+          const iso = toISODate(new Date(stYear, m, d));
+          const e = entriesDB[iso];
+          const calc = calculateDay(iso, e);
+          const mjH = getMinijobHoursForDate(iso);
+          mMj += mjH;
+          if ((minijobDB[iso] || []).length > 0) yMjCount += minijobDB[iso].length;
+
+          if (e && e.unpaidChild) mUnpaidChild++;
+          mIst += calc.ist; mVerr += calc.verr; mMehr += calc.mehr; mNacht += calc.nacht; mFsUsed += (calc.fsUsed || 0);
+
+          const shift = e ? (e.tazp || e.shift) : rosterDB[iso];
+          if (shift === 'URLAUB' || shift === '0109') countU++;
+          else if (shift === 'KRANK') countK++;
+          else if (shift === '0112') countF++;
+          else if (shift === '0111') countS++;
+          else if (shift === '0113') countN++;
+          else if (shift === '0135') countZ++;
+
+          const realWorkH = getMainWorkedHoursForDate(iso);
+          if (realWorkH > 0 || mjH > 0) {
+            workedDaysCount++;
+            totalWorkedHours += (realWorkH + (includeMj ? mjH : 0));
+          }
+          if ((realWorkH + mjH) > 10.0) {
+            over10hDays.push(`${String(d).padStart(2, '0')}.${String(m + 1).padStart(2, '0')}. (${fmtDec(realWorkH + mjH)}h)`);
+          }
+        }
+
+        const ymKey = `${stYear}-${String(m + 1).padStart(2, '0')}`;
+        const prevFS = getFsPrevValueForMonth(stYear, m);
+        const effBase = PAYOUT_BASELINE_HOURS - (mUnpaidChild * 5.0);
+        const fsAufbau = (mVerr > 0) ? Math.round((mVerr - effBase) * 100) / 100 : 0;
+        const mMeta = (metaDB.months && metaDB.months[ymKey]) || { payout: 0, corr: 0 };
+        const fsEnd = Math.round((prevFS + fsAufbau - mFsUsed - (mMeta.payout || 0) + (mMeta.corr || 0)) * 100) / 100;
+
+        const dispIst = includeMj ? (mIst + mMj) : mIst;
+        yIst += dispIst; yVerr += mVerr; yMehr += mMehr; yNacht += mNacht; yMjHours += mMj;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-1.5 px-1.5 text-left font-sans font-bold">${MONTH_SHORT[m]}</td>
+          <td class="py-1.5 px-1">${dispIst > 0 ? fmtDec(dispIst) : '-'}</td>
+          <td class="py-1.5 px-1 font-bold">${mVerr > 0 ? fmtDec(mVerr) : '-'}</td>
+          <td class="py-1.5 px-1 ${mMehr > 0 ? 'text-emerald-600' : (mMehr < 0 ? 'text-rose-600' : 'text-slate-400')}">${mMehr !== 0 ? fmtDec(mMehr, true) : '-'}</td>
+          <td class="py-1.5 px-1 text-cyan-600 dark:text-cyan-400">${mNacht > 0 ? fmtDec(mNacht) : '-'}</td>
+          <td class="py-1.5 px-1.5 font-bold text-blue-600 dark:text-blue-400">${fmtDec(fsEnd)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-2 px-1.5 text-left font-sans">JAHR</td>
+          <td class="py-2 px-1">${fmtDec(yIst)}</td>
+          <td class="py-2 px-1 text-blue-600 dark:text-blue-400">${fmtDec(yVerr)}</td>
+          <td class="py-2 px-1 ${yMehr > 0 ? 'text-emerald-600' : (yMehr < 0 ? 'text-rose-600' : '')}">${fmtDec(yMehr, true)}</td>
+          <td class="py-2 px-1 text-cyan-600 dark:text-cyan-400">${fmtDec(yNacht)}</td>
+          <td class="py-2 px-1.5">-</td>
+        </tr>
+      `;
+
+      // 2. 60h-Wochen-Prüfung für das gewählte Jahr
+      const weeks = generateWeeksForYear(stYear);
+      let over60KWs = [];
+      weeks.forEach(w => {
+        if (w.thursdayYear !== stYear) return;
+        let wSum = 0;
+        w.days.forEach(dObj => {
+          const iso = toISODate(dObj);
+          wSum += getMainWorkedHoursForDate(iso) + getMinijobHoursForDate(iso);
+        });
+        if (wSum > 60.0) over60KWs.push(`KW ${w.kw} (${fmtDec(wSum)}h)`);
+      });
+
+      // 3. JAHRESÜBERGREIFENDER 24-Wochen-Schnitt (48h-Regel nach § 3 ArbZG)
+      const now = new Date();
+      const refDate = (stYear === now.getFullYear()) ? now : new Date(stYear, 11, 31);
+      let sum24W = 0;
+      let earliestActiveDaysAgo = 0;
+
+      for (let i = 0; i < 168; i++) {
+        const d = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate() - i);
+        const iso = toISODate(d);
+        const h = getMainWorkedHoursForDate(iso) + getMinijobHoursForDate(iso);
+        if (h > 0 || entriesDB[iso] || minijobDB[iso]) {
+          earliestActiveDaysAgo = i + 1;
+        }
+        sum24W += h;
+      }
+      const effectiveWeeks = Math.max(1, Math.min(24, Math.ceil(earliestActiveDaysAgo / 7)));
+      const avg24W = Math.round((sum24W / effectiveWeeks) * 100) / 100;
+
+      // ArbZG-Karten einfärben
+      const el10 = document.getElementById('arbzg-val-10h');
+      const el60 = document.getElementById('arbzg-val-60h');
+      const el48 = document.getElementById('arbzg-val-48h');
+      el10.textContent = `${over10hDays.length} ${over10hDays.length === 1 ? 'Tag' : 'Tage'}`;
+      el10.className = `text-xs font-extrabold mt-0.5 ${over10hDays.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`;
+
+      el60.textContent = `${over60KWs.length} ${over60KWs.length === 1 ? 'KW' : 'KWs'}`;
+      el60.className = `text-xs font-extrabold mt-0.5 ${over60KWs.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`;
+
+      el48.textContent = `${fmtDec(avg24W)} h`;
+      el48.className = `text-xs font-extrabold mt-0.5 ${avg24W > 48 ? 'text-rose-600 dark:text-rose-400' : (avg24W > 44 ? 'text-amber-600' : 'text-emerald-600 dark:text-emerald-400')}`;
+
+      const warnDetail = document.getElementById('arbzg-warnings-detail');
+      const warnMessages = [];
+      if (over10hDays.length > 0) warnMessages.push(`⚠️ >10h/Tag: ${over10hDays.slice(0, 6).join(', ')}${over10hDays.length > 6 ? '...' : ''}`);
+      if (over60KWs.length > 0) warnMessages.push(`⚠️ >60h/Woche: ${over60KWs.join(', ')}`);
+      if (avg24W > 48) warnMessages.push(`⚠️ 24-Wochen-Schnitt (${fmtDec(avg24W)}h/Wo.) überschreitet die 48h-Grenze!`);
+      if (warnMessages.length > 0) {
+        warnDetail.innerHTML = warnMessages.join('<br>');
+        warnDetail.classList.remove('hidden');
+      } else {
+        warnDetail.classList.add('hidden');
+      }
+
+      // 4. Kennzahlen-Kacheln
+      const avgDay = workedDaysCount > 0 ? (totalWorkedHours / workedDaysCount) : 0;
+      const avgWeek = totalWorkedHours / 52;
+      document.getElementById('st-kpi-avg').textContent = `${fmtShortHours(avgDay)}h / ${fmtShortHours(avgWeek)}h`;
+      document.getElementById('st-kpi-uk').textContent = `${countU} U • ${countK} K`;
+
+      const totalShifts = Math.max(1, countF + countS + countN + countZ);
+      const pF = Math.round((countF / totalShifts) * 100);
+      const pS = Math.round((countS / totalShifts) * 100);
+      const pN = Math.round((countN / totalShifts) * 100);
+      document.getElementById('st-kpi-dist').textContent = `${pF}% / ${pS}% / ${pN}%`;
+
+      if (mjEnabled) {
+        document.getElementById('st-mj-year-total').textContent = `${fmtDec(yMjHours)} h (${yMjCount} Einsätze)`;
+        document.getElementById('st-mj-averages').textContent = `Ø pro Monat: ${fmtDec(yMjHours / 12)} h • Ø pro Woche: ${fmtDec(yMjHours / 52)} h`;
+      }
     }
 
     function generateMonthOrYearCSV(isYear = false) {
@@ -2593,30 +3349,110 @@
         saveJSON(STORAGE_KEYS.META, metaDB); triggerBackgroundDriveSync(); document.getElementById('modal-fs').classList.add('hidden'); renderOverview();
       });
 
-      // EINSTELLUNGEN & ZAHNRAD (Global)
+      // EINSTELLUNGEN & STATISTIKEN VOLLBILD (Global)
       document.querySelectorAll('.btn-open-settings-modal').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.getElementById('setting-night-sunday').checked = !!metaDB.nightShiftSunday;
-          document.getElementById('setting-hide-patterns').checked = !!metaDB.hidePatterns;
-          document.getElementById('setting-roster-only').checked = !!metaDB.rosterOnly;
-          document.getElementById('modal-settings').classList.remove('hidden');
-        });
+        btn.addEventListener('click', () => window.switchView('settings'));
       });
-      document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
+      document.getElementById('btn-settings-back').addEventListener('click', () => {
+        window.switchView(metaDB.rosterOnly ? 'roster' : (previousActiveView || 'main'));
+      });
+      document.getElementById('setting-enable-minijob').addEventListener('change', (e) => {
+        const on = e.target.checked;
+        document.getElementById('setting-minijob-details').classList.toggle('hidden', !on);
+        document.getElementById('setting-minijob-details').classList.toggle('flex', on);
+      });
       document.getElementById('btn-save-settings').addEventListener('click', () => { 
         metaDB.nightShiftSunday = document.getElementById('setting-night-sunday').checked; 
         metaDB.hidePatterns = document.getElementById('setting-hide-patterns').checked;
         metaDB.rosterOnly = document.getElementById('setting-roster-only').checked;
+        metaDB.minijobEnabled = document.getElementById('setting-enable-minijob').checked;
+        metaDB.minijobEmail = document.getElementById('setting-mj-email').value.trim();
+        metaDB.minijobName = document.getElementById('setting-mj-name').value.trim();
         saveJSON(STORAGE_KEYS.META, metaDB); 
-        document.getElementById('modal-settings').classList.add('hidden'); 
+        triggerBackgroundDriveSync();
         applyHidePatternsState();
+        applyMinijobVisibilityState();
         applyRosterOnlyState();
+        if (!metaDB.rosterOnly) window.switchView(previousActiveView || 'main');
       });
       document.getElementById('theme-light').addEventListener('click', () => applyTheme('light')); document.getElementById('theme-dark').addEventListener('click', () => applyTheme('dark')); document.getElementById('theme-system').addEventListener('click', () => applyTheme('system'));
 
+      // STATISTIK-STEUERUNG IN DEN EINSTELLUNGEN
+      document.getElementById('btn-st-year-prev').addEventListener('click', () => { stYear--; renderAdvancedSettingsStats(); });
+      document.getElementById('btn-st-year-next').addEventListener('click', () => { stYear++; renderAdvancedSettingsStats(); });
+      document.getElementById('st-include-minijob').addEventListener('change', renderAdvancedSettingsStats);
+      document.getElementById('btn-st-open-booked-shifts').addEventListener('click', () => { overviewYear = stYear; renderStats(); document.getElementById('modal-stats').classList.remove('hidden'); });
+      document.getElementById('btn-st-open-roster-shifts').addEventListener('click', () => { rosterYear = stYear; renderRosterStats(); document.getElementById('modal-roster-stats').classList.remove('hidden'); });
+
+      // NEBENERWERB / MINIJOB STEUERUNG
+      document.getElementById('btn-mj-prev-month').addEventListener('click', () => { mjMonth--; if (mjMonth < 0) { mjMonth = 11; mjYear--; } renderMinijobView(); });
+      document.getElementById('btn-mj-next-month').addEventListener('click', () => { mjMonth++; if (mjMonth > 11) { mjMonth = 0; mjYear++; } renderMinijobView(); });
+      ['mj-date', 'mj-in', 'mj-out'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateMinijobLiveCheck);
+      });
+      document.getElementById('btn-mj-cancel-edit').addEventListener('click', resetMinijobForm);
+      document.getElementById('btn-mj-save').addEventListener('click', () => {
+        const iso = document.getElementById('mj-date').value;
+        const start = document.getElementById('mj-in').value;
+        const end = document.getElementById('mj-out').value;
+        const text = document.getElementById('mj-text').value.trim();
+        if (!iso || !start || !end || !text) { alert('Bitte Datum, Von, Bis und Tätigkeit ausfüllen!'); return; }
+        const hours = calcMinijobDurationHours(start, end);
+        if (mjEditState) {
+          if (minijobDB[mjEditState.iso]) {
+            minijobDB[mjEditState.iso].splice(mjEditState.idx, 1);
+            if (minijobDB[mjEditState.iso].length === 0) delete minijobDB[mjEditState.iso];
+          }
+        }
+        if (!minijobDB[iso]) minijobDB[iso] = [];
+        minijobDB[iso].push({ start, end, hours, text });
+        minijobDB[iso].sort((a, b) => a.start.localeCompare(b.start));
+        const dObj = parseISODate(iso);
+        mjYear = dObj.getFullYear(); mjMonth = dObj.getMonth();
+        saveJSON(STORAGE_KEYS.MINIJOB, minijobDB);
+        triggerBackgroundDriveSync();
+        resetMinijobForm();
+        renderMinijobView();
+      });
+
+      // MINIJOB E-MAIL ABRECHNUNGS-MODAL
+      document.getElementById('btn-open-mj-mail').addEventListener('click', () => {
+        document.getElementById('mj-mail-to').value = metaDB.minijobEmail || '';
+        document.getElementById('mj-mail-name').value = metaDB.minijobName || '';
+        buildMinijobMailContent();
+        document.getElementById('modal-minijob-mail').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-mj-mail').addEventListener('click', () => document.getElementById('modal-minijob-mail').classList.add('hidden'));
+      document.getElementById('btn-mj-scope-month').addEventListener('click', () => {
+        mjMailScope = 'month';
+        document.getElementById('btn-mj-scope-month').className = 'py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm';
+        document.getElementById('btn-mj-scope-year').className = 'py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+        buildMinijobMailContent();
+      });
+      document.getElementById('btn-mj-scope-year').addEventListener('click', () => {
+        mjMailScope = 'year';
+        document.getElementById('btn-mj-scope-year').className = 'py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm';
+        document.getElementById('btn-mj-scope-month').className = 'py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+        buildMinijobMailContent();
+      });
+      ['mj-mail-to', 'mj-mail-name'].forEach(id => {
+        document.getElementById(id).addEventListener('input', buildMinijobMailContent);
+      });
+      document.getElementById('btn-mj-send-mailto').addEventListener('click', () => {
+        const { toEmail, subject, body } = buildMinijobMailContent();
+        window.location.href = `mailto:${encodeURIComponent(toEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      });
+      document.getElementById('btn-mj-copy-text').addEventListener('click', function() {
+        const { body } = buildMinijobMailContent();
+        navigator.clipboard.writeText(body).then(() => {
+          const orig = this.textContent; this.textContent = '✅ Kopiert!';
+          setTimeout(() => { this.textContent = orig; }, 1800);
+        });
+      });
+      document.getElementById('btn-mj-export-csv').addEventListener('click', exportMinijobCSV);
+
       // BACKUP
       document.getElementById('btn-open-backup-modal').addEventListener('click', () => {
-        document.getElementById('modal-settings').classList.add('hidden');
         document.getElementById('modal-backup').classList.remove('hidden');
       });
       document.getElementById('btn-close-backup').addEventListener('click', () => document.getElementById('modal-backup').classList.add('hidden'));
@@ -2634,7 +3470,6 @@
 
       // DRIVE SYNC & KOPIEREN
       document.getElementById('btn-open-drive-modal').addEventListener('click', () => {
-        document.getElementById('modal-settings').classList.add('hidden');
         document.getElementById('drive-auto-sync').checked = !!metaDB.driveAuto; document.getElementById('drive-url-input').value = metaDB.driveUrl || '';
         document.getElementById('drive-sync-status').classList.add('hidden'); document.getElementById('drive-help-text').classList.add('hidden');
         document.getElementById('btn-drive-help').textContent = '📖 Anleitung für Google Drive anzeigen';
@@ -2717,6 +3552,7 @@ function doGet(e) {
       });
       
       applyHidePatternsState(); // Hält Schicht-Kombis aus, wenn eingestellt
+      applyMinijobVisibilityState(); // Zeigt Minijob-Button nur, wenn in Einstellungen aktiviert
       applyRosterOnlyState();
 
       // ==========================================
