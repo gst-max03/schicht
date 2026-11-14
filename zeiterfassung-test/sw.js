@@ -1,5 +1,5 @@
 const APP_PREFIX = 'zeiterfassung-offline-';
-const CACHE_NAME = `${APP_PREFIX}v066`; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
+const CACHE_NAME = `${APP_PREFIX}v067_test`; // HIER BEI JEDEM UPDATE DIE NUMMER ÄNDERN!
 
 // 1. INSTALL-EVENT (NEU): Wichtige Start-Dateien sofort beim Installieren cachen
 const CACHE_URLS = [
